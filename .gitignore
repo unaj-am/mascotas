@@ -1,0 +1,25 @@
+
+# Gradle
+.gradle/
+**/build/
+
+# Android Studio
+.idea/
+*.iml
+
+# Android SDK local
+local.properties
+
+# Android NDK
+.externalNativeBuild/
+.cxx/
+
+# Capturas y archivos del sistema
+captures/
+.DS_Store
+Thumbs.db
+
+# Variables de entorno y secretos locales
+.env
+.env.*
+!.env.example
