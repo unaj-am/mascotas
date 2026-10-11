@@ -49,7 +49,7 @@ dependencies {
     implementation(project(":features:profile"))
     implementation(project(":features:tracking"))
     implementation(project(":features:walks"))
-    implementation(project(":features:wolkers"))
+    implementation(project(":features:walkers"))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)
