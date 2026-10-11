@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.app.pets"
+    namespace = "com.app.features.pets"
     compileSdk {
         version = release(37)
     }
@@ -22,6 +22,7 @@ android {
 
 dependencies {
     implementation(project(":core:domain"))
+    implementation(project(":core:ui"))
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.core.ktx)
     implementation(libs.material)
