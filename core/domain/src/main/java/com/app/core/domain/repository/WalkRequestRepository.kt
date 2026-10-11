@@ -25,4 +25,5 @@ interface WalkRequestRepository {
         requestId: String,
         status: RequestStatus
     )
+    suspend fun deleteRequest(requestId: String)
 }

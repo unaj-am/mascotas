@@ -50,4 +50,8 @@ class WalkRequestRepositoryImpl : WalkRequestRepository {
             )
         }
     }
+
+    override suspend fun deleteRequest(requestId: String) {
+        requests.removeAll { it.id == requestId }
+    }
 }
