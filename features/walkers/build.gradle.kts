@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.app.features.wolkers"
+    namespace = "com.app.features.walkers"
     compileSdk {
         version = release(37)
     }
