@@ -13,6 +13,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.core.domain.model.Pet
+import androidx.compose.foundation.layout.safeDrawingPadding
+import com.app.features.pets.component.PetCard
 
 @Composable
 fun PetRoute(
@@ -35,6 +37,7 @@ fun PetScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .safeDrawingPadding()
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -55,7 +58,7 @@ fun PetScreen(
                     )
                 } else {
                     uiState.pets.forEach { pet ->
-                        Text(text = pet.name)
+                        PetCard(pet = pet)
                     }
                 }
             }
