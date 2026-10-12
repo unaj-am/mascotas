@@ -24,8 +24,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "Mascotas"
 include(":app")
-include(":core")
-include(":features")
 include(":core:database")
 include(":core:data")
 include(":core:ui")

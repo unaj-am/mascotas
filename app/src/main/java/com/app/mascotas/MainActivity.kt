@@ -4,44 +4,41 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.ViewModelProvider
+import com.app.core.data.repository.PetRepositoryImpl
+import com.app.core.domain.usecase.GetPetsByOwnerUseCase
+import com.app.features.pets.list.PetRoute
+import com.app.features.pets.list.PetViewModel
+import com.app.features.pets.list.PetViewModelFactory
 import com.app.mascotas.ui.theme.MascotasTheme
 
 class MainActivity : ComponentActivity() {
+
+    private val petRepository = PetRepositoryImpl()
+
+    private val getPetsByOwnerUseCase =
+        GetPetsByOwnerUseCase(petRepository)
+
+    private val petViewModelFactory =
+        PetViewModelFactory(getPetsByOwnerUseCase)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         enableEdgeToEdge()
+
+        val petViewModel = ViewModelProvider(
+            this,
+            petViewModelFactory
+        )[PetViewModel::class.java]
+
         setContent {
             MascotasTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                PetRoute(
+                    ownerId = "USR001",
+                    viewModel = petViewModel
+                )
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MascotasTheme {
-        Greeting("Android")
     }
 }
