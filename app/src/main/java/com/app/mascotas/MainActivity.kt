@@ -11,6 +11,9 @@ import com.app.features.pets.list.PetRoute
 import com.app.features.pets.list.PetViewModel
 import com.app.features.pets.list.PetViewModelFactory
 import com.app.mascotas.ui.theme.MascotasTheme
+import androidx.lifecycle.lifecycleScope
+import com.app.core.domain.model.Pet
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -31,6 +34,33 @@ class MainActivity : ComponentActivity() {
             this,
             petViewModelFactory
         )[PetViewModel::class.java]
+
+        lifecycleScope.launch {
+
+            petRepository.savePet(
+                Pet(
+                    id = "PET001",
+                    ownerId = "USR001",
+                    name = "Firulais",
+                    breed = "Labrador",
+                    age = 3,
+                    weight = 25.0
+                )
+            )
+
+            petRepository.savePet(
+                Pet(
+                    id = "PET002",
+                    ownerId = "USR001",
+                    name = "Luna",
+                    breed = "Mestiza",
+                    age = 2,
+                    weight = 12.5
+                )
+            )
+
+            petViewModel.loadPets("USR001")
+        }
 
         setContent {
             MascotasTheme {
