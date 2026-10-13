@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,13 +14,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.core.domain.model.Pet
-import androidx.compose.foundation.layout.safeDrawingPadding
 import com.app.features.pets.component.PetCard
 
 @Composable
 fun PetRoute(
     ownerId: String,
-    viewModel: PetViewModel
+    viewModel: PetViewModel,
+    onPetClick: (String) -> Unit = {}
 ) {
     val uiState = viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -27,12 +28,16 @@ fun PetRoute(
         viewModel.loadPets(ownerId)
     }
 
-    PetScreen(uiState = uiState.value)
+    PetScreen(
+        uiState = uiState.value,
+        onPetClick = onPetClick
+    )
 }
 
 @Composable
 fun PetScreen(
-    uiState: PetListUiState
+    uiState: PetListUiState,
+    onPetClick: (String) -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -53,12 +58,21 @@ fun PetScreen(
             is PetListUiState.Success -> {
 
                 if (uiState.pets.isEmpty()) {
+
                     Text(
                         text = "Todavía no tenés mascotas registradas"
                     )
+
                 } else {
+
                     uiState.pets.forEach { pet ->
-                        PetCard(pet = pet)
+
+                        PetCard(
+                            pet = pet,
+                            onClick = {
+                                onPetClick(pet.id)
+                            }
+                        )
                     }
                 }
             }

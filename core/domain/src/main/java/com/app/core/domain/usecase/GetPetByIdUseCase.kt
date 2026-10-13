@@ -6,7 +6,11 @@ import com.app.core.domain.repository.PetRepository
 class GetPetByIdUseCase(
     private val petRepository: PetRepository
 ) {
-    suspend operator fun invoke(petId: String): Pet? {
+
+    suspend operator fun invoke(
+        petId: String
+    ): Pet? {
+
         require(petId.isNotBlank()) {
             "El identificador de la mascota no puede estar vacío"
         }
