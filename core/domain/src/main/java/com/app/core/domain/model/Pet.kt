@@ -7,5 +7,9 @@ data class Pet(
     val breed: String,
     val age: Int,
     val weight: Double,
-    val observations: String = ""
+    val observations: String = "",
+    val photoUri: String? = null,
+    val size: String = "",
+    val behavior: String = "",
+    val specialNeeds: String = ""
 )
