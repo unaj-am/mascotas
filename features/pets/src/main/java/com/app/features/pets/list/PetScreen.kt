@@ -1,10 +1,13 @@
+
 package com.app.features.pets.list
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,7 +23,8 @@ import com.app.features.pets.component.PetCard
 fun PetRoute(
     ownerId: String,
     viewModel: PetViewModel,
-    onPetClick: (String) -> Unit = {}
+    onPetClick: (String) -> Unit = {},
+    onAddPetClick: () -> Unit = {}
 ) {
     val uiState = viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -30,14 +34,16 @@ fun PetRoute(
 
     PetScreen(
         uiState = uiState.value,
-        onPetClick = onPetClick
+        onPetClick = onPetClick,
+        onAddPetClick = onAddPetClick
     )
 }
 
 @Composable
 fun PetScreen(
     uiState: PetListUiState,
-    onPetClick: (String) -> Unit = {}
+    onPetClick: (String) -> Unit = {},
+    onAddPetClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -46,27 +52,27 @@ fun PetScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-
         Text(text = "Mis mascotas")
 
-        when (uiState) {
+        Button(
+            onClick = onAddPetClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Agregar mascota")
+        }
 
+        when (uiState) {
             is PetListUiState.Loading -> {
                 CircularProgressIndicator()
             }
 
             is PetListUiState.Success -> {
-
                 if (uiState.pets.isEmpty()) {
-
                     Text(
                         text = "Todavía no tenés mascotas registradas"
                     )
-
                 } else {
-
                     uiState.pets.forEach { pet ->
-
                         PetCard(
                             pet = pet,
                             onClick = {
@@ -87,7 +93,6 @@ fun PetScreen(
 @Preview(showBackground = true)
 @Composable
 fun PetScreenPreview() {
-
     val mascotas = listOf(
         Pet(
             id = "PET001",
