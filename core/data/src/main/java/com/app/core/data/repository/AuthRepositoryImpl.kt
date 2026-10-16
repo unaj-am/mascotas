@@ -1,7 +1,9 @@
+
 package com.app.core.data.repository
 
-import com.app.core.domain.repository.AuthRepository
 import com.app.core.data.remote.firebase.FirebaseAuthDataSource
+import com.app.core.domain.repository.AuthRepository
+import kotlinx.coroutines.flow.Flow
 
 class AuthRepositoryImpl(
     private val dataSource: FirebaseAuthDataSource
@@ -31,5 +33,27 @@ class AuthRepositoryImpl(
 
     override fun getCurrentUserId(): String? {
         return dataSource.getCurrentUserId()
+    }
+
+    override fun observeAuthState(): Flow<String?> {
+        return dataSource.observeAuthState()
+    }
+
+    override suspend fun sendEmailVerification(): Result<Unit> {
+        return runCatching {
+            dataSource.sendEmailVerification()
+        }
+    }
+
+    override suspend fun isEmailVerified(): Result<Boolean> {
+        return runCatching {
+            dataSource.isEmailVerified()
+        }
+    }
+
+    override suspend fun resendEmailVerification(): Result<Unit> {
+        return runCatching {
+            dataSource.resendEmailVerification()
+        }
     }
 }
