@@ -1,6 +1,8 @@
 
 package com.app.core.domain.repository
 
+import kotlinx.coroutines.flow.Flow
+
 interface AuthRepository {
 
     suspend fun signIn(
@@ -16,4 +18,12 @@ interface AuthRepository {
     suspend fun signOut()
 
     fun getCurrentUserId(): String?
+
+    fun observeAuthState(): Flow<String?>
+
+    suspend fun sendEmailVerification(): Result<Unit>
+
+    suspend fun isEmailVerified(): Result<Boolean>
+
+    suspend fun resendEmailVerification(): Result<Unit>
 }
