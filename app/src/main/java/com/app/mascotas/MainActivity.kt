@@ -40,7 +40,10 @@ import com.app.features.pets.list.PetViewModel
 import com.app.features.pets.list.PetViewModelFactory
 import com.app.mascotas.ui.theme.MascotasTheme
 import kotlinx.coroutines.launch
+import dagger.hilt.android.AndroidEntryPoint
+import com.app.features.auth.login.LoginScreen
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private val database by lazy {
@@ -138,91 +141,107 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MascotasTheme {
-
-                var selectedPetId by rememberSaveable {
-                    mutableStateOf<String?>(null)
-                }
-
-                var showPetForm by rememberSaveable {
+                var isLoggedIn by rememberSaveable {
                     mutableStateOf(false)
                 }
 
-                val operationState by
-                petViewModel.operationState.collectAsStateWithLifecycle()
-
-                // Volver a la lista cuando el guardado finaliza correctamente.
-                LaunchedEffect(operationState, showPetForm) {
-                    if (
-                        showPetForm &&
-                        operationState is PetOperationUiState.Success
-                    ) {
-                        showPetForm = false
-                        selectedPetId = null
-                        petViewModel.resetOperationState()
+                if (!isLoggedIn) {
+                    LoginScreen(
+                        onLoginSuccess = {
+                            isLoggedIn = true
+                        },
+                        onNavigateToRegister = {
+                            // El registro se implementará más adelante.
+                        }
+                    )
+                } else {
+                    var selectedPetId by rememberSaveable {
+                        mutableStateOf<String?>(null)
                     }
-                }
 
-                when {
-                    showPetForm -> {
-                        BackHandler {
+                    var showPetForm by rememberSaveable {
+                        mutableStateOf(false)
+                    }
+
+                    val operationState by
+                    petViewModel.operationState.collectAsStateWithLifecycle()
+
+                    // Volver a la lista cuando el guardado finaliza correctamente.
+                    LaunchedEffect(operationState, showPetForm) {
+                        if (
+                            showPetForm &&
+                            operationState is PetOperationUiState.Success
+                        ) {
                             showPetForm = false
+                            selectedPetId = null
                             petViewModel.resetOperationState()
                         }
+                    }
 
-                        val errorMessage =
-                            (operationState as? PetOperationUiState.Error)?.message
-
-                        PetFormScreen(
-                            ownerId = "USR001",
-                            errorMessage = errorMessage,
-                            onSave = { pet ->
-                                petViewModel.savePet(pet)
-                            },
-                            onCancel = {
+                    when {
+                        showPetForm -> {
+                            BackHandler {
                                 showPetForm = false
                                 petViewModel.resetOperationState()
                             }
-                        )
-                    }
 
-                    selectedPetId != null -> {
-                        BackHandler {
-                            selectedPetId = null
+                            val errorMessage =
+                                (operationState as? PetOperationUiState.Error)?.message
+
+                            PetFormScreen(
+                                ownerId = "USR001",
+                                errorMessage = errorMessage,
+                                onSave = { pet ->
+                                    petViewModel.savePet(pet)
+                                },
+                                onCancel = {
+                                    showPetForm = false
+                                    petViewModel.resetOperationState()
+                                }
+                            )
                         }
 
-                        Column(
-                            modifier = Modifier.safeDrawingPadding()
-                        ) {
-                            TextButton(
-                                onClick = {
-                                    selectedPetId = null
-                                },
-                                modifier = Modifier.padding(horizontal = 8.dp)
-                            ) {
-                                Text("← Volver a mis mascotas")
+                        selectedPetId != null -> {
+                            BackHandler {
+                                selectedPetId = null
                             }
 
-                            PetDetailRoute(
-                                petId = selectedPetId!!,
-                                viewModel = petDetailViewModel
+                            Column(
+                                modifier = Modifier.safeDrawingPadding()
+                            ) {
+                                TextButton(
+                                    onClick = {
+                                        selectedPetId = null
+                                    },
+                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                ) {
+                                    Text("← Volver a mis mascotas")
+                                }
+
+                                PetDetailRoute(
+                                    petId = selectedPetId!!,
+                                    viewModel = petDetailViewModel
+                                )
+                            }
+                        }
+
+                        else -> {
+                            PetRoute(
+                                ownerId = "USR001",
+                                viewModel = petViewModel,
+                                onPetClick = { petId ->
+                                    selectedPetId = petId
+                                },
+                                onAddPetClick = {
+                                    petViewModel.resetOperationState()
+                                    showPetForm = true
+                                }
                             )
                         }
                     }
-
-                    else -> {
-                        PetRoute(
-                            ownerId = "USR001",
-                            viewModel = petViewModel,
-                            onPetClick = { petId ->
-                                selectedPetId = petId
-                            },
-                            onAddPetClick = {
-                                petViewModel.resetOperationState()
-                                showPetForm = true
-                            }
-                        )
-                    }
                 }
+
+
             }
         }
     }
