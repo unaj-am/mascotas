@@ -4,8 +4,9 @@ package com.app.core.data.repository
 import com.app.core.data.remote.firebase.FirebaseAuthDataSource
 import com.app.core.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
-class AuthRepositoryImpl(
+class AuthRepositoryImpl @Inject constructor(
     private val dataSource: FirebaseAuthDataSource
 ) : AuthRepository {
 

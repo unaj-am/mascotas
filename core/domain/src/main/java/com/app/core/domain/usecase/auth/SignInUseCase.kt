@@ -2,7 +2,9 @@ package com.app.core.domain.usecase.auth
 
 import com.app.core.domain.repository.AuthRepository
 
-class SignInUseCase(
+import javax.inject.Inject
+
+class SignInUseCase @Inject constructor(
     private val authRepository: AuthRepository
 ) {
 
