@@ -3,6 +3,7 @@ package com.app.features.auth.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.core.domain.usecase.auth.SignInUseCase
+import com.app.core.domain.usecase.auth.IsEmailVerifiedUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val signInUseCase: SignInUseCase
+    private val signInUseCase: SignInUseCase,
+    private val isEmailVerifiedUseCase: IsEmailVerifiedUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -24,28 +26,20 @@ class LoginViewModel @Inject constructor(
 
     fun onEmailChange(email: String) {
         _uiState.update {
-            it.copy(
-                email = email,
-                errorMessage = null
-            )
+            it.copy(email = email, errorMessage = null)
         }
     }
 
     fun onPasswordChange(password: String) {
         _uiState.update {
-            it.copy(
-                password = password,
-                errorMessage = null
-            )
+            it.copy(password = password, errorMessage = null)
         }
     }
 
     fun signIn() {
         val currentState = _uiState.value
 
-        if (currentState.isLoading || currentState.isSuccess) {
-            return
-        }
+        if (currentState.isLoading || currentState.isSuccess) return
 
         val email = currentState.email.trim()
         val password = currentState.password
@@ -61,39 +55,59 @@ class LoginViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.update {
-                it.copy(
-                    isLoading = true,
-                    errorMessage = null
-                )
+                it.copy(isLoading = true, errorMessage = null)
             }
 
             try {
-                val result = signInUseCase(
+                val signInResult = signInUseCase(
                     email = email,
                     password = password
                 )
 
-                result.fold(
+                signInResult.fold(
                     onSuccess = {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                isSuccess = true,
-                                password = "",
-                                errorMessage = null
-                            )
-                        }
+                        isEmailVerifiedUseCase().fold(
+                            onSuccess = { verified ->
+                                if (verified) {
+                                    _uiState.update {
+                                        it.copy(
+                                            isLoading = false,
+                                            isSuccess = true,
+                                            password = "",
+                                            errorMessage = null
+                                        )
+                                    }
+                                } else {
+                                    _uiState.update {
+                                        it.copy(
+                                            isLoading = false,
+                                            isSuccess = false,
+                                            password = "",
+                                            errorMessage = "Tu cuenta todavía no está verificada. Revisá tu correo electrónico."
+                                        )
+                                    }
+                                }
+                            },
+                            onFailure = { error ->
+                                if (error is CancellationException) throw error
+
+                                _uiState.update {
+                                    it.copy(
+                                        isLoading = false,
+                                        isSuccess = false,
+                                        errorMessage = "No se pudo comprobar la verificación del correo. Intentá nuevamente."
+                                    )
+                                }
+                            }
+                        )
                     },
                     onFailure = { error ->
-                        if (error is CancellationException) {
-                            throw error
-                        }
+                        if (error is CancellationException) throw error
 
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                errorMessage =
-                                    "No se pudo iniciar sesión. Verificá tus datos."
+                                errorMessage = "No se pudo iniciar sesión. Verificá tus datos."
                             )
                         }
                     }
@@ -104,8 +118,8 @@ class LoginViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage =
-                            "No se pudo iniciar sesión. Intentá nuevamente."
+                        isSuccess = false,
+                        errorMessage = "Ocurrió un error al iniciar sesión."
                     )
                 }
             }

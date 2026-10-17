@@ -1,31 +1,25 @@
 package com.app.core.data.repository
 
+import com.app.core.data.datasource.remote.UserRemoteDataSource
 import com.app.core.domain.model.User
 import com.app.core.domain.repository.UserRepository
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class UserRepositoryImpl : UserRepository {
+@Singleton
+class UserRepositoryImpl @Inject constructor(
+    private val userRemoteDataSource: UserRemoteDataSource
+) : UserRepository {
 
-    private val users = mutableListOf<User>()
-
-    override suspend fun getUserById(
-        userId: String
-    ): User? {
-        return users.find { it.id == userId }
+    override suspend fun getUserById(userId: String): User? {
+        return userRemoteDataSource.getUserById(userId)
     }
 
-    override suspend fun saveUser(
-        user: User
-    ) {
-        users.add(user)
+    override suspend fun saveUser(user: User) {
+        userRemoteDataSource.saveUser(user)
     }
 
-    override suspend fun updateUser(
-        user: User
-    ) {
-        val index = users.indexOfFirst { it.id == user.id }
-
-        if (index >= 0) {
-            users[index] = user
-        }
+    override suspend fun updateUser(user: User) {
+        userRemoteDataSource.updateUser(user)
     }
 }
