@@ -29,6 +29,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.core.domain.model.UserRole
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.material3.AlertDialog
+
+
 
 
 @Composable
@@ -39,10 +45,42 @@ fun RegisterScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    var showSuccessDialog by remember {
+        mutableStateOf(false)
+    }
+
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
-            onRegisterSuccess()
+            showSuccessDialog = true
         }
+    }
+    if (showSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                // Evitamos cerrar la modal sin confirmar.
+            },
+            title = {
+                Text("¡Registro exitoso!")
+            },
+            text = {
+                Text(
+                    uiState.successMessage
+                        ?: "Tu cuenta fue creada. " +
+                        "Revisá tu correo y verificá tu email " +
+                        "antes de iniciar sesión."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showSuccessDialog = false
+                        onRegisterSuccess()
+                    }
+                ) {
+                    Text("Ir al inicio de sesión")
+                }
+            }
+        )
     }
 
     Column(
