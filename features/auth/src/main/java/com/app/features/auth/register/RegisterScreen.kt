@@ -33,6 +33,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.material3.AlertDialog
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.app.features.auth.component.AuthMessageDialog
 
 
 
@@ -54,31 +58,20 @@ fun RegisterScreen(
             showSuccessDialog = true
         }
     }
+
     if (showSuccessDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                // Evitamos cerrar la modal sin confirmar.
+        AuthMessageDialog(
+            title = "Cuenta creada",
+            message = uiState.successMessage
+                ?: "Tu cuenta fue creada. Revisá tu correo " +
+                "y verificá tu email antes de iniciar sesión.",
+            confirmText = "Ir al inicio de sesión",
+            onConfirm = {
+                showSuccessDialog = false
+                onRegisterSuccess()
             },
-            title = {
-                Text("¡Registro exitoso!")
-            },
-            text = {
-                Text(
-                    uiState.successMessage
-                        ?: "Tu cuenta fue creada. " +
-                        "Revisá tu correo y verificá tu email " +
-                        "antes de iniciar sesión."
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showSuccessDialog = false
-                        onRegisterSuccess()
-                    }
-                ) {
-                    Text("Ir al inicio de sesión")
-                }
+            onDismiss = {
+                showSuccessDialog = false
             }
         )
     }
