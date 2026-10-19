@@ -58,20 +58,36 @@ class RegisterViewModel @Inject constructor(
 
     fun onPasswordChange(password: String) {
         _uiState.update {
-            it.copy(password = password, errorMessage = null)
+            it.copy(
+                password = password,
+                errorMessage = null
+            )
         }
     }
 
     fun onConfirmPasswordChange(password: String) {
         _uiState.update {
-            it.copy(confirmPassword = password, errorMessage = null)
+            it.copy(
+                confirmPassword = password,
+                errorMessage = null
+            )
         }
     }
 
     fun register() {
+        _uiState.update {
+            it.copy(
+                hasAttemptedSubmit = true,
+                errorMessage = null
+            )
+        }
+
         val state = _uiState.value
 
         if (state.isLoading || state.isSuccess) return
+
+        // Los errores se calculan desde RegisterUiState.
+        if (state.hasValidationErrors) return
 
         val email = state.email.trim()
         val password = state.password
