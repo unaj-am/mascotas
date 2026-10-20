@@ -32,10 +32,6 @@ import com.app.core.domain.model.UserRole
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.material3.AlertDialog
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import com.app.features.auth.component.AuthMessageDialog
 
 
@@ -99,11 +95,18 @@ fun RegisterScreen(
 
         Spacer(Modifier.height(24.dp))
 
+
         OutlinedTextField(
             value = uiState.name,
             onValueChange = viewModel::onNameChange,
             label = { Text("Nombre") },
             singleLine = true,
+            isError = uiState.nameError != null,
+            supportingText = {
+                uiState.nameError?.let { error ->
+                    Text(error)
+                }
+            },
             enabled = !uiState.isLoading,
             modifier = Modifier.fillMaxWidth()
         )
@@ -115,6 +118,12 @@ fun RegisterScreen(
             onValueChange = viewModel::onLastNameChange,
             label = { Text("Apellido") },
             singleLine = true,
+            isError = uiState.lastNameError != null,
+            supportingText = {
+                uiState.lastNameError?.let { error ->
+                    Text(error)
+                }
+            },
             enabled = !uiState.isLoading,
             modifier = Modifier.fillMaxWidth()
         )
@@ -129,6 +138,12 @@ fun RegisterScreen(
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email
             ),
+            isError = uiState.emailError != null,
+            supportingText = {
+                uiState.emailError?.let { error ->
+                    Text(error)
+                }
+            },
             enabled = !uiState.isLoading,
             modifier = Modifier.fillMaxWidth()
         )
@@ -143,6 +158,12 @@ fun RegisterScreen(
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Phone
             ),
+            isError = uiState.phoneError != null,
+            supportingText = {
+                uiState.phoneError?.let { error ->
+                    Text(error)
+                }
+            },
             enabled = !uiState.isLoading,
             modifier = Modifier.fillMaxWidth()
         )
@@ -185,6 +206,12 @@ fun RegisterScreen(
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password
             ),
+            isError = uiState.passwordError != null,
+            supportingText = {
+                uiState.passwordError?.let { error ->
+                    Text(error)
+                }
+            },
             enabled = !uiState.isLoading,
             modifier = Modifier.fillMaxWidth()
         )
@@ -200,6 +227,12 @@ fun RegisterScreen(
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password
             ),
+            isError = uiState.confirmPasswordError != null,
+            supportingText = {
+                uiState.confirmPasswordError?.let { error ->
+                    Text(error)
+                }
+            },
             enabled = !uiState.isLoading,
             modifier = Modifier.fillMaxWidth()
         )
