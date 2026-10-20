@@ -1,3 +1,4 @@
+
 package com.app.features.auth.login
 
 import androidx.compose.foundation.layout.*
@@ -11,19 +12,26 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.app.core.domain.model.UserRole
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit,
+    onLoginSuccess: (String, UserRole) -> Unit,
     onNavigateToRegister: () -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(uiState.isSuccess) {
-        if (uiState.isSuccess) {
-            onLoginSuccess()
+    LaunchedEffect(
+        uiState.isSuccess,
+        uiState.userId,
+        uiState.userRole
+    ) {
+        val userId = uiState.userId
+        val userRole = uiState.userRole
+
+        if (uiState.isSuccess && userId != null && userRole != null) {
+            onLoginSuccess(userId, userRole)
         }
     }
 
@@ -35,7 +43,6 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         Text(
             text = "Mascotas",
             style = MaterialTheme.typography.headlineLarge
