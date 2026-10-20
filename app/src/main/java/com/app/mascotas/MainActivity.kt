@@ -19,11 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
 import com.app.core.data.repository.PetRepositoryImpl
 import com.app.core.database.AppDatabase
-import com.app.core.domain.model.Pet
 import com.app.core.domain.usecase.DeletePetUseCase
 import com.app.core.domain.usecase.GetPetByIdUseCase
 import com.app.core.domain.usecase.GetPetsByOwnerUseCase
@@ -41,8 +39,7 @@ import com.app.features.pets.list.PetViewModel
 import com.app.features.pets.list.PetViewModelFactory
 import com.app.mascotas.ui.theme.MascotasTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
-
+import com.app.core.domain.model.UserRole
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
@@ -105,51 +102,20 @@ class MainActivity : ComponentActivity() {
             petDetailViewModelFactory
         )[PetDetailViewModel::class.java]
 
-        // Datos de prueba: insertar solamente si la base está vacía.
-        lifecycleScope.launch {
-            val mascotasExistentes =
-                petRepository.getPetsByOwner("USR001")
-
-            if (mascotasExistentes.isEmpty()) {
-                petRepository.savePet(
-                    Pet(
-                        id = "PET001",
-                        ownerId = "USR001",
-                        name = "Firulais",
-                        breed = "Labrador",
-                        age= 3,
-                        weight = 25.0,
-                        observations = "Es sociable y tranquilo"
-                    )
-                )
-
-                petRepository.savePet(
-                    Pet(
-                        id = "PET002",
-                        ownerId = "USR001",
-                        name = "Luna",
-                        breed = "Mestiza",
-                        age = 2,
-                        weight = 12.5,
-                        observations = "Le gusta jugar y pasear"
-                    )
-                )
-            }
-
-            petViewModel.loadPets("USR001")
-        }
-
         setContent {
             MascotasTheme {
 
-                var isLoggedIn by rememberSaveable {
-                    mutableStateOf(false)
+                var currentUserId by rememberSaveable {
+                    mutableStateOf<String?>(null)
+                }
+
+                var currentUserRole by rememberSaveable {
+                    mutableStateOf<UserRole?>(null)
                 }
 
                 var showRegister by rememberSaveable {
                     mutableStateOf(false)
                 }
-
                 // Estado de la pantalla de mascotas.
                 var selectedPetId by rememberSaveable {
                     mutableStateOf<String?>(null)
@@ -175,8 +141,13 @@ class MainActivity : ComponentActivity() {
                 }
 
                 when {
-                    // Pantalla principal de mascotas.
-                    isLoggedIn -> {
+                    currentUserId != null && currentUserRole == UserRole.OWNER -> {
+                        val ownerId = currentUserId!!
+
+                        LaunchedEffect(ownerId) {
+                            petViewModel.loadPets(ownerId)
+                        }
+
                         when {
                             showPetForm -> {
                                 BackHandler {
@@ -185,11 +156,10 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 val errorMessage =
-                                    (operationState as? PetOperationUiState.Error)
-                                        ?.message
+                                    (operationState as? PetOperationUiState.Error)?.message
 
                                 PetFormScreen(
-                                    ownerId = "USR001",
+                                    ownerId = ownerId,
                                     errorMessage = errorMessage,
                                     onSave = { pet ->
                                         petViewModel.savePet(pet)
@@ -213,9 +183,7 @@ class MainActivity : ComponentActivity() {
                                         onClick = {
                                             selectedPetId = null
                                         },
-                                        modifier = Modifier.padding(
-                                            horizontal = 8.dp
-                                        )
+                                        modifier = Modifier.padding(horizontal = 8.dp)
                                     ) {
                                         Text("← Volver a mis mascotas")
                                     }
@@ -229,7 +197,7 @@ class MainActivity : ComponentActivity() {
 
                             else -> {
                                 PetRoute(
-                                    ownerId = "USR001",
+                                    ownerId = ownerId,
                                     viewModel = petViewModel,
                                     onPetClick = { petId ->
                                         selectedPetId = petId
@@ -243,7 +211,15 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    // Pantalla de registro.
+                    currentUserId != null && currentUserRole == UserRole.WALKER -> {
+                        androidx.compose.foundation.layout.Box(
+                            modifier = Modifier.safeDrawingPadding()
+                                .padding(24.dp)
+                        ) {
+                            Text("Panel del paseador")
+                        }
+                    }
+
                     showRegister -> {
                         BackHandler {
                             showRegister = false
@@ -259,11 +235,11 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // Pantalla de inicio de sesión.
                     else -> {
                         LoginScreen(
-                            onLoginSuccess = {
-                                isLoggedIn = true
+                            onLoginSuccess = { userId, role ->
+                                currentUserId = userId
+                                currentUserRole = role
                             },
                             onNavigateToRegister = {
                                 showRegister = true
