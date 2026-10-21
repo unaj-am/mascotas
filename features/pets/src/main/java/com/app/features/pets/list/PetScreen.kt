@@ -30,7 +30,8 @@ fun PetRoute(
     ownerId: String,
     viewModel: PetViewModel,
     onPetClick: (String) -> Unit = {},
-    onAddPetClick: () -> Unit = {}
+    onAddPetClick: () -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -42,9 +43,8 @@ fun PetRoute(
         uiState = uiState,
         onPetClick = onPetClick,
         onAddPetClick = onAddPetClick,
-        onRetry = {
-            viewModel.loadPets(ownerId)
-        }
+        onRetry = { viewModel.loadPets(ownerId) },
+        modifier = modifier
     )
 }
 @Composable
@@ -52,12 +52,12 @@ fun PetScreen(
     uiState: PetListUiState,
     onPetClick: (String) -> Unit = {},
     onAddPetClick: () -> Unit = {},
-    onRetry: () -> Unit = {}
+    onRetry: () -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
-            .safeDrawingPadding()
             .padding(
                 horizontal = DimensUI.ScreenHorizontalPadding,
                 vertical = DimensUI.ScreenVerticalPadding
