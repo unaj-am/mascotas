@@ -37,7 +37,7 @@ import com.app.features.pets.list.PetOperationUiState
 import com.app.features.pets.list.PetRoute
 import com.app.features.pets.list.PetViewModel
 import com.app.features.pets.list.PetViewModelFactory
-import com.app.mascotas.ui.theme.MascotasTheme
+import com.app.core.ui.theme.MascotasThemeUI
 import dagger.hilt.android.AndroidEntryPoint
 import com.app.core.domain.model.UserRole
 @AndroidEntryPoint
@@ -103,7 +103,7 @@ class MainActivity : ComponentActivity() {
         )[PetDetailViewModel::class.java]
 
         setContent {
-            MascotasTheme {
+            MascotasThemeUI {
 
                 var currentUserId by rememberSaveable {
                     mutableStateOf<String?>(null)
