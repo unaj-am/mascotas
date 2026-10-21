@@ -1,22 +1,28 @@
-
 package com.app.features.pets.list
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.core.domain.model.Pet
+import com.app.core.ui.components.EmptyContent
+import com.app.core.ui.components.ErrorContent
+import com.app.core.ui.components.LoadingContent
+import com.app.core.ui.components.PrimaryActionButton
+import com.app.core.ui.theme.DimensUI
+import com.app.core.ui.theme.MascotasThemeUI
 import com.app.features.pets.component.PetCard
 
 @Composable
@@ -24,67 +30,96 @@ fun PetRoute(
     ownerId: String,
     viewModel: PetViewModel,
     onPetClick: (String) -> Unit = {},
-    onAddPetClick: () -> Unit = {}
+    onAddPetClick: () -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
-    val uiState = viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(ownerId) {
         viewModel.loadPets(ownerId)
     }
 
     PetScreen(
-        uiState = uiState.value,
+        uiState = uiState,
         onPetClick = onPetClick,
-        onAddPetClick = onAddPetClick
+        onAddPetClick = onAddPetClick,
+        onRetry = { viewModel.loadPets(ownerId) },
+        modifier = modifier
     )
 }
-
 @Composable
 fun PetScreen(
     uiState: PetListUiState,
     onPetClick: (String) -> Unit = {},
-    onAddPetClick: () -> Unit = {}
+    onAddPetClick: () -> Unit = {},
+    onRetry: () -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
-            .safeDrawingPadding()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(
+                horizontal = DimensUI.ScreenHorizontalPadding,
+                vertical = DimensUI.ScreenVerticalPadding
+            ),
+        verticalArrangement = Arrangement.spacedBy(
+            DimensUI.SectionSpacing
+        )
     ) {
-        Text(text = "Mis mascotas")
+        Text(
+            text = "Mis mascotas",
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onBackground
+        )
 
-        Button(
-            onClick = onAddPetClick,
-            modifier = Modifier.fillMaxWidth()
+        PrimaryActionButton(
+            text = "Agregar mascota",
+            onClick = onAddPetClick
+        )
+
+        Box(
+            modifier = Modifier.weight(1f)
         ) {
-            Text("Agregar mascota")
-        }
+            when (uiState) {
+                PetListUiState.Loading -> {
+                    LoadingContent()
+                }
 
-        when (uiState) {
-            is PetListUiState.Loading -> {
-                CircularProgressIndicator()
-            }
-
-            is PetListUiState.Success -> {
-                if (uiState.pets.isEmpty()) {
-                    Text(
-                        text = "Todavía no tenés mascotas registradas"
-                    )
-                } else {
-                    uiState.pets.forEach { pet ->
-                        PetCard(
-                            pet = pet,
-                            onClick = {
-                                onPetClick(pet.id)
-                            }
+                is PetListUiState.Success -> {
+                    if (uiState.pets.isEmpty()) {
+                        EmptyContent(
+                            message = "Todavía no tenés mascotas registradas.",
+                            actionText = "Agregar mi primera mascota",
+                            onAction = onAddPetClick
                         )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(
+                                DimensUI.SpaceMedium
+                            )
+                        ) {
+                            items(
+                                items = uiState.pets,
+                                key = { pet -> pet.id }
+                            ) { pet ->
+                                PetCard(
+                                    pet = pet,
+                                    onClick = {
+                                        onPetClick(pet.id)
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
-            }
 
-            is PetListUiState.Error -> {
-                Text(text = uiState.message)
+                is PetListUiState.Error -> {
+                    ErrorContent(
+                        message = uiState.message,
+                        onRetry = onRetry
+                    )
+                }
             }
         }
     }
@@ -92,7 +127,7 @@ fun PetScreen(
 
 @Preview(showBackground = true)
 @Composable
-fun PetScreenPreview() {
+private fun PetScreenPreview() {
     val mascotas = listOf(
         Pet(
             id = "PET001",
@@ -112,9 +147,11 @@ fun PetScreenPreview() {
         )
     )
 
-    PetScreen(
-        uiState = PetListUiState.Success(
-            pets = mascotas
+    MascotasThemeUI {
+        PetScreen(
+            uiState = PetListUiState.Success(
+                pets = mascotas
+            )
         )
-    )
+    }
 }

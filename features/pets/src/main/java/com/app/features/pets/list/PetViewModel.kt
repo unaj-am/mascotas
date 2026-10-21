@@ -16,12 +16,9 @@ import kotlinx.coroutines.launch
 
 sealed interface PetOperationUiState {
     data object Idle : PetOperationUiState
-
+    data object Loading : PetOperationUiState
     data object Success : PetOperationUiState
-
-    data class Error(
-        val message: String
-    ) : PetOperationUiState
+    data class Error(val message: String) : PetOperationUiState
 }
 
 class PetViewModel(
@@ -32,9 +29,7 @@ class PetViewModel(
 ) : ViewModel() {
 
     private val _uiState =
-        MutableStateFlow<PetListUiState>(
-            PetListUiState.Loading
-        )
+        MutableStateFlow<PetListUiState>(PetListUiState.Loading)
 
     val uiState: StateFlow<PetListUiState> =
         _uiState.asStateFlow()
@@ -53,16 +48,12 @@ class PetViewModel(
 
             try {
                 val pets = getPetsByOwnerUseCase(ownerId)
-
-                _uiState.value = PetListUiState.Success(
-                    pets = pets
-                )
+                _uiState.value = PetListUiState.Success(pets)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 _uiState.value = PetListUiState.Error(
-                    message = e.message
-                        ?: "Error al cargar mascotas"
+                    e.message ?: "Error al cargar las mascotas"
                 )
             }
         }
@@ -94,25 +85,42 @@ class PetViewModel(
         ownerId: String,
         operation: suspend () -> Unit
     ) {
+        // Evita ejecutar dos operaciones simultáneamente.
+        if (_operationState.value is PetOperationUiState.Loading) {
+            return
+        }
+
         viewModelScope.launch {
-            _operationState.value = PetOperationUiState.Idle
+            _operationState.value = PetOperationUiState.Loading
 
             try {
+                // 1. Ejecutar la escritura en el repositorio.
                 operation()
 
+                // 2. Actualizar el listado desde la fuente de datos.
+                try {
+                    val pets = getPetsByOwnerUseCase(ownerId)
+                    _uiState.value = PetListUiState.Success(pets)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    // La escritura ya se realizó. El error corresponde
+                    // a la recarga del listado, no al guardado.
+                    _uiState.value = PetListUiState.Error(
+                        e.message
+                            ?: "La operación se realizó, pero no se pudo actualizar el listado."
+                    )
+                }
+
+                // 3. Informar el resultado de la operación.
+                // Se establece después de intentar actualizar el listado.
                 _operationState.value = PetOperationUiState.Success
 
-                val pets = getPetsByOwnerUseCase(ownerId)
-
-                _uiState.value = PetListUiState.Success(
-                    pets = pets
-                )
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 _operationState.value = PetOperationUiState.Error(
-                    message = e.message
-                        ?: "No se pudo completar la operación"
+                    e.message ?: "No se pudo completar la operación"
                 )
             }
         }

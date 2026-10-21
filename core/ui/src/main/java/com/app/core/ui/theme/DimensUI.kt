@@ -40,4 +40,7 @@ object DimensUI {
     // Imágenes de mascotas
     val PetAvatarSize: Dp = 64.dp
     val PetImageSize: Dp = 120.dp
+
+    // Altura de las acciones rápidas del dashboard
+    val QuickActionHeight: Dp = 100.dp
 }

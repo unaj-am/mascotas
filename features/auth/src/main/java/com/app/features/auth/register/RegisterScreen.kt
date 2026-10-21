@@ -1,41 +1,38 @@
 package com.app.features.auth.register
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.RadioButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.core.domain.model.UserRole
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import com.app.core.ui.components.AppTextField
+import com.app.core.ui.components.DomainErrorMessage
+import com.app.core.ui.components.PrimaryActionButton
+import com.app.core.ui.theme.DimensUI
 import com.app.features.auth.component.AuthMessageDialog
-
-
-
 
 @Composable
 fun RegisterScreen(
@@ -55,6 +52,7 @@ fun RegisterScreen(
         }
     }
 
+    // Conservamos el diálogo de confirmación existente.
     if (showSuccessDialog) {
         AuthMessageDialog(
             title = "Cuenta creada",
@@ -72,212 +70,158 @@ fun RegisterScreen(
         )
     }
 
+    val fieldsEnabled = !uiState.isLoading && !uiState.isSuccess
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .safeDrawingPadding()
+            .imePadding()
             .verticalScroll(rememberScrollState())
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
+            .padding(
+                horizontal = DimensUI.ScreenHorizontalPadding,
+                vertical = DimensUI.ScreenVerticalPadding
+            ),
+        verticalArrangement = Arrangement.spacedBy(
+            DimensUI.SpaceMedium
+        ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = "Mascotas",
-            style = MaterialTheme.typography.headlineLarge
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.primary
         )
-
-        Spacer(Modifier.height(8.dp))
 
         Text(
             text = "Crear cuenta",
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground
         )
 
-        Spacer(Modifier.height(24.dp))
-
-
-        OutlinedTextField(
+        AppTextField(
             value = uiState.name,
             onValueChange = viewModel::onNameChange,
-            label = { Text("Nombre") },
-            singleLine = true,
+            label = "Nombre",
+            enabled = fieldsEnabled,
             isError = uiState.nameError != null,
-            supportingText = {
-                uiState.nameError?.let { error ->
-                    Text(error)
-                }
-            },
-            enabled = !uiState.isLoading,
-            modifier = Modifier.fillMaxWidth()
+            errorMessage = uiState.nameError
         )
 
-        Spacer(Modifier.height(12.dp))
-
-        OutlinedTextField(
+        AppTextField(
             value = uiState.lastName,
             onValueChange = viewModel::onLastNameChange,
-            label = { Text("Apellido") },
-            singleLine = true,
+            label = "Apellido",
+            enabled = fieldsEnabled,
             isError = uiState.lastNameError != null,
-            supportingText = {
-                uiState.lastNameError?.let { error ->
-                    Text(error)
-                }
-            },
-            enabled = !uiState.isLoading,
-            modifier = Modifier.fillMaxWidth()
+            errorMessage = uiState.lastNameError
         )
 
-        Spacer(Modifier.height(12.dp))
-
-        OutlinedTextField(
+        AppTextField(
             value = uiState.email,
             onValueChange = viewModel::onEmailChange,
-            label = { Text("Correo electrónico") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Email
-            ),
+            label = "Correo electrónico",
+            keyboardType = KeyboardType.Email,
+            enabled = fieldsEnabled,
             isError = uiState.emailError != null,
-            supportingText = {
-                uiState.emailError?.let { error ->
-                    Text(error)
-                }
-            },
-            enabled = !uiState.isLoading,
-            modifier = Modifier.fillMaxWidth()
+            errorMessage = uiState.emailError
         )
 
-        Spacer(Modifier.height(12.dp))
-
-        OutlinedTextField(
+        AppTextField(
             value = uiState.phone,
             onValueChange = viewModel::onPhoneChange,
-            label = { Text("Teléfono") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Phone
-            ),
+            label = "Teléfono",
+            keyboardType = KeyboardType.Phone,
+            enabled = fieldsEnabled,
             isError = uiState.phoneError != null,
-            supportingText = {
-                uiState.phoneError?.let { error ->
-                    Text(error)
+            errorMessage = uiState.phoneError
+        )
+
+        // Selección del tipo de cuenta.
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(
+                DimensUI.SpaceSmall
+            )
+        ) {
+            Text(
+                text = "Tipo de cuenta",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            listOf(
+                UserRole.OWNER,
+                UserRole.WALKER
+            ).forEach { role ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(enabled = fieldsEnabled) {
+                            viewModel.onRoleChange(role)
+                        },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = uiState.role == role,
+                        onClick = null,
+                        enabled = fieldsEnabled
+                    )
+
+                    Text(
+                        text = when (role) {
+                            UserRole.OWNER -> "Dueño de mascota"
+                            UserRole.WALKER -> "Paseador"
+                        },
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                 }
-            },
-            enabled = !uiState.isLoading,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(Modifier.height(20.dp))
-
-        Text(
-            text = "Tipo de cuenta",
-            style = MaterialTheme.typography.titleMedium
-        )
-
-        UserRole.values().forEach { role ->
-            androidx.compose.foundation.layout.Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                RadioButton(
-                    selected = uiState.role == role,
-                    onClick = { viewModel.onRoleChange(role) },
-                    enabled = !uiState.isLoading
-                )
-
-                Text(
-                    text = when (role) {
-                        UserRole.OWNER -> "Dueño de mascota"
-                        UserRole.WALKER -> "Paseador"
-                    }
-                )
             }
         }
 
-        Spacer(Modifier.height(12.dp))
-
-        OutlinedTextField(
+        AppTextField(
             value = uiState.password,
             onValueChange = viewModel::onPasswordChange,
-            label = { Text("Contraseña") },
-            singleLine = true,
+            label = "Contraseña",
+            keyboardType = KeyboardType.Password,
             visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password
-            ),
+            enabled = fieldsEnabled,
             isError = uiState.passwordError != null,
-            supportingText = {
-                uiState.passwordError?.let { error ->
-                    Text(error)
-                }
-            },
-            enabled = !uiState.isLoading,
-            modifier = Modifier.fillMaxWidth()
+            errorMessage = uiState.passwordError
         )
 
-        Spacer(Modifier.height(12.dp))
-
-        OutlinedTextField(
+        AppTextField(
             value = uiState.confirmPassword,
             onValueChange = viewModel::onConfirmPasswordChange,
-            label = { Text("Confirmar contraseña") },
-            singleLine = true,
+            label = "Confirmar contraseña",
+            keyboardType = KeyboardType.Password,
             visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password
-            ),
+            enabled = fieldsEnabled,
             isError = uiState.confirmPasswordError != null,
-            supportingText = {
-                uiState.confirmPasswordError?.let { error ->
-                    Text(error)
-                }
-            },
-            enabled = !uiState.isLoading,
-            modifier = Modifier.fillMaxWidth()
+            errorMessage = uiState.confirmPasswordError
         )
 
-        Spacer(Modifier.height(16.dp))
-
+        // Errores generales de registro.
         uiState.errorMessage?.let { message ->
-            Text(
-                text = message,
-                color = MaterialTheme.colorScheme.error
+            DomainErrorMessage(
+                message = message
             )
-            Spacer(Modifier.height(12.dp))
         }
 
-        uiState.successMessage?.let { message ->
-            Text(
-                text = message,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Spacer(Modifier.height(12.dp))
-        }
-
-        Button(
+        PrimaryActionButton(
+            text = "Registrarme",
             onClick = viewModel::register,
-            enabled = !uiState.isLoading && !uiState.isSuccess,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            if (uiState.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.height(20.dp),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            } else {
-                Text("Registrarme")
-            }
-        }
-
-        Spacer(Modifier.height(12.dp))
+            enabled = !uiState.isSuccess,
+            isLoading = uiState.isLoading
+        )
 
         TextButton(
             onClick = onNavigateToLogin,
             enabled = !uiState.isLoading
         ) {
-            Text("Ya tengo una cuenta")
+            Text(
+                text = "Ya tengo una cuenta"
+            )
         }
     }
 }

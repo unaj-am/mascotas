@@ -1,19 +1,21 @@
+
 package com.app.features.pets.component
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.app.core.domain.model.Pet
+import com.app.core.ui.theme.DimensUI
+import com.app.core.ui.theme.MascotasThemeUI
 
 @Composable
 fun PetCard(
@@ -22,35 +24,69 @@ fun PetCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = DimensUI.SpaceXXSmall
+        )
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(DimensUI.SpaceLarge),
+            verticalArrangement = Arrangement.spacedBy(
+                DimensUI.SpaceSmall
+            )
         ) {
-
             Text(
                 text = pet.name,
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Text(
-                text = "Raza: ${pet.breed}"
+                text = "Raza: ${pet.breed.ifBlank { "No especificada" }}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(
+                    DimensUI.SpaceLarge
+                )
             ) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "Edad",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "${pet.age} años",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
 
-                Text(
-                    text = "Edad: ${pet.age} años"
-                )
-
-                Text(
-                    text = "Peso: ${pet.weight} kg"
-                )
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "Peso",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "${pet.weight} kg",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
         }
     }
@@ -58,8 +94,7 @@ fun PetCard(
 
 @Preview(showBackground = true)
 @Composable
-fun PetCardPreview() {
-
+private fun PetCardPreview() {
     val mascota = Pet(
         id = "PET001",
         ownerId = "USR001",
@@ -69,8 +104,10 @@ fun PetCardPreview() {
         weight = 25.0
     )
 
-    PetCard(
-        pet = mascota,
-        modifier = Modifier.padding(16.dp)
-    )
+    MascotasThemeUI {
+        PetCard(
+            pet = mascota,
+            modifier = Modifier.padding(DimensUI.SpaceMedium)
+        )
+    }
 }
