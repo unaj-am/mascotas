@@ -1,18 +1,30 @@
-
 package com.app.features.auth.login
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.core.domain.model.UserRole
+import com.app.core.ui.components.AppTextField
+import com.app.core.ui.components.DomainErrorMessage
+import com.app.core.ui.components.PrimaryActionButton
+import com.app.core.ui.theme.DimensUI
 
 @Composable
 fun LoginScreen(
@@ -22,6 +34,7 @@ fun LoginScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // Notifica a la aplicación cuando el login finaliza.
     LaunchedEffect(
         uiState.isSuccess,
         uiState.userId,
@@ -30,7 +43,11 @@ fun LoginScreen(
         val userId = uiState.userId
         val userRole = uiState.userRole
 
-        if (uiState.isSuccess && userId != null && userRole != null) {
+        if (
+            uiState.isSuccess &&
+            userId != null &&
+            userRole != null
+        ) {
             onLoginSuccess(userId, userRole)
         }
     }
@@ -39,85 +56,77 @@ fun LoginScreen(
         modifier = Modifier
             .fillMaxSize()
             .safeDrawingPadding()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
+            .imePadding()
+            .verticalScroll(rememberScrollState())
+            .padding(
+                horizontal = DimensUI.ScreenHorizontalPadding,
+                vertical = DimensUI.ScreenVerticalPadding
+            ),
+        verticalArrangement = Arrangement.spacedBy(
+            DimensUI.SpaceLarge,
+            Alignment.CenterVertically
+        ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Encabezado
         Text(
             text = "Mascotas",
-            style = MaterialTheme.typography.headlineLarge
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.primary
         )
-
-        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = "Iniciar sesión",
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-        OutlinedTextField(
+        // Correo electrónico
+        AppTextField(
             value = uiState.email,
             onValueChange = viewModel::onEmailChange,
-            label = { Text("Correo electrónico") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Email
-            ),
-            enabled = !uiState.isLoading,
-            modifier = Modifier.fillMaxWidth()
+            label = "Correo electrónico",
+            placeholder = "ejemplo@correo.com",
+            keyboardType = KeyboardType.Email,
+            enabled = !uiState.isLoading &&
+                    !uiState.isSuccess
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
+        // Contraseña
+        AppTextField(
             value = uiState.password,
             onValueChange = viewModel::onPasswordChange,
-            label = { Text("Contraseña") },
-            singleLine = true,
+            label = "Contraseña",
+            keyboardType = KeyboardType.Password,
             visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password
-            ),
-            enabled = !uiState.isLoading,
-            modifier = Modifier.fillMaxWidth()
+            enabled = !uiState.isLoading &&
+                    !uiState.isSuccess
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        uiState.errorMessage?.let { error ->
-            Text(
-                text = error,
-                color = MaterialTheme.colorScheme.error
+        // Error general de autenticación
+        uiState.errorMessage?.let { message ->
+            DomainErrorMessage(
+                message = message
             )
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
 
-        Button(
+        // Acción principal
+        PrimaryActionButton(
+            text = "Ingresar",
             onClick = viewModel::signIn,
-            enabled = !uiState.isLoading && !uiState.isSuccess,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            if (uiState.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            } else {
-                Text("Ingresar")
-            }
-        }
+            enabled = !uiState.isSuccess,
+            isLoading = uiState.isLoading
+        )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
+// Navegación hacia registro
         TextButton(
             onClick = onNavigateToRegister,
-            enabled = !uiState.isLoading
+            enabled = !uiState.isLoading &&
+                    !uiState.isSuccess
         ) {
-            Text("¿No tenés cuenta? Registrate")
+            Text(
+                text = "¿No tenés cuenta? Registrate"
+            )
         }
     }
 }
