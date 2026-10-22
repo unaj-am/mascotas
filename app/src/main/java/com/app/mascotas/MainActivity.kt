@@ -48,6 +48,7 @@ import com.app.features.pets.list.PetViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.AndroidEntryPoint
+import com.app.core.ui.components.SuccessDialog
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -87,6 +88,7 @@ class MainActivity : ComponentActivity() {
             deletePetUseCase
         )
     }
+
 
     private val petDetailViewModelFactory by lazy {
         PetDetailViewModelFactory(getPetByIdUseCase)
@@ -133,6 +135,14 @@ class MainActivity : ComponentActivity() {
                     mutableStateOf(OwnerTab.HOME)
                 }
 
+                var showPetSuccessDialog by rememberSaveable {
+                    mutableStateOf(false)
+                }
+
+                var isCreatingPet by rememberSaveable {
+                    mutableStateOf(false)
+                }
+
                 val operationState by
                 petViewModel.operationState.collectAsStateWithLifecycle()
 
@@ -147,12 +157,16 @@ class MainActivity : ComponentActivity() {
 
                 // Cerrar el formulario después de guardar correctamente.
                 LaunchedEffect(operationState, showPetForm) {
-                    if (
-                        showPetForm &&
-                        operationState is PetOperationUiState.Success
-                    ) {
+                    if (showPetForm && operationState is PetOperationUiState.Success) {
                         showPetForm = false
                         selectedPetId = null
+
+                        if (isCreatingPet) {
+                            showPetSuccessDialog = true
+                        }
+
+                        isCreatingPet = false
+
                         petViewModel.resetOperationState()
                         selectedOwnerTab = OwnerTab.PETS
                     }
@@ -282,6 +296,7 @@ class MainActivity : ComponentActivity() {
                                                 },
                                                 onAddPetClick = {
                                                     petViewModel.resetOperationState()
+                                                    isCreatingPet = true
                                                     showPetForm = true
                                                 }
                                             )
@@ -313,6 +328,8 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
+
+
 
                     currentUserId != null &&
                             currentUserRole == UserRole.WALKER -> {
@@ -355,6 +372,21 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
+
+
+                }
+                if (showPetSuccessDialog) {
+                    SuccessDialog(
+                        title = "Mascota registrada",
+                        message = "La mascota se guardó correctamente.",
+                        confirmText = "Aceptar",
+                        onConfirm = {
+                            showPetSuccessDialog = false
+                        },
+                        onDismiss = {
+                            showPetSuccessDialog = false
+                        }
+                    )
                 }
             }
         }

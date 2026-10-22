@@ -8,25 +8,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val LightColorScheme = lightColorScheme(
-    primary = PetGreen,
+    primary = PetOwnerPurple,
     onPrimary = Color.White,
 
-    primaryContainer = PetMint,
-    onPrimaryContainer = PetGreenDark,
+    primaryContainer = PetOwnerPurpleLight,
+    onPrimaryContainer = PetOwnerPurpleDark,
 
     secondary = PetMuted,
     onSecondary = Color.White,
 
-    tertiary = PetCoral,
+    tertiary = PetOwnerPurple,
     onTertiary = Color.White,
 
-    background = PetCream,
+    background = PetOwnerBackground,
     onBackground = PetInk,
 
     surface = Color.White,
     onSurface = PetInk,
 
-    surfaceVariant = PetMint,
+    surfaceVariant = PetOwnerLavender,
     onSurfaceVariant = PetMuted,
 
     error = Color(0xFFBA1A1A),
@@ -34,26 +34,26 @@ private val LightColorScheme = lightColorScheme(
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = PetGreenLight,
-    onPrimary = PetGreenDark,
+    primary = PetOwnerPurpleLight,
+    onPrimary = PetOwnerPurpleDark,
 
-    primaryContainer = PetGreenDark,
-    onPrimaryContainer = PetMint,
+    primaryContainer = PetOwnerPurpleDark,
+    onPrimaryContainer = PetOwnerPurpleLight,
 
-    secondary = Color(0xFFB8C9BE),
-    onSecondary = PetSurfaceDark,
+    secondary = Color(0xFFCEC0E0),
+    onSecondary = Color(0xFF302044),
 
-    tertiary = Color(0xFFFFB4A8),
-    onTertiary = PetSurfaceDark,
+    tertiary = PetOwnerPurpleLight,
+    onTertiary = PetOwnerPurpleDark,
 
-    background = PetSurfaceDark,
-    onBackground = Color(0xFFE0E5DE),
+    background = Color(0xFF19151F),
+    onBackground = Color(0xFFEAE1F0),
 
-    surface = Color(0xFF202D25),
-    onSurface = Color(0xFFE0E5DE),
+    surface = Color(0xFF24202B),
+    onSurface = Color(0xFFEAE1F0),
 
-    surfaceVariant = Color(0xFF34483B),
-    onSurfaceVariant = Color(0xFFC0CDC2),
+    surfaceVariant = Color(0xFF40364D),
+    onSurfaceVariant = Color(0xFFD0C3DC),
 
     error = Color(0xFFFFB4AB),
     onError = Color(0xFF690005)
@@ -62,8 +62,8 @@ private val DarkColorScheme = darkColorScheme(
 /**
  * Tema visual compartido de Mascotas.
  *
- * Se define en core:ui para que todas las
- * funcionalidades utilicen el mismo diseño.
+ * Todas las funcionalidades utilizan la misma
+ * identidad visual, independientemente del perfil.
  */
 @Composable
 fun MascotasThemeUI(
