@@ -39,7 +39,6 @@ import com.app.features.home.OwnerHomeScreen
 import com.app.features.home.OwnerTab
 import com.app.features.pets.detail.PetDetailRoute
 import com.app.features.pets.detail.PetDetailViewModel
-import com.app.features.pets.detail.PetDetailViewModelFactory
 import com.app.features.pets.form.PetFormScreen
 import com.app.features.pets.list.PetOperationUiState
 import com.app.features.pets.list.PetRoute
@@ -49,6 +48,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.AndroidEntryPoint
 import com.app.core.ui.components.SuccessDialog
+import androidx.compose.runtime.remember
+import com.app.core.domain.model.Pet
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -90,10 +91,6 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    private val petDetailViewModelFactory by lazy {
-        PetDetailViewModelFactory(getPetByIdUseCase)
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -103,10 +100,9 @@ class MainActivity : ComponentActivity() {
             petViewModelFactory
         )[PetViewModel::class.java]
 
-        val petDetailViewModel = ViewModelProvider(
-            this,
-            petDetailViewModelFactory
-        )[PetDetailViewModel::class.java]
+        val petDetailViewModel = PetDetailViewModel(
+            getPetByIdUseCase
+        )
 
         setContent {
             MascotasThemeUI {
@@ -129,6 +125,10 @@ class MainActivity : ComponentActivity() {
 
                 var showPetForm by rememberSaveable {
                     mutableStateOf(false)
+                }
+
+                var petBeingEdited by remember {
+                    mutableStateOf<Pet?>(null)
                 }
 
                 var selectedOwnerTab by rememberSaveable {
@@ -160,6 +160,7 @@ class MainActivity : ComponentActivity() {
                     if (showPetForm && operationState is PetOperationUiState.Success) {
                         showPetForm = false
                         selectedPetId = null
+                        petBeingEdited = null
 
                         if (isCreatingPet) {
                             showPetSuccessDialog = true
@@ -181,31 +182,32 @@ class MainActivity : ComponentActivity() {
                         when {
                             showPetForm -> {
                                 BackHandler(
-                                    enabled = operationState !is
-                                            PetOperationUiState.Loading
+                                    enabled = operationState !is PetOperationUiState.Loading
                                 ) {
                                     showPetForm = false
+                                    petBeingEdited = null
                                     petViewModel.resetOperationState()
                                 }
 
                                 val errorMessage =
-                                    (operationState as?
-                                            PetOperationUiState.Error)?.message
+                                    (operationState as? PetOperationUiState.Error)?.message
 
                                 PetFormScreen(
                                     ownerId = ownerId,
-                                    isSaving = operationState is
-                                            PetOperationUiState.Loading,
+                                    pet = petBeingEdited,
+                                    isSaving = operationState is PetOperationUiState.Loading,
                                     errorMessage = errorMessage,
                                     onSave = { pet ->
-                                        petViewModel.savePet(pet)
+                                        if (petBeingEdited != null) {
+                                            petViewModel.updatePet(pet)
+                                        } else {
+                                            petViewModel.savePet(pet)
+                                        }
                                     },
                                     onCancel = {
-                                        if (
-                                            operationState !is
-                                                    PetOperationUiState.Loading
-                                        ) {
+                                        if (operationState !is PetOperationUiState.Loading) {
                                             showPetForm = false
+                                            petBeingEdited = null
                                             petViewModel.resetOperationState()
                                         }
                                     }
@@ -232,10 +234,15 @@ class MainActivity : ComponentActivity() {
                                     ) {
                                         Text("← Volver a mis mascotas")
                                     }
-
                                     PetDetailRoute(
                                         petId = selectedPetId!!,
-                                        viewModel = petDetailViewModel
+                                        viewModel = petDetailViewModel,
+                                        onEditClick = { pet ->
+                                            petViewModel.resetOperationState()
+                                            petBeingEdited = pet
+                                            isCreatingPet = false
+                                            showPetForm = true
+                                        }
                                     )
                                 }
                             }
