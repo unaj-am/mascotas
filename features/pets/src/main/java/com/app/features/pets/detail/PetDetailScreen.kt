@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,7 +28,8 @@ import com.app.core.ui.theme.MascotasThemeUI
 @Composable
 fun PetDetailRoute(
     petId: String,
-    viewModel: PetDetailViewModel
+    viewModel: PetDetailViewModel,
+    onEditClick: (Pet) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -39,14 +41,16 @@ fun PetDetailRoute(
         uiState = uiState,
         onRetry = {
             viewModel.loadPet(petId)
-        }
+        },
+        onEditClick = onEditClick
     )
 }
 
 @Composable
 fun PetDetailScreen(
     uiState: PetDetailUiState,
-    onRetry: () -> Unit = {}
+    onRetry: () -> Unit = {},
+    onEditClick: (Pet) -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -75,9 +79,29 @@ fun PetDetailScreen(
                 }
 
                 is PetDetailUiState.Success -> {
-                    PetDetailContent(
-                        pet = uiState.pet
-                    )
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(
+                            DimensUI.SpaceMedium
+                        )
+                    ) {
+                        Box(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            PetDetailContent(
+                                pet = uiState.pet
+                            )
+                        }
+
+                        Button(
+                            onClick = {
+                                onEditClick(uiState.pet)
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Editar mascota")
+                        }
+                    }
                 }
 
                 is PetDetailUiState.Error -> {
