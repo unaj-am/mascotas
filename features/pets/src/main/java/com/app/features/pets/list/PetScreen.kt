@@ -24,6 +24,7 @@ import com.app.core.ui.components.PrimaryActionButton
 import com.app.core.ui.theme.DimensUI
 import com.app.core.ui.theme.MascotasThemeUI
 import com.app.features.pets.component.PetCard
+import androidx.compose.foundation.background
 
 @Composable
 fun PetRoute(
@@ -67,15 +68,44 @@ fun PetScreen(
         )
     ) {
         Text(
-            text = "Mis mascotas",
+            text = "MIS MASCOTAS",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Text(
+            text = "Tus compañeros",
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onBackground
         )
 
-        PrimaryActionButton(
-            text = "Agregar mascota",
-            onClick = onAddPetClick
+        Text(
+            text = when (uiState) {
+                is PetListUiState.Success ->
+                    if (uiState.pets.isEmpty()) {
+                        "Todavía no tenés mascotas registradas."
+                    } else {
+                        "Tenés ${uiState.pets.size} mascotas registradas."
+                    }
+
+                PetListUiState.Loading -> "Cargando tus mascotas..."
+
+                is PetListUiState.Error ->
+                    "No pudimos cargar tus mascotas."
+            },
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+
+        if (
+            uiState is PetListUiState.Success &&
+            uiState.pets.isNotEmpty()
+        ) {
+            PrimaryActionButton(
+                text = "Agregar mascota",
+                onClick = onAddPetClick
+            )
+        }
 
         Box(
             modifier = Modifier.weight(1f)
@@ -88,7 +118,7 @@ fun PetScreen(
                 is PetListUiState.Success -> {
                     if (uiState.pets.isEmpty()) {
                         EmptyContent(
-                            message = "Todavía no tenés mascotas registradas.",
+                            message = "Registrá tu primera mascota para consultar sus datos desde acá.",
                             actionText = "Agregar mi primera mascota",
                             onAction = onAddPetClick
                         )

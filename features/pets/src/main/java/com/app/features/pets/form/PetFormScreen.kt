@@ -2,13 +2,22 @@ package com.app.features.pets.form
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -20,6 +29,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+
+
 import com.app.core.domain.model.Pet
 import com.app.core.ui.components.AppTextField
 import com.app.core.ui.components.DomainErrorMessage
@@ -27,6 +38,7 @@ import com.app.core.ui.components.PrimaryActionButton
 import com.app.core.ui.theme.DimensUI
 import java.util.UUID
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PetFormScreen(
     ownerId: String,
@@ -68,9 +80,19 @@ fun PetFormScreen(
         mutableStateOf(pet?.observations.orEmpty())
     }
 
+    var sizeExpanded by rememberSaveable(pet?.id) {
+        mutableStateOf(false)
+    }
+
     var validationError by rememberSaveable(pet?.id) {
         mutableStateOf<String?>(null)
     }
+
+    val sizeOptions = listOf(
+        "Pequeño",
+        "Mediano",
+        "Grande"
+    )
 
     LaunchedEffect(errorMessage) {
         if (errorMessage != null) {
@@ -123,15 +145,46 @@ fun PetFormScreen(
             enabled = !isSaving
         )
 
-        AppTextField(
+        // Edad con controles para disminuir y aumentar.
+        OutlinedTextField(
             value = age,
             onValueChange = {
-                age = it
+                age = it.filter(Char::isDigit)
                 validationError = null
             },
-            label = "Edad en años",
-            keyboardType = KeyboardType.Number,
-            enabled = !isSaving
+            label = { Text("Edad en años") },
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = KeyboardType.Number
+            ),
+            singleLine = true,
+            enabled = !isSaving,
+            modifier = Modifier.fillMaxWidth(),
+            trailingIcon = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(
+                        enabled = !isSaving &&
+                                (age.toIntOrNull() ?: 0) > 0,
+                        onClick = {
+                            age = ((age.toIntOrNull() ?: 0) - 1).toString()
+                            validationError = null
+                        }
+                    ) {
+                        Text("−")
+                    }
+
+                    TextButton(
+                        enabled = !isSaving,
+                        onClick = {
+                            age = ((age.toIntOrNull() ?: 0) + 1).toString()
+                            validationError = null
+                        }
+                    ) {
+                        Text("+")
+                    }
+                }
+            }
         )
 
         AppTextField(
@@ -145,15 +198,55 @@ fun PetFormScreen(
             enabled = !isSaving
         )
 
-        AppTextField(
-            value = size,
-            onValueChange = {
-                size = it
-                validationError = null
+        // Selector de tamaño.
+        ExposedDropdownMenuBox(
+            expanded = sizeExpanded,
+            onExpandedChange = {
+                if (!isSaving) {
+                    sizeExpanded = !sizeExpanded
+                }
             },
-            label = "Tamaño",
-            enabled = !isSaving
-        )
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            OutlinedTextField(
+                value = size,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Tamaño") },
+                placeholder = { Text("Seleccioná un tamaño") },
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(
+                        expanded = sizeExpanded
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(
+                        type = androidx.compose.material3.MenuAnchorType.PrimaryNotEditable,
+                        enabled = !isSaving
+                    ),
+                enabled = !isSaving,
+                singleLine = true
+            )
+
+            ExposedDropdownMenu(
+                expanded = sizeExpanded,
+                onDismissRequest = {
+                    sizeExpanded = false
+                }
+            ) {
+                sizeOptions.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option) },
+                        onClick = {
+                            size = option
+                            sizeExpanded = false
+                            validationError = null
+                        }
+                    )
+                }
+            }
+        }
 
         AppTextField(
             value = behavior,
@@ -189,13 +282,15 @@ fun PetFormScreen(
         )
 
         validationError?.let { message ->
-            DomainErrorMessage(
-                message = message
-            )
+            DomainErrorMessage(message = message)
         }
 
         PrimaryActionButton(
-            text = "Guardar",
+            text = if (pet == null) {
+                "Registrar mascota"
+            } else {
+                "Guardar cambios"
+            },
             onClick = {
                 val parsedAge = age.toIntOrNull()
                 val parsedWeight = weight
@@ -220,7 +315,8 @@ fun PetFormScreen(
                 if (validationError == null) {
                     onSave(
                         Pet(
-                            id = pet?.id ?: UUID.randomUUID().toString(),
+                            id = pet?.id
+                                ?: UUID.randomUUID().toString(),
                             ownerId = ownerId,
                             name = name.trim(),
                             breed = breed.trim(),

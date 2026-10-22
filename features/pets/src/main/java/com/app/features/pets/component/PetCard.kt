@@ -37,35 +37,61 @@ fun PetCard(
         Column(
             modifier = Modifier.padding(DimensUI.SpaceLarge),
             verticalArrangement = Arrangement.spacedBy(
-                DimensUI.SpaceSmall
+                DimensUI.SpaceMedium
             )
         ) {
-            Text(
-                text = pet.name,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(
+                    DimensUI.SpaceMedium
+                )
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(
+                        DimensUI.SpaceXSmall
+                    )
+                ) {
+                    Text(
+                        text = pet.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
 
-            Text(
-                text = "Raza: ${pet.breed.ifBlank { "No especificada" }}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+                    Text(
+                        text = pet.breed.ifBlank {
+                            "Raza no especificada"
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Text(
+                    text = "→",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(
-                    DimensUI.SpaceLarge
+                    DimensUI.SpaceMedium
                 )
             ) {
                 Column(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(
+                        DimensUI.SpaceXSmall
+                    )
                 ) {
                     Text(
-                        text = "Edad",
+                        text = "EDAD",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+
                     Text(
                         text = "${pet.age} años",
                         style = MaterialTheme.typography.bodyLarge,
@@ -74,13 +100,17 @@ fun PetCard(
                 }
 
                 Column(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(
+                        DimensUI.SpaceXSmall
+                    )
                 ) {
                     Text(
-                        text = "Peso",
+                        text = "PESO",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+
                     Text(
                         text = "${pet.weight} kg",
                         style = MaterialTheme.typography.bodyLarge,
