@@ -2,8 +2,9 @@ package com.app.core.domain.usecase
 
 import com.app.core.domain.model.Pet
 import com.app.core.domain.repository.PetRepository
+import javax.inject.Inject
 
-class UpdatePetUseCase(
+class UpdatePetUseCase @Inject constructor(
     private val petRepository: PetRepository
 ) {
     suspend operator fun invoke(pet: Pet) {
@@ -22,17 +23,13 @@ class UpdatePetUseCase(
         require(pet.weight > 0) {
             "El peso debe ser mayor que cero"
         }
-
         val existingPet = petRepository.getPetById(pet.id)
-
         require(existingPet != null) {
             "No existe una mascota con ese identificador"
         }
-
         require(existingPet.ownerId == pet.ownerId) {
             "La mascota no pertenece al dueño indicado"
         }
-
         petRepository.savePet(pet)
     }
 }
