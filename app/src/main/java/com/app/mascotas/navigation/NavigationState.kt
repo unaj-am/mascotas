@@ -56,13 +56,22 @@ class NavigationState(
 
     fun selectTab(tab: TopLevelDestination) {
         if (tab == currentTab) {
-            val stack = backStacks.getValue(tab)
-
-            while (stack.size > 1) {
-                stack.removeAt(stack.lastIndex)
-            }
+            popToRoot(tab)
         } else {
             currentTab = tab
+        }
+    }
+
+    fun navigateToTabRoot(tab: TopLevelDestination) {
+        popToRoot(tab)
+        currentTab = tab
+    }
+
+    private fun popToRoot(tab: TopLevelDestination) {
+        val stack = backStacks.getValue(tab)
+
+        while (stack.size > 1) {
+            stack.removeAt(stack.lastIndex)
         }
     }
 }

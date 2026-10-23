@@ -8,11 +8,13 @@ import com.app.core.domain.usecase.DeletePetUseCase
 import com.app.core.domain.usecase.GetPetsByOwnerUseCase
 import com.app.core.domain.usecase.SavePetUseCase
 import com.app.core.domain.usecase.UpdatePetUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 sealed interface PetOperationUiState {
     data object Idle : PetOperationUiState
@@ -21,7 +23,8 @@ sealed interface PetOperationUiState {
     data class Error(val message: String) : PetOperationUiState
 }
 
-class PetViewModel(
+@HiltViewModel
+class PetViewModel @Inject constructor(
     private val getPetsByOwnerUseCase: GetPetsByOwnerUseCase,
     private val savePetUseCase: SavePetUseCase,
     private val updatePetUseCase: UpdatePetUseCase,
@@ -85,7 +88,6 @@ class PetViewModel(
         ownerId: String,
         operation: suspend () -> Unit
     ) {
-        // Evita ejecutar dos operaciones simultáneamente.
         if (_operationState.value is PetOperationUiState.Loading) {
             return
         }
@@ -94,26 +96,20 @@ class PetViewModel(
             _operationState.value = PetOperationUiState.Loading
 
             try {
-                // 1. Ejecutar la escritura en el repositorio.
                 operation()
 
-                // 2. Actualizar el listado desde la fuente de datos.
                 try {
                     val pets = getPetsByOwnerUseCase(ownerId)
                     _uiState.value = PetListUiState.Success(pets)
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    // La escritura ya se realizó. El error corresponde
-                    // a la recarga del listado, no al guardado.
                     _uiState.value = PetListUiState.Error(
                         e.message
                             ?: "La operación se realizó, pero no se pudo actualizar el listado."
                     )
                 }
 
-                // 3. Informar el resultado de la operación.
-                // Se establece después de intentar actualizar el listado.
                 _operationState.value = PetOperationUiState.Success
 
             } catch (e: CancellationException) {

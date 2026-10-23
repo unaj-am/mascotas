@@ -15,3 +15,14 @@ data object WalksDestination : NavKey
 
 @Serializable
 data object ProfileDestination : NavKey
+
+@Serializable
+data class PetDetailDestination(
+    val petId: String
+) : NavKey
+
+@Serializable
+data class PetFormDestination(
+    val ownerId: String,
+    val petId: String? = null
+) : NavKey
