@@ -29,7 +29,6 @@ import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.app.core.domain.model.Pet
-import com.app.core.domain.model.UserRole
 import com.app.core.ui.components.ErrorContent
 import com.app.core.ui.components.LoadingContent
 import com.app.features.home.OwnerHomeScreen
@@ -40,6 +39,7 @@ import com.app.features.pets.form.PetFormScreen
 import com.app.features.pets.list.PetOperationUiState
 import com.app.features.pets.list.PetRoute
 import com.app.features.pets.list.PetViewModel
+import com.app.features.pets.list.PetListUiState
 
 @Composable
 fun AppNavDisplay(
@@ -57,6 +57,11 @@ fun AppNavDisplay(
     val operationState by
     petViewModel.operationState.collectAsStateWithLifecycle()
 
+    val petsUiState by petViewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(ownerId) {
+        petViewModel.loadPets(ownerId)
+    }
     val currentForm =
         navigationState.currentKey as? PetFormDestination
 
@@ -70,33 +75,31 @@ fun AppNavDisplay(
     val destinationProvider = entryProvider<NavKey> {
 
         entry<HomeDestination> {
+            val petsCount = when (val state = petsUiState) {
+                is PetListUiState.Success -> state.pets.size
+                PetListUiState.Loading -> 0
+                is PetListUiState.Error -> 0
+            }
+
             OwnerHomeScreen(
                 userName = "Dueño",
-                petsCount = 0,
+                petsCount = petsCount,
                 upcomingWalksCount = 0,
                 nextPetName = null,
                 nextPetBreed = null,
                 nextWalkDate = null,
                 onNotificationsClick = {},
                 onPetsClick = {
-                    navigationState.selectTab(
-                        TopLevelDestination.PETS
-                    )
+                    navigationState.selectTab(TopLevelDestination.PETS)
                 },
                 onWalksClick = {
-                    navigationState.selectTab(
-                        TopLevelDestination.WALKS
-                    )
+                    navigationState.selectTab(TopLevelDestination.WALKS)
                 },
                 onFindWalkerClick = {
-                    navigationState.selectTab(
-                        TopLevelDestination.WALKS
-                    )
+                    navigationState.selectTab(TopLevelDestination.WALKS)
                 },
                 onHistoryClick = {
-                    navigationState.selectTab(
-                        TopLevelDestination.WALKS
-                    )
+                    navigationState.selectTab(TopLevelDestination.WALKS)
                 }
             )
         }

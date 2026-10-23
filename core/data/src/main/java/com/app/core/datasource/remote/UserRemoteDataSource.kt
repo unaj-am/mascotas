@@ -41,23 +41,28 @@ class UserRemoteDataSource @Inject constructor(
     }
 
     suspend fun saveUser(user: User) {
-        val data = mapOf(
-            "name" to user.name,
-            "lastName" to user.lastName,
-            "email" to user.email,
-            "phone" to user.phone,
-            "profileImage" to user.profileImage,
-            "role" to user.role.name,
-            "active" to user.active
-        )
-
         usersCollection
             .document(user.id)
-            .set(data)
+            .set(user.toFirestoreMap())
             .await()
     }
 
     suspend fun updateUser(user: User) {
-        saveUser(user)
+        usersCollection
+            .document(user.id)
+            .update(user.toFirestoreMap())
+            .await()
+    }
+
+    private fun User.toFirestoreMap(): Map<String, Any?> {
+        return mapOf(
+            "name" to name,
+            "lastName" to lastName,
+            "email" to email,
+            "phone" to phone,
+            "profileImage" to profileImage,
+            "role" to role.name,
+            "active" to active
+        )
     }
 }
