@@ -17,7 +17,8 @@ import com.app.mascotas.ui.AppShell
 
 @Composable
 fun OwnerNavigation(
-    ownerId: String
+    ownerId: String,
+    onSignOut: () -> Unit
 ) {
     val petViewModel: PetViewModel = hiltViewModel()
     val petDetailViewModel: PetDetailViewModel = hiltViewModel()
@@ -74,7 +75,8 @@ fun OwnerNavigation(
             navigationState.navigate(
                 PetFormDestination(ownerId = ownerId)
             )
-        }
+        },
+        onSignOut = onSignOut
     )
 
     if (showPetSuccessDialog) {

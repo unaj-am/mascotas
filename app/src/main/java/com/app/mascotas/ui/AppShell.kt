@@ -22,7 +22,8 @@ fun AppShell(
     petViewModel: PetViewModel,
     petDetailViewModel: PetDetailViewModel,
     onPetClick: (String) -> Unit,
-    onAddPetClick: () -> Unit
+    onAddPetClick: () -> Unit,
+    onSignOut: () -> Unit
 ) {
     Scaffold(
         bottomBar = {
@@ -39,6 +40,7 @@ fun AppShell(
             petDetailViewModel = petDetailViewModel,
             onPetClick = onPetClick,
             onAddPetClick = onAddPetClick,
+            onSignOut = onSignOut,
             modifier = Modifier.padding(innerPadding)
         )
     }

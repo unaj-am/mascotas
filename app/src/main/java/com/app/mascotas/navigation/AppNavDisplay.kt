@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -49,6 +50,7 @@ fun AppNavDisplay(
     petDetailViewModel: PetDetailViewModel,
     onPetClick: (String) -> Unit,
     onAddPetClick: () -> Unit,
+    onSignOut: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val detailUiState by
@@ -57,11 +59,13 @@ fun AppNavDisplay(
     val operationState by
     petViewModel.operationState.collectAsStateWithLifecycle()
 
-    val petsUiState by petViewModel.uiState.collectAsStateWithLifecycle()
+    val petsUiState by
+    petViewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(ownerId) {
         petViewModel.loadPets(ownerId)
     }
+
     val currentForm =
         navigationState.currentKey as? PetFormDestination
 
@@ -90,16 +94,24 @@ fun AppNavDisplay(
                 nextWalkDate = null,
                 onNotificationsClick = {},
                 onPetsClick = {
-                    navigationState.selectTab(TopLevelDestination.PETS)
+                    navigationState.selectTab(
+                        TopLevelDestination.PETS
+                    )
                 },
                 onWalksClick = {
-                    navigationState.selectTab(TopLevelDestination.WALKS)
+                    navigationState.selectTab(
+                        TopLevelDestination.WALKS
+                    )
                 },
                 onFindWalkerClick = {
-                    navigationState.selectTab(TopLevelDestination.WALKS)
+                    navigationState.selectTab(
+                        TopLevelDestination.WALKS
+                    )
                 },
                 onHistoryClick = {
-                    navigationState.selectTab(TopLevelDestination.WALKS)
+                    navigationState.selectTab(
+                        TopLevelDestination.WALKS
+                    )
                 }
             )
         }
@@ -122,10 +134,8 @@ fun AppNavDisplay(
         }
 
         entry<ProfileDestination> {
-            PlaceholderScreen(
-                title = "Mi perfil",
-                description =
-                    "El módulo de perfil se integrará en este apartado."
+            ProfileScreen(
+                onSignOut = onSignOut
             )
         }
 
@@ -257,6 +267,40 @@ fun AppNavDisplay(
         onBack = navigationState::goBack,
         modifier = modifier
     )
+}
+
+@Composable
+private fun ProfileScreen(
+    onSignOut: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .safeDrawingPadding()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "Mi perfil",
+            style = MaterialTheme.typography.headlineSmall
+        )
+
+        Text(
+            text = "Desde acá podés gestionar tu cuenta.",
+            modifier = Modifier.padding(
+                top = 8.dp,
+                bottom = 24.dp
+            ),
+            style = MaterialTheme.typography.bodyMedium
+        )
+
+        Button(
+            onClick = onSignOut
+        ) {
+            Text("Cerrar sesión")
+        }
+    }
 }
 
 @Composable

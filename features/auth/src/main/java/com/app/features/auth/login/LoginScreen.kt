@@ -1,3 +1,4 @@
+
 package com.app.features.auth.login
 
 import androidx.compose.foundation.layout.Arrangement
@@ -20,7 +21,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.app.core.domain.model.UserRole
 import com.app.core.ui.components.AppTextField
 import com.app.core.ui.components.DomainErrorMessage
 import com.app.core.ui.components.PrimaryActionButton
@@ -28,27 +28,19 @@ import com.app.core.ui.theme.DimensUI
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (String, UserRole) -> Unit,
+    onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Notifica a la aplicación cuando el login finaliza.
-    LaunchedEffect(
-        uiState.isSuccess,
-        uiState.userId,
-        uiState.userRole
-    ) {
-        val userId = uiState.userId
-        val userRole = uiState.userRole
+    LaunchedEffect(Unit) {
+        viewModel.resetForm()
+    }
 
-        if (
-            uiState.isSuccess &&
-            userId != null &&
-            userRole != null
-        ) {
-            onLoginSuccess(userId, userRole)
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
+            onLoginSuccess()
         }
     }
 
@@ -68,7 +60,6 @@ fun LoginScreen(
         ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Encabezado
         Text(
             text = "Mascotas",
             style = MaterialTheme.typography.headlineLarge,
@@ -81,36 +72,28 @@ fun LoginScreen(
             color = MaterialTheme.colorScheme.onBackground
         )
 
-        // Correo electrónico
         AppTextField(
             value = uiState.email,
             onValueChange = viewModel::onEmailChange,
             label = "Correo electrónico",
             placeholder = "ejemplo@correo.com",
             keyboardType = KeyboardType.Email,
-            enabled = !uiState.isLoading &&
-                    !uiState.isSuccess
+            enabled = !uiState.isLoading && !uiState.isSuccess
         )
 
-        // Contraseña
         AppTextField(
             value = uiState.password,
             onValueChange = viewModel::onPasswordChange,
             label = "Contraseña",
             keyboardType = KeyboardType.Password,
             visualTransformation = PasswordVisualTransformation(),
-            enabled = !uiState.isLoading &&
-                    !uiState.isSuccess
+            enabled = !uiState.isLoading && !uiState.isSuccess
         )
 
-        // Error general de autenticación
         uiState.errorMessage?.let { message ->
-            DomainErrorMessage(
-                message = message
-            )
+            DomainErrorMessage(message = message)
         }
 
-        // Acción principal
         PrimaryActionButton(
             text = "Ingresar",
             onClick = viewModel::signIn,
@@ -118,15 +101,11 @@ fun LoginScreen(
             isLoading = uiState.isLoading
         )
 
-// Navegación hacia registro
         TextButton(
             onClick = onNavigateToRegister,
-            enabled = !uiState.isLoading &&
-                    !uiState.isSuccess
+            enabled = !uiState.isLoading && !uiState.isSuccess
         ) {
-            Text(
-                text = "¿No tenés cuenta? Registrate"
-            )
+            Text("¿No tenés cuenta? Registrate")
         }
     }
 }
