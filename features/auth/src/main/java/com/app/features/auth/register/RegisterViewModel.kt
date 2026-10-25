@@ -1,8 +1,14 @@
+
 package com.app.features.auth.register
 
+import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.app.core.domain.model.User
+import com.app.core.domain.model.UserRole
+import com.app.core.domain.repository.UserRepository
 import com.app.core.domain.usecase.auth.SendEmailVerificationUseCase
+import com.app.core.domain.usecase.auth.SignOutUseCase
 import com.app.core.domain.usecase.auth.SignUpUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -12,14 +18,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.app.core.domain.model.UserRole
-import com.app.core.domain.model.User
-import com.app.core.domain.repository.UserRepository
+
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
     private val signUpUseCase: SignUpUseCase,
     private val sendEmailVerificationUseCase: SendEmailVerificationUseCase,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val signOutUseCase: SignOutUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
@@ -58,10 +63,7 @@ class RegisterViewModel @Inject constructor(
 
     fun onPasswordChange(password: String) {
         _uiState.update {
-            it.copy(
-                password = password,
-                errorMessage = null
-            )
+            it.copy(password = password, errorMessage = null)
         }
     }
 
@@ -85,8 +87,6 @@ class RegisterViewModel @Inject constructor(
         val state = _uiState.value
 
         if (state.isLoading || state.isSuccess) return
-
-        // Los errores se calculan desde RegisterUiState.
         if (state.hasValidationErrors) return
 
         val email = state.email.trim()
@@ -109,7 +109,7 @@ class RegisterViewModel @Inject constructor(
                 return
             }
 
-            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+            !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
                 updateError("Ingresá un correo electrónico válido")
                 return
             }
@@ -125,7 +125,9 @@ class RegisterViewModel @Inject constructor(
             }
 
             password.length < 6 -> {
-                updateError("La contraseña debe tener al menos 6 caracteres")
+                updateError(
+                    "La contraseña debe tener al menos 6 caracteres"
+                )
                 return
             }
 
@@ -150,91 +152,136 @@ class RegisterViewModel @Inject constructor(
             }
 
             try {
-                val signUpResult = signUpUseCase(
+                signUpUseCase(
                     email = email,
                     password = password
-                )
-
-                signUpResult.fold(
+                ).fold(
                     onSuccess = { userId ->
-                        try {
-                            val user = User(
-                                id = userId,
-                                name = state.name.trim(),
-                                lastName = state.lastName.trim(),
-                                email = email,
-                                phone = state.phone.trim(),
-                                role = state.role,
-                                active = true
-                            )
-
-                            userRepository.saveUser(user)
-
-                            sendEmailVerificationUseCase().fold(
-                                onSuccess = {
-                                    _uiState.update { current ->
-                                        current.copy(
-                                            isLoading = false,
-                                            isSuccess = true,
-                                            password = "",
-                                            confirmPassword = "",
-                                            successMessage =
-                                                "Cuenta creada. Revisá tu correo para verificarla."
-                                        )
-                                    }
-                                },
-                                onFailure = { error ->
-                                    if (error is CancellationException) throw error
-
-                                    _uiState.update { current ->
-                                        current.copy(
-                                            isLoading = false,
-                                            isSuccess = true,
-                                            password = "",
-                                            confirmPassword = "",
-                                            successMessage =
-                                                "La cuenta y el perfil fueron creados, pero no se pudo enviar el correo de verificación."
-                                        )
-                                    }
-                                }
-                            )
-                        } catch (error: CancellationException) {
-                            throw error
-                        } catch (error: Exception) {
-                            _uiState.update { current ->
-                                current.copy(
-                                    isLoading = false,
-                                    errorMessage =
-                                        "La cuenta se creó, pero no se pudo guardar el perfil. Contactá al soporte antes de intentar registrarte nuevamente."
-                                )
-                            }
-                        }
+                        createProfileAndSendVerification(
+                            userId = userId,
+                            name = state.name.trim(),
+                            lastName = state.lastName.trim(),
+                            email = email,
+                            phone = state.phone.trim(),
+                            role = state.role
+                        )
                     },
                     onFailure = { error ->
                         if (error is CancellationException) throw error
 
                         updateError(
-                            "No se pudo crear la cuenta. Verificá los datos o intentá con otro correo."
+                            "No se pudo crear la cuenta. " +
+                                    "Verificá los datos o intentá con otro correo."
                         )
                     }
                 )
             } catch (error: CancellationException) {
                 throw error
-            } catch (error: Exception) {
+            } catch (_: Exception) {
+                closeRegistrationSession()
+
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         errorMessage =
-                            "Ocurrió un error al registrarte. Intentá nuevamente."
+                            "Ocurrió un error al registrarte. " +
+                                    "Intentá nuevamente."
                     )
                 }
             }
         }
     }
 
+    private suspend fun createProfileAndSendVerification(
+        userId: String,
+        name: String,
+        lastName: String,
+        email: String,
+        phone: String,
+        role: UserRole
+    ) {
+        try {
+            val user = User(
+                id = userId,
+                name = name,
+                lastName = lastName,
+                email = email,
+                phone = phone,
+                role = role,
+                active = true
+            )
+
+            userRepository.saveUser(user)
+
+            val verificationResult = sendEmailVerificationUseCase()
+
+            closeRegistrationSession()
+
+            verificationResult.fold(
+                onSuccess = {
+                    _uiState.update { current ->
+                        current.copy(
+                            isLoading = false,
+                            isSuccess = true,
+                            password = "",
+                            confirmPassword = "",
+                            successMessage =
+                                "Cuenta creada. Revisá tu correo " +
+                                        "para verificarla."
+                        )
+                    }
+                },
+                onFailure = { error ->
+                    if (error is CancellationException) throw error
+
+                    _uiState.update { current ->
+                        current.copy(
+                            isLoading = false,
+                            isSuccess = true,
+                            password = "",
+                            confirmPassword = "",
+                            successMessage =
+                                "La cuenta y el perfil fueron creados, " +
+                                        "pero no se pudo enviar el correo " +
+                                        "de verificación."
+                        )
+                    }
+                }
+            )
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            closeRegistrationSession()
+
+            _uiState.update { current ->
+                current.copy(
+                    isLoading = false,
+                    errorMessage =
+                        "La cuenta se creó, pero no se pudo guardar " +
+                                "el perfil. Contactá al soporte antes de " +
+                                "intentar registrarte nuevamente."
+                )
+            }
+        }
+    }
+
+    private suspend fun closeRegistrationSession() {
+        try {
+            signOutUseCase()
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            // La pantalla no debe dar acceso al panel por el registro.
+            // El estado global seguirá validando la sesión de Firebase.
+        }
+    }
+
     private fun updateError(message: String) {
         _uiState.update {
-            it.copy(errorMessage = message)
+            it.copy(
+                isLoading = false,
+                errorMessage = message
+            )
         }
     }
 }
