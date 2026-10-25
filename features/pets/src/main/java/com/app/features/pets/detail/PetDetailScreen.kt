@@ -7,12 +7,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -24,6 +21,7 @@ import com.app.core.ui.components.ErrorContent
 import com.app.core.ui.components.LoadingContent
 import com.app.core.ui.theme.DimensUI
 import com.app.core.ui.theme.MascotasThemeUI
+import com.app.features.pets.detail.component.PetDetailContent
 
 @Composable
 fun PetDetailRoute(
@@ -39,9 +37,7 @@ fun PetDetailRoute(
 
     PetDetailScreen(
         uiState = uiState,
-        onRetry = {
-            viewModel.loadPet(petId)
-        },
+        onRetry = { viewModel.loadPet(petId) },
         onEditClick = onEditClick
     )
 }
@@ -115,110 +111,10 @@ fun PetDetailScreen(
     }
 }
 
-@Composable
-private fun PetDetailContent(
-    pet: Pet
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-    ) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.large
-        ) {
-            Column(
-                modifier = Modifier.padding(
-                    DimensUI.SpaceLarge
-                ),
-                verticalArrangement = Arrangement.spacedBy(
-                    DimensUI.SpaceMedium
-                )
-            ) {
-                Text(
-                    text = pet.name,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.primary
-                )
-
-                PetDetailField(
-                    label = "Raza",
-                    value = pet.breed.ifBlank {
-                        "No especificada"
-                    }
-                )
-
-                PetDetailField(
-                    label = "Edad",
-                    value = "${pet.age} años"
-                )
-
-                PetDetailField(
-                    label = "Peso",
-                    value = "${pet.weight} kg"
-                )
-
-                PetDetailField(
-                    label = "Tamaño",
-                    value = pet.size.ifBlank {
-                        "No especificado"
-                    }
-                )
-
-                PetDetailField(
-                    label = "Comportamiento",
-                    value = pet.behavior.ifBlank {
-                        "No especificado"
-                    }
-                )
-
-                PetDetailField(
-                    label = "Necesidades especiales",
-                    value = pet.specialNeeds.ifBlank {
-                        "Ninguna registrada"
-                    }
-                )
-
-                PetDetailField(
-                    label = "Observaciones",
-                    value = pet.observations.ifBlank {
-                        "Sin observaciones"
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun PetDetailField(
-    label: String,
-    value: String
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(
-            DimensUI.SpaceXSmall
-        )
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
-
 @Preview(showBackground = true)
 @Composable
 private fun PetDetailScreenPreview() {
-    val mascota = Pet(
+    val pet = Pet(
         id = "PET001",
         ownerId = "USR001",
         name = "Firulais",
@@ -230,9 +126,7 @@ private fun PetDetailScreenPreview() {
 
     MascotasThemeUI {
         PetDetailScreen(
-            uiState = PetDetailUiState.Success(
-                pet = mascota
-            )
+            uiState = PetDetailUiState.Success(pet)
         )
     }
 }
