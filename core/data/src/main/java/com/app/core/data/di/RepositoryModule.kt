@@ -4,9 +4,13 @@ package com.app.core.data.di
 import com.app.core.data.repository.AuthRepositoryImpl
 import com.app.core.data.repository.PetRepositoryImpl
 import com.app.core.data.repository.UserRepositoryImpl
+import com.app.core.data.repository.WalkerRepositoryImpl
+
 import com.app.core.domain.repository.AuthRepository
 import com.app.core.domain.repository.PetRepository
 import com.app.core.domain.repository.UserRepository
+import com.app.core.domain.repository.WalkerRepository
+
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -34,4 +38,10 @@ abstract class RepositoryModule {
     abstract fun bindPetRepository(
         implementation: PetRepositoryImpl
     ): PetRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindWalkerRepository(
+        implementation: WalkerRepositoryImpl
+    ): WalkerRepository
 }

@@ -1,4 +1,3 @@
-
 package com.app.mascotas.navigation
 
 import androidx.navigation3.runtime.NavKey
@@ -12,6 +11,9 @@ data object PetsDestination : NavKey
 
 @Serializable
 data object WalksDestination : NavKey
+
+@Serializable
+data object WalkerSearchDestination : NavKey
 
 @Serializable
 data object ProfileDestination : NavKey

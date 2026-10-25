@@ -1,4 +1,3 @@
-
 package com.app.mascotas.navigation
 
 import androidx.activity.compose.BackHandler
@@ -37,10 +36,12 @@ import com.app.features.pets.detail.PetDetailRoute
 import com.app.features.pets.detail.PetDetailUiState
 import com.app.features.pets.detail.PetDetailViewModel
 import com.app.features.pets.form.PetFormScreen
+import com.app.features.pets.list.PetListUiState
 import com.app.features.pets.list.PetOperationUiState
 import com.app.features.pets.list.PetRoute
 import com.app.features.pets.list.PetViewModel
-import com.app.features.pets.list.PetListUiState
+import com.app.features.walkers.list.WalkerRoute
+import com.app.features.walkers.list.WalkerViewModel
 
 @Composable
 fun AppNavDisplay(
@@ -48,6 +49,7 @@ fun AppNavDisplay(
     ownerId: String,
     petViewModel: PetViewModel,
     petDetailViewModel: PetDetailViewModel,
+    walkerViewModel: WalkerViewModel,
     onPetClick: (String) -> Unit,
     onAddPetClick: () -> Unit,
     onSignOut: () -> Unit,
@@ -104,8 +106,8 @@ fun AppNavDisplay(
                     )
                 },
                 onFindWalkerClick = {
-                    navigationState.selectTab(
-                        TopLevelDestination.WALKS
+                    navigationState.navigate(
+                        WalkerSearchDestination
                     )
                 },
                 onHistoryClick = {
@@ -130,6 +132,12 @@ fun AppNavDisplay(
                 title = "Mis paseos",
                 description =
                     "El módulo de paseos se integrará en este apartado."
+            )
+        }
+
+        entry<WalkerSearchDestination> {
+            WalkerRoute(
+                viewModel = walkerViewModel
             )
         }
 
