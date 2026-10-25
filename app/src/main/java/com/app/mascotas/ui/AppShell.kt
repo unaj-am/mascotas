@@ -1,4 +1,3 @@
-
 package com.app.mascotas.ui
 
 import androidx.compose.foundation.layout.padding
@@ -11,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.app.features.pets.detail.PetDetailViewModel
 import com.app.features.pets.list.PetViewModel
+import com.app.features.walkers.list.WalkerViewModel
 import com.app.mascotas.navigation.AppNavDisplay
 import com.app.mascotas.navigation.NavigationState
 import com.app.mascotas.navigation.TopLevelDestination
@@ -21,6 +21,7 @@ fun AppShell(
     ownerId: String,
     petViewModel: PetViewModel,
     petDetailViewModel: PetDetailViewModel,
+    walkerViewModel: WalkerViewModel,
     onPetClick: (String) -> Unit,
     onAddPetClick: () -> Unit,
     onSignOut: () -> Unit
@@ -38,6 +39,7 @@ fun AppShell(
             ownerId = ownerId,
             petViewModel = petViewModel,
             petDetailViewModel = petDetailViewModel,
+            walkerViewModel = walkerViewModel,
             onPetClick = onPetClick,
             onAddPetClick = onAddPetClick,
             onSignOut = onSignOut,

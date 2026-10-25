@@ -1,4 +1,3 @@
-
 package com.app.mascotas.navigation
 
 import androidx.compose.runtime.Composable
@@ -13,6 +12,7 @@ import com.app.core.ui.components.SuccessDialog
 import com.app.features.pets.detail.PetDetailViewModel
 import com.app.features.pets.list.PetOperationUiState
 import com.app.features.pets.list.PetViewModel
+import com.app.features.walkers.list.WalkerViewModel
 import com.app.mascotas.ui.AppShell
 
 @Composable
@@ -22,6 +22,7 @@ fun OwnerNavigation(
 ) {
     val petViewModel: PetViewModel = hiltViewModel()
     val petDetailViewModel: PetDetailViewModel = hiltViewModel()
+    val walkerViewModel: WalkerViewModel = hiltViewModel()
 
     val navigationState = rememberNavigationState()
 
@@ -62,6 +63,7 @@ fun OwnerNavigation(
         ownerId = ownerId,
         petViewModel = petViewModel,
         petDetailViewModel = petDetailViewModel,
+        walkerViewModel = walkerViewModel,
         onPetClick = { petId ->
             petViewModel.resetOperationState()
 
