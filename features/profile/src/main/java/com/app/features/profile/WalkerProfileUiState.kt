@@ -1,5 +1,4 @@
-
-package com.app.features.walkers.profile
+package com.app.features.profile
 
 data class WalkerProfileUiState(
     val name: String = "",

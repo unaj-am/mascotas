@@ -1,6 +1,4 @@
-
-package com.app.features.walkers.profile
-
+package com.app.features.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.core.domain.model.UserRole
@@ -28,7 +26,7 @@ class WalkerProfileViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(WalkerProfileUiState())
 
-    val uiState: StateFlow<WalkerProfileUiState> =
+    val uiState: StateFlow<com.app.features.profile.WalkerProfileUiState> =
         _uiState.asStateFlow()
 
     private var currentUserId: String? = null
