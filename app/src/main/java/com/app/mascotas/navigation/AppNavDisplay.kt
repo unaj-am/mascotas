@@ -42,7 +42,7 @@ import com.app.features.pets.list.PetRoute
 import com.app.features.pets.list.PetViewModel
 import com.app.features.walkers.list.WalkerRoute
 import com.app.features.walkers.list.WalkerViewModel
-
+import com.app.features.profile.OwnerProfileRoute
 @Composable
 fun AppNavDisplay(
     navigationState: NavigationState,
@@ -135,14 +135,20 @@ fun AppNavDisplay(
             )
         }
 
+
         entry<WalkerSearchDestination> {
             WalkerRoute(
-                viewModel = walkerViewModel
+                viewModel = walkerViewModel,
+                onBack = {
+                    navigationState.goBack()
+                }
             )
         }
 
+
         entry<ProfileDestination> {
-            ProfileScreen(
+            OwnerProfileRoute(
+                userId = ownerId,
                 onSignOut = onSignOut
             )
         }
@@ -275,40 +281,6 @@ fun AppNavDisplay(
         onBack = navigationState::goBack,
         modifier = modifier
     )
-}
-
-@Composable
-private fun ProfileScreen(
-    onSignOut: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .safeDrawingPadding()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "Mi perfil",
-            style = MaterialTheme.typography.headlineSmall
-        )
-
-        Text(
-            text = "Desde acá podés gestionar tu cuenta.",
-            modifier = Modifier.padding(
-                top = 8.dp,
-                bottom = 24.dp
-            ),
-            style = MaterialTheme.typography.bodyMedium
-        )
-
-        Button(
-            onClick = onSignOut
-        ) {
-            Text("Cerrar sesión")
-        }
-    }
 }
 
 @Composable

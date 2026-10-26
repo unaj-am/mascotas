@@ -1,11 +1,15 @@
+
 package com.app.mascotas.navigation
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.core.ui.components.SuccessDialog
@@ -14,6 +18,7 @@ import com.app.features.pets.list.PetOperationUiState
 import com.app.features.pets.list.PetViewModel
 import com.app.features.walkers.list.WalkerViewModel
 import com.app.mascotas.ui.AppShell
+import com.app.mascotas.ui.AppTab
 
 @Composable
 fun OwnerNavigation(
@@ -58,28 +63,48 @@ fun OwnerNavigation(
         }
     }
 
+    val tabs = TopLevelDestination.entries.map { destination ->
+        AppTab(
+            key = destination.startKey,
+            label = destination.label,
+            icon = destination.icon
+        )
+    }
+
     AppShell(
-        navigationState = navigationState,
-        ownerId = ownerId,
-        petViewModel = petViewModel,
-        petDetailViewModel = petDetailViewModel,
-        walkerViewModel = walkerViewModel,
-        onPetClick = { petId ->
-            petViewModel.resetOperationState()
-
-            navigationState.navigate(
-                PetDetailDestination(petId)
-            )
+        tabs = tabs,
+        currentTab = navigationState.currentTab.startKey,
+        onTabClick = { selectedKey ->
+            TopLevelDestination.entries
+                .firstOrNull { it.startKey == selectedKey }
+                ?.let(navigationState::selectTab)
         },
-        onAddPetClick = {
-            petViewModel.resetOperationState()
-
-            navigationState.navigate(
-                PetFormDestination(ownerId = ownerId)
-            )
-        },
-        onSignOut = onSignOut
-    )
+        isWalker = false
+    ) { innerPadding ->
+        AppNavDisplay(
+            navigationState = navigationState,
+            ownerId = ownerId,
+            petViewModel = petViewModel,
+            petDetailViewModel = petDetailViewModel,
+            walkerViewModel = walkerViewModel,
+            onPetClick = { petId ->
+                petViewModel.resetOperationState()
+                navigationState.navigate(
+                    PetDetailDestination(petId)
+                )
+            },
+            onAddPetClick = {
+                petViewModel.resetOperationState()
+                navigationState.navigate(
+                    PetFormDestination(ownerId = ownerId)
+                )
+            },
+            onSignOut = onSignOut,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        )
+    }
 
     if (showPetSuccessDialog) {
         SuccessDialog(

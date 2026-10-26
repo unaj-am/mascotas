@@ -1,3 +1,4 @@
+
 package com.app.features.auth.register
 
 import androidx.compose.foundation.clickable
@@ -31,8 +32,8 @@ import com.app.core.domain.model.UserRole
 import com.app.core.ui.components.AppTextField
 import com.app.core.ui.components.DomainErrorMessage
 import com.app.core.ui.components.PrimaryActionButton
+import com.app.core.ui.components.SuccessDialog
 import com.app.core.ui.theme.DimensUI
-import com.app.features.auth.component.AuthMessageDialog
 
 @Composable
 fun RegisterScreen(
@@ -52,9 +53,8 @@ fun RegisterScreen(
         }
     }
 
-    // Conservamos el diálogo de confirmación existente.
     if (showSuccessDialog) {
-        AuthMessageDialog(
+        SuccessDialog(
             title = "Cuenta creada",
             message = uiState.successMessage
                 ?: "Tu cuenta fue creada. Revisá tu correo " +
@@ -137,7 +137,6 @@ fun RegisterScreen(
             errorMessage = uiState.phoneError
         )
 
-        // Selección del tipo de cuenta.
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(
@@ -201,7 +200,6 @@ fun RegisterScreen(
             errorMessage = uiState.confirmPasswordError
         )
 
-        // Errores generales de registro.
         uiState.errorMessage?.let { message ->
             DomainErrorMessage(
                 message = message
@@ -217,7 +215,7 @@ fun RegisterScreen(
 
         TextButton(
             onClick = onNavigateToLogin,
-            enabled = !uiState.isLoading
+            enabled = !uiState.isLoading && !uiState.isSuccess
         ) {
             Text(
                 text = "Ya tengo una cuenta"

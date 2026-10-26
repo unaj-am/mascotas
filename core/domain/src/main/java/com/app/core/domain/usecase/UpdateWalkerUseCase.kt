@@ -1,9 +1,11 @@
+
 package com.app.core.domain.usecase
 
 import com.app.core.domain.model.Walker
 import com.app.core.domain.repository.WalkerRepository
+import javax.inject.Inject
 
-class UpdateWalkerUseCase(
+class UpdateWalkerUseCase @Inject constructor(
     private val walkerRepository: WalkerRepository
 ) {
     suspend operator fun invoke(walker: Walker) {
@@ -29,7 +31,8 @@ class UpdateWalkerUseCase(
             "La calificación debe estar entre 0 y 5"
         }
 
-        val existingWalker = walkerRepository.getWalkerById(walker.userId)
+        val existingWalker =
+            walkerRepository.getWalkerById(walker.userId)
 
         require(existingWalker != null) {
             "No existe un perfil de paseador con ese identificador"

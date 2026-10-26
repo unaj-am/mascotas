@@ -5,7 +5,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,16 +20,17 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.core.domain.model.UserRole
+import com.app.core.ui.theme.DimensUI
 import com.app.core.ui.theme.MascotasThemeUI
 import com.app.features.auth.login.LoginScreen
 import com.app.features.auth.register.RegisterScreen
 import com.app.features.auth.verification.EmailVerificationScreen
 import com.app.mascotas.navigation.AppSessionState
 import com.app.mascotas.navigation.OwnerNavigation
+import com.app.mascotas.navigation.WalkerNavigation
 import com.app.mascotas.session.AppSessionViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -39,20 +39,23 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
 
         setContent {
-            MascotasThemeUI {
-                val sessionViewModel: AppSessionViewModel =
-                    hiltViewModel()
+            val sessionViewModel: AppSessionViewModel =
+                hiltViewModel()
 
-                val sessionState by sessionViewModel.uiState
-                    .collectAsStateWithLifecycle()
+            val sessionState by sessionViewModel.uiState
+                .collectAsStateWithLifecycle()
 
-                var showRegister by rememberSaveable {
-                    mutableStateOf(false)
-                }
+            var showRegister by rememberSaveable {
+                mutableStateOf(false)
+            }
 
+            val isWalkerTheme =
+                (sessionState as? AppSessionState.Authenticated)
+                    ?.role == UserRole.WALKER
+
+            MascotasThemeUI(isWalker = isWalkerTheme) {
                 when {
                     showRegister -> {
                         BackHandler {
@@ -84,7 +87,7 @@ class MainActivity : ComponentActivity() {
                         LoginScreen(
                             onLoginSuccess = {
                                 // Firebase notifica el cambio de sesión.
-                                // AppSessionViewModel valida el usuario.
+                                // AppSessionViewModel valida el perfil.
                             },
                             onNavigateToRegister = {
                                 showRegister = true
@@ -126,17 +129,12 @@ class MainActivity : ComponentActivity() {
                             }
 
                             UserRole.WALKER -> {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .safeDrawingPadding()
-                                        .padding(24.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        "Panel del paseador pendiente de integración"
-                                    )
-                                }
+                                WalkerNavigation(
+                                    userId = state.userId,
+                                    onSignOut = {
+                                        sessionViewModel.signOut()
+                                    }
+                                )
                             }
                         }
                     }
@@ -149,9 +147,14 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier
                                 .fillMaxSize()
                                 .safeDrawingPadding()
-                                .padding(24.dp),
+                                .padding(
+                                    horizontal =
+                                        DimensUI.ScreenHorizontalPadding,
+                                    vertical =
+                                        DimensUI.ScreenVerticalPadding
+                                ),
                             verticalArrangement = Arrangement.spacedBy(
-                                16.dp,
+                                DimensUI.SpaceLarge,
                                 Alignment.CenterVertically
                             ),
                             horizontalAlignment = Alignment.CenterHorizontally
