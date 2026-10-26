@@ -1,12 +1,16 @@
+
 package com.app.core.domain.usecase
 
 import com.app.core.domain.model.WalkRequest
 import com.app.core.domain.repository.WalkRequestRepository
+import javax.inject.Inject
 
-class GetWalkRequestsByWalkerUseCase(
+class GetWalkRequestsByWalkerUseCase @Inject constructor(
     private val walkRequestRepository: WalkRequestRepository
 ) {
-    suspend operator fun invoke(walkerId: String): List<WalkRequest> {
+    suspend operator fun invoke(
+        walkerId: String
+    ): List<WalkRequest> {
         require(walkerId.isNotBlank()) {
             "El identificador del paseador no puede estar vacío"
         }

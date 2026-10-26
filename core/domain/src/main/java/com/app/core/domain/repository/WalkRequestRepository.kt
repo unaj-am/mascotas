@@ -1,7 +1,9 @@
+
 package com.app.core.domain.repository
 
-import com.app.core.domain.model.WalkRequest
 import com.app.core.domain.model.RequestStatus
+import com.app.core.domain.model.Walk
+import com.app.core.domain.model.WalkRequest
 
 interface WalkRequestRepository {
 
@@ -25,5 +27,12 @@ interface WalkRequestRepository {
         requestId: String,
         status: RequestStatus
     )
-    suspend fun deleteRequest(requestId: String)
+
+    suspend fun deleteRequest(
+        requestId: String
+    )
+
+    suspend fun acceptRequestAndCreateWalk(
+        requestId: String
+    ): Walk
 }

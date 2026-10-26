@@ -1,9 +1,11 @@
+
 package com.app.core.domain.usecase
 
 import com.app.core.domain.model.Walker
 import com.app.core.domain.repository.WalkerRepository
+import javax.inject.Inject
 
-class SaveWalkerUseCase(
+class SaveWalkerUseCase @Inject constructor(
     private val walkerRepository: WalkerRepository
 ) {
     suspend operator fun invoke(walker: Walker) {

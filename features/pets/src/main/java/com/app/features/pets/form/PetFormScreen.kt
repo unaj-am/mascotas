@@ -181,6 +181,7 @@ fun PetFormScreen(
             DomainErrorMessage(message = message)
         }
 
+
         PrimaryActionButton(
             text = if (isSaving) {
                 "Guardando..."
@@ -232,11 +233,13 @@ fun PetFormScreen(
             enabled = !isSaving,
             modifier = Modifier.fillMaxWidth()
         )
-            TextButton(
-                onClick = onCancel,
-                enabled = !isSaving
-            ) {
-                Text("Cancelar")
-            }
+
+        TextButton(
+            onClick = onCancel,
+            enabled = !isSaving,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Cancelar")
         }
     }
+}

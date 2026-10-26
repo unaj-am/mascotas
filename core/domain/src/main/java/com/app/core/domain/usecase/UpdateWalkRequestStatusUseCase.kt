@@ -1,9 +1,11 @@
+
 package com.app.core.domain.usecase
 
 import com.app.core.domain.model.RequestStatus
 import com.app.core.domain.repository.WalkRequestRepository
+import javax.inject.Inject
 
-class UpdateWalkRequestStatusUseCase(
+class UpdateWalkRequestStatusUseCase @Inject constructor(
     private val walkRequestRepository: WalkRequestRepository
 ) {
     suspend operator fun invoke(
@@ -15,11 +17,10 @@ class UpdateWalkRequestStatusUseCase(
         }
 
         require(
-            newStatus == RequestStatus.ACCEPTED ||
-                    newStatus == RequestStatus.REJECTED ||
+            newStatus == RequestStatus.REJECTED ||
                     newStatus == RequestStatus.CANCELLED
         ) {
-            "El nuevo estado no es válido para esta operación"
+            "Para aceptar una solicitud debe utilizarse AcceptWalkRequestUseCase"
         }
 
         val request = walkRequestRepository.getRequestById(requestId)
@@ -32,6 +33,9 @@ class UpdateWalkRequestStatusUseCase(
             "Solo se pueden actualizar solicitudes pendientes"
         }
 
-        walkRequestRepository.updateRequestStatus(requestId, newStatus)
+        walkRequestRepository.updateRequestStatus(
+            requestId = requestId,
+            status = newStatus
+        )
     }
 }

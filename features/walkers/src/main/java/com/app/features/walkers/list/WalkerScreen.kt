@@ -1,3 +1,4 @@
+
 package com.app.features.walkers.list
 
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +23,7 @@ import com.app.features.walkers.list.component.WalkerHeader
 fun WalkerRoute(
     viewModel: WalkerViewModel,
     onWalkerClick: (String) -> Unit = {},
+    onBack: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -30,6 +32,7 @@ fun WalkerRoute(
         uiState = uiState,
         onWalkerClick = onWalkerClick,
         onRetry = viewModel::loadWalkers,
+        onBack = onBack,
         modifier = modifier
     )
 }
@@ -39,6 +42,7 @@ fun WalkerScreen(
     uiState: WalkerUiState,
     onWalkerClick: (String) -> Unit = {},
     onRetry: () -> Unit = {},
+    onBack: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -60,7 +64,8 @@ fun WalkerScreen(
             WalkerContent(
                 uiState = uiState,
                 onWalkerClick = onWalkerClick,
-                onRetry = onRetry
+                onRetry = onRetry,
+                onBack = onBack
             )
         }
     }
