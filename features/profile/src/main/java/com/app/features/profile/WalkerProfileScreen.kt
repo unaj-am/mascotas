@@ -1,5 +1,5 @@
 
-package com.app.features.walkers.profile
+package com.app.features.profile
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,10 +22,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.core.ui.components.DomainErrorMessage
 import com.app.core.ui.components.LoadingContent
 import com.app.core.ui.theme.DimensUI
-import com.app.features.walkers.profile.components.WalkerAvailabilitySection
-import com.app.features.walkers.profile.components.WalkerPersonalInfoSection
-import com.app.features.walkers.profile.components.WalkerProfessionalInfoSection
-import com.app.features.walkers.profile.components.WalkerProfileActions
+import com.app.features.profile.component.WalkerAvailabilitySection
+import com.app.features.profile.component.WalkerPersonalInfoSection
+import com.app.features.profile.component.WalkerProfessionalInfoSection
+import com.app.features.profile.component.WalkerProfileActions
 
 @Composable
 fun WalkerProfileScreen(

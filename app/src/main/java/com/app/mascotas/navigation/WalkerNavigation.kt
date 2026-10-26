@@ -1,4 +1,3 @@
-
 package com.app.mascotas.navigation
 
 import androidx.activity.compose.BackHandler
@@ -11,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -27,7 +25,7 @@ import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.app.features.walkers.profile.WalkerProfileScreen
+import com.app.features.profile.WalkerProfileScreen
 import com.app.features.walkers.requests.WalkerRequestsScreen
 import com.app.mascotas.ui.AppShell
 import com.app.mascotas.ui.AppTab

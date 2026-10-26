@@ -1,4 +1,3 @@
-
 package com.app.features.profile.component
 
 import androidx.compose.foundation.layout.Arrangement
