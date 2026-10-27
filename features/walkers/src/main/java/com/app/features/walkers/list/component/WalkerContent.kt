@@ -7,12 +7,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import com.app.core.ui.components.EmptyContent
 import com.app.core.ui.components.ErrorContent
 import com.app.core.ui.components.LoadingContent
 import com.app.core.ui.components.PrimaryActionButton
@@ -57,11 +55,6 @@ fun WalkerContent(
                         onClick = onRetry
                     )
 
-                    TextButton(
-                        onClick = onBack
-                    ) {
-                        Text("Volver")
-                    }
                 }
             } else {
                 WalkerList(

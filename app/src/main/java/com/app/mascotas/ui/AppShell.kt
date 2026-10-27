@@ -1,4 +1,3 @@
-
 package com.app.mascotas.ui
 
 import androidx.compose.foundation.layout.PaddingValues
@@ -40,9 +39,8 @@ fun AppShell(
                     NavigationBarItem(
                         selected = currentTab == tab.key,
                         onClick = {
-                            if (currentTab != tab.key) {
-                                onTabClick(tab.key)
-                            }
+                            // Ejecutar también si la pestaña ya está seleccionada.
+                            onTabClick(tab.key)
                         },
                         icon = {
                             Icon(
