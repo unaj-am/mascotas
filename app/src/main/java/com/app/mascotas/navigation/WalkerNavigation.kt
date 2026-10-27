@@ -29,6 +29,7 @@ import com.app.features.profile.WalkerProfileScreen
 import com.app.features.walkers.requests.WalkerRequestsScreen
 import com.app.mascotas.ui.AppShell
 import com.app.mascotas.ui.AppTab
+import com.app.features.home.WalkerHomeRoute
 
 @Composable
 fun WalkerNavigation(
@@ -68,21 +69,11 @@ fun WalkerNavigation(
 
     val destinationProvider = entryProvider<NavKey> {
         entry<WalkerHomeDestination> {
-            WalkerHomeScreen(
-                onAgendaClick = {
-                    navigateToRoot(
-                        backStack,
-                        WalkerAgendaDestination
-                    )
-                },
-                onActiveWalkClick = {
-                    navigateToRoot(
-                        backStack,
-                        WalkerActiveWalkDestination
-                    )
-                }
+            WalkerHomeRoute(
+                userId = userId
             )
         }
+
 
         entry<WalkerAgendaDestination> {
             WalkerAgendaScreen(
@@ -160,41 +151,6 @@ private fun navigateToRoot(
 ) {
     backStack.clear()
     backStack.add(destination)
-}
-
-@Composable
-private fun WalkerHomeScreen(
-    onAgendaClick: () -> Unit,
-    onActiveWalkClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(
-            text = "Inicio",
-            style = MaterialTheme.typography.headlineLarge
-        )
-
-        Text(
-            text = "Consultá tus próximos paseos y las actividades del día."
-        )
-
-        Text(
-            text = "Los próximos paseos y las actividades se mostrarán " +
-                    "cuando se integre la consulta de paseos asignados."
-        )
-
-        Button(onClick = onAgendaClick) {
-            Text("Ver agenda")
-        }
-
-        Button(onClick = onActiveWalkClick) {
-            Text("Ir al paseo activo")
-        }
-    }
 }
 
 @Composable

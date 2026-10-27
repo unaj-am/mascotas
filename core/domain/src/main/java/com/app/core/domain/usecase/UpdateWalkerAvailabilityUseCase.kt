@@ -1,8 +1,9 @@
 package com.app.core.domain.usecase
 
 import com.app.core.domain.repository.WalkerRepository
+import javax.inject.Inject
 
-class UpdateWalkerAvailabilityUseCase(
+class UpdateWalkerAvailabilityUseCase @Inject constructor(
     private val walkerRepository: WalkerRepository
 ) {
     suspend operator fun invoke(
@@ -13,14 +14,9 @@ class UpdateWalkerAvailabilityUseCase(
             "El identificador del usuario no puede estar vacío"
         }
 
-        val walker = walkerRepository.getWalkerById(userId)
-
-        require(walker != null) {
-            "No existe un perfil de paseador con ese identificador"
-        }
-
-        walkerRepository.updateWalker(
-            walker.copy(available = available)
+        walkerRepository.updateAvailability(
+            userId = userId,
+            available = available
         )
     }
 }
