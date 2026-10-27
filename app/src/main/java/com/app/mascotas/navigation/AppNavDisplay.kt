@@ -31,7 +31,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.app.core.domain.model.Pet
 import com.app.core.ui.components.ErrorContent
 import com.app.core.ui.components.LoadingContent
-import com.app.features.home.OwnerHomeScreen
+import com.app.features.home.OwnerHomeRoute
 import com.app.features.pets.detail.PetDetailRoute
 import com.app.features.pets.detail.PetDetailUiState
 import com.app.features.pets.detail.PetDetailViewModel
@@ -81,20 +81,12 @@ fun AppNavDisplay(
     val destinationProvider = entryProvider<NavKey> {
 
         entry<HomeDestination> {
-            val petsCount = when (val state = petsUiState) {
-                is PetListUiState.Success -> state.pets.size
-                PetListUiState.Loading -> 0
-                is PetListUiState.Error -> 0
-            }
-
-            OwnerHomeScreen(
-                userName = "Dueño",
-                petsCount = petsCount,
-                upcomingWalksCount = 0,
-                nextPetName = null,
-                nextPetBreed = null,
-                nextWalkDate = null,
-                onNotificationsClick = {},
+            OwnerHomeRoute(
+                ownerId = ownerId,
+                onNotificationsClick = {
+                    // Conectar cuando se implemente
+                    // la pantalla de notificaciones.
+                },
                 onPetsClick = {
                     navigationState.selectTab(
                         TopLevelDestination.PETS

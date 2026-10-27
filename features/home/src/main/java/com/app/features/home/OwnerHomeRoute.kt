@@ -1,0 +1,55 @@
+package com.app.features.home
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.app.core.ui.components.DomainErrorMessage
+import com.app.core.ui.components.LoadingContent
+
+@Composable
+fun OwnerHomeRoute(
+    ownerId: String,
+    onNotificationsClick: () -> Unit,
+    onPetsClick: () -> Unit,
+    onWalksClick: () -> Unit,
+    onFindWalkerClick: () -> Unit,
+    onHistoryClick: () -> Unit,
+    viewModel: OwnerHomeViewModel = hiltViewModel()
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(ownerId) {
+        viewModel.loadHome(ownerId)
+    }
+
+    when {
+        state.isLoading -> {
+            LoadingContent()
+        }
+
+        state.errorMessage != null -> {
+            DomainErrorMessage(
+                message = state.errorMessage.orEmpty(),
+                onRetry = viewModel::retryLoadHome
+            )
+        }
+
+        else -> {
+            OwnerHomeScreen(
+                userName = state.userName,
+                petsCount = state.petsCount,
+                upcomingWalksCount = state.upcomingWalksCount,
+                nextPetName = state.nextPetName,
+                nextPetBreed = state.nextPetBreed,
+                nextWalkDate = state.nextWalkDate,
+                onNotificationsClick = onNotificationsClick,
+                onPetsClick = onPetsClick,
+                onWalksClick = onWalksClick,
+                onFindWalkerClick = onFindWalkerClick,
+                onHistoryClick = onHistoryClick
+            )
+        }
+    }
+}
