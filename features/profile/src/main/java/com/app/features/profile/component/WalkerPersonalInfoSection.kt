@@ -7,6 +7,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import com.app.core.ui.components.AppTextField
 import com.app.core.ui.theme.DimensUI
 
@@ -15,7 +16,11 @@ fun WalkerPersonalInfoSection(
     name: String,
     lastName: String,
     email: String,
-    phone: String
+    phone: String,
+    isSaving: Boolean,
+    onNameChange: (String) -> Unit,
+    onLastNameChange: (String) -> Unit,
+    onPhoneChange: (String) -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -30,16 +35,16 @@ fun WalkerPersonalInfoSection(
 
         AppTextField(
             value = name,
-            onValueChange = {},
+            onValueChange = onNameChange,
             label = "Nombre",
-            readOnly = true
+            enabled = !isSaving
         )
 
         AppTextField(
             value = lastName,
-            onValueChange = {},
+            onValueChange = onLastNameChange,
             label = "Apellido",
-            readOnly = true
+            enabled = !isSaving
         )
 
         AppTextField(
@@ -51,9 +56,10 @@ fun WalkerPersonalInfoSection(
 
         AppTextField(
             value = phone,
-            onValueChange = {},
+            onValueChange = onPhoneChange,
             label = "Teléfono",
-            readOnly = true
+            keyboardType = KeyboardType.Phone,
+            enabled = !isSaving
         )
     }
 }

@@ -22,7 +22,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.core.ui.components.DomainErrorMessage
 import com.app.core.ui.components.LoadingContent
 import com.app.core.ui.theme.DimensUI
-import com.app.features.profile.component.WalkerAvailabilitySection
+
 import com.app.features.profile.component.WalkerPersonalInfoSection
 import com.app.features.profile.component.WalkerProfessionalInfoSection
 import com.app.features.profile.component.WalkerProfileActions
@@ -91,7 +91,11 @@ fun WalkerProfileScreen(
                     name = state.name,
                     lastName = state.lastName,
                     email = state.email,
-                    phone = state.phone
+                    phone = state.phone,
+                    isSaving = state.isSaving,
+                    onNameChange = viewModel::onNameChange,
+                    onLastNameChange = viewModel::onLastNameChange,
+                    onPhoneChange = viewModel::onPhoneChange
                 )
 
                 HorizontalDivider()
@@ -110,12 +114,6 @@ fun WalkerProfileScreen(
                     onPricePerWalkChange =
                         viewModel::onPricePerWalkChange,
                     onMaxPetsChange = viewModel::onMaxPetsChange
-                )
-
-                WalkerAvailabilitySection(
-                    available = state.available,
-                    isSaving = state.isSaving,
-                    onAvailableChange = viewModel::onAvailableChange
                 )
 
                 state.rating?.let { rating ->

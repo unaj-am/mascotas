@@ -9,7 +9,6 @@ data class WalkerProfileUiState(
     val description: String = "",
     val experienceYears: String = "0",
     val serviceArea: String = "",
-    val available: Boolean = false,
     val pricePerWalk: String = "0",
     val maxPets: String = "1",
     val rating: Double? = null,

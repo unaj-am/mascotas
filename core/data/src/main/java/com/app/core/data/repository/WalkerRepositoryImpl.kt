@@ -90,19 +90,24 @@ class WalkerRepositoryImpl @Inject constructor(
             "No podés modificar el perfil de otro paseador"
         }
 
-        val document = walkersCollection
-            .document(currentUserId)
-            .get()
-            .await()
+        val documentRef = walkersCollection.document(currentUserId)
+
+        val document = documentRef.get().await()
 
         require(document.exists()) {
             "No existe el perfil de paseador que querés modificar"
         }
 
-        walkersCollection
-            .document(currentUserId)
-            .set(walker.toFirestoreMap())
-            .await()
+        documentRef.update(
+            mapOf(
+                "description" to walker.description,
+                "experienceYears" to walker.experienceYears,
+                "serviceArea" to walker.serviceArea,
+                "available" to walker.available,
+                "pricePerWalk" to walker.pricePerWalk,
+                "maxPets" to walker.maxPets
+            )
+        ).await()
     }
 
     override suspend fun getAvailableWalkers(): List<Walker> {
@@ -114,6 +119,31 @@ class WalkerRepositoryImpl @Inject constructor(
         return snapshot.documents.map { document ->
             document.toWalker()
         }
+    }
+
+    override suspend fun updateAvailability(
+        userId: String,
+        available: Boolean
+    ) {
+        val currentUserId = requireCurrentUserId()
+
+        require(userId == currentUserId) {
+            "No podés modificar la disponibilidad de otro paseador"
+        }
+
+        val document = walkersCollection
+            .document(currentUserId)
+            .get()
+            .await()
+
+        require(document.exists()) {
+            "No existe el perfil profesional del paseador"
+        }
+
+        walkersCollection
+            .document(currentUserId)
+            .update("available", available)
+            .await()
     }
 
     private fun DocumentSnapshot.toWalker(): Walker {
