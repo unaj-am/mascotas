@@ -44,6 +44,8 @@ import com.app.features.walkers.list.WalkerRoute
 import com.app.features.walkers.list.WalkerViewModel
 import com.app.features.profile.OwnerProfileRoute
 import com.app.features.walkers.requests.WalkRequestFormRoute
+import com.app.features.walks.owner.OwnerWalksScreen
+import com.app.features.tracking.WalkTrackingScreen
 
 @Composable
 fun AppNavDisplay(
@@ -100,9 +102,8 @@ fun AppNavDisplay(
                     )
                 },
                 onFindWalkerClick = {
-                    navigationState.navigate(
-                        WalkerSearchDestination
-                    )
+                    navigationState.navigate(WalkerSearchDestination)
+
                 },
                 onHistoryClick = {
                     navigationState.selectTab(
@@ -122,10 +123,18 @@ fun AppNavDisplay(
         }
 
         entry<WalksDestination> {
-            PlaceholderScreen(
-                title = "Mis paseos",
-                description =
-                    "El módulo de paseos se integrará en este apartado."
+            OwnerWalksScreen(
+                ownerId = ownerId,
+                onTrackWalk = { walkId ->
+                    navigationState.navigate(WalkTrackingDestination(walkId))
+                }
+            )
+        }
+
+        entry<WalkTrackingDestination> { destination ->
+            WalkTrackingScreen(
+                walkId = destination.walkId,
+                onBack = { navigationState.goBackFrom(destination) }
             )
         }
 
@@ -156,6 +165,7 @@ fun AppNavDisplay(
                 },
                 onSuccess = {
                     navigationState.goBack()
+                    navigationState.navigateToTabRoot(TopLevelDestination.WALKS)
                 }
             )
         }

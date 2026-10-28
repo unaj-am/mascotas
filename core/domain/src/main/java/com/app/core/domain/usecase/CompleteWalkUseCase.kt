@@ -1,9 +1,11 @@
+
 package com.app.core.domain.usecase
 
 import com.app.core.domain.model.WalkStatus
 import com.app.core.domain.repository.WalkRepository
+import javax.inject.Inject
 
-class CompleteWalkUseCase(
+class CompleteWalkUseCase @Inject constructor(
     private val walkRepository: WalkRepository
 ) {
     suspend operator fun invoke(walkId: String) {

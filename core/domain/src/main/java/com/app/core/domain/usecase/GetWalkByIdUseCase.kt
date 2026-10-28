@@ -1,16 +1,11 @@
 package com.app.core.domain.usecase
 
-import com.app.core.domain.model.Walk
 import com.app.core.domain.repository.WalkRepository
+import javax.inject.Inject
 
-class GetWalkByIdUseCase(
+class GetWalkByIdUseCase @Inject constructor(
     private val walkRepository: WalkRepository
 ) {
-    suspend operator fun invoke(walkId: String): Walk? {
-        require(walkId.isNotBlank()) {
-            "El identificador del paseo no puede estar vacío"
-        }
-
-        return walkRepository.getWalkById(walkId)
-    }
+    suspend operator fun invoke(walkId: String) =
+        walkRepository.getWalkById(walkId)
 }
