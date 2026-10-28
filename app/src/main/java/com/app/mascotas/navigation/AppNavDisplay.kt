@@ -43,6 +43,8 @@ import com.app.features.pets.list.PetViewModel
 import com.app.features.walkers.list.WalkerRoute
 import com.app.features.walkers.list.WalkerViewModel
 import com.app.features.profile.OwnerProfileRoute
+import com.app.features.walkers.requests.WalkRequestFormRoute
+
 @Composable
 fun AppNavDisplay(
     navigationState: NavigationState,
@@ -131,11 +133,33 @@ fun AppNavDisplay(
         entry<WalkerSearchDestination> {
             WalkerRoute(
                 viewModel = walkerViewModel,
+                onWalkerClick = { walkerId ->
+                    navigationState.navigate(
+                        WalkRequestFormDestination(
+                            walkerId = walkerId
+                        )
+                    )
+                },
                 onBack = {
                     navigationState.goBack()
                 }
             )
         }
+
+
+        entry<WalkRequestFormDestination> { destination ->
+            WalkRequestFormRoute(
+                ownerId = ownerId,
+                walkerId = destination.walkerId,
+                onBack = {
+                    navigationState.goBack()
+                },
+                onSuccess = {
+                    navigationState.goBack()
+                }
+            )
+        }
+
 
 
         entry<ProfileDestination> {
