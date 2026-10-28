@@ -89,40 +89,41 @@ class WalkRequestRepositoryImpl @Inject constructor(
         return snapshot.documents.map { it.toWalkRequest() }
     }
 
+
     override suspend fun createRequest(
         request: WalkRequest
     ) {
         require(request.id.isNotBlank()) {
             "El identificador de la solicitud es obligatorio"
         }
+
         require(request.ownerId == requireCurrentUserId()) {
             "Solo el dueño autenticado puede crear su solicitud"
         }
+
         require(request.petIds.isNotEmpty()) {
             "La solicitud debe incluir al menos una mascota"
         }
+
         require(request.scheduledAt.isNotBlank()) {
             "La fecha del paseo es obligatoria"
         }
+
         require(request.durationMinutes > 0) {
             "La duración debe ser mayor que cero"
         }
+
         require(request.status == RequestStatus.PENDING) {
             "Una nueva solicitud debe estar pendiente"
         }
 
         val requestRef = requestsCollection.document(request.id)
 
-        firestore.runTransaction { transaction ->
-            val existing = transaction.get(requestRef)
-
-            require(!existing.exists()) {
-                "Ya existe una solicitud con ese identificador"
-            }
-
-            transaction.set(requestRef, request.toFirestoreMap())
-        }.await()
+        requestRef.set(
+            request.toFirestoreMap()
+        ).await()
     }
+
 
     override suspend fun updateRequestStatus(
         requestId: String,

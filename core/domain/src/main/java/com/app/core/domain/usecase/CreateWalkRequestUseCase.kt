@@ -4,7 +4,9 @@ import com.app.core.domain.model.RequestStatus
 import com.app.core.domain.model.WalkRequest
 import com.app.core.domain.repository.WalkRequestRepository
 
-class CreateWalkRequestUseCase(
+import javax.inject.Inject
+
+class CreateWalkRequestUseCase @Inject constructor(
     private val walkRequestRepository: WalkRequestRepository
 ) {
     suspend operator fun invoke(request: WalkRequest) {
