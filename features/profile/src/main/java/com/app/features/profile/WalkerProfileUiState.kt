@@ -1,3 +1,4 @@
+
 package com.app.features.profile
 
 data class WalkerProfileUiState(
@@ -16,6 +17,12 @@ data class WalkerProfileUiState(
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
     val isProfileCreated: Boolean = false,
+
     val errorMessage: String? = null,
-    val successMessage: String? = null
+    val successMessage: String? = null,
+
+    // Foto de perfil (Cloudinary)
+    val profileImage: String? = null,
+    val isUploadingPhoto: Boolean = false,
+    val photoErrorMessage: String? = null
 )

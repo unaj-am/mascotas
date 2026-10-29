@@ -89,6 +89,7 @@ class OwnerProfileViewModel @Inject constructor(
                     lastName = user.lastName,
                     email = user.email,
                     phone = user.phone,
+                    profileImage = user.profileImage,
                     isLoading = false
                 )
             } catch (error: CancellationException) {
