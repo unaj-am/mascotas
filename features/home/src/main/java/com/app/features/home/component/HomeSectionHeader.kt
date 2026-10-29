@@ -1,8 +1,9 @@
+
 package com.app.features.home.component
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -12,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.app.core.ui.theme.DimensUI
-import com.app.core.ui.theme.PetOwnerPurple
 
 @Composable
 fun HomeSectionHeader(
@@ -37,7 +37,7 @@ fun HomeSectionHeader(
         if (action != null) {
             TextButton(
                 onClick = onAction,
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                contentPadding = PaddingValues(
                     horizontal = DimensUI.SpaceSmall,
                     vertical = DimensUI.SpaceXSmall
                 )
@@ -45,7 +45,7 @@ fun HomeSectionHeader(
                 Text(
                     text = action,
                     style = MaterialTheme.typography.labelLarge,
-                    color = PetOwnerPurple
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }

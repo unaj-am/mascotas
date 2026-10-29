@@ -1,15 +1,12 @@
+
 package com.app.features.pets.detail
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -19,10 +16,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.core.domain.model.Pet
 import com.app.core.ui.components.ErrorContent
 import com.app.core.ui.components.LoadingContent
+import com.app.core.ui.components.PrimaryActionButton
+import com.app.core.ui.components.SectionHeader
 import com.app.core.ui.theme.DimensUI
 import com.app.core.ui.theme.MascotasThemeUI
 import com.app.features.pets.detail.component.PetDetailContent
 
+/**
+ * Route del detalle de mascota.
+ *
+ * Conecta la interfaz con el ViewModel y solicita
+ * los datos cuando cambia el identificador.
+ */
 @Composable
 fun PetDetailRoute(
     petId: String,
@@ -42,6 +47,11 @@ fun PetDetailRoute(
     )
 }
 
+/**
+ * Interfaz visual del detalle de una mascota.
+ *
+ * Recibe el estado y delega las acciones al Route.
+ */
 @Composable
 fun PetDetailScreen(
     uiState: PetDetailUiState,
@@ -60,10 +70,18 @@ fun PetDetailScreen(
             DimensUI.SectionSpacing
         )
     ) {
-        Text(
-            text = "Detalle de mascota",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground
+        SectionHeader(
+            title = "Detalle de mascota",
+            subtitle = when (uiState) {
+                PetDetailUiState.Loading ->
+                    "Cargando información..."
+
+                is PetDetailUiState.Success ->
+                    "Información de ${uiState.pet.name}"
+
+                is PetDetailUiState.Error ->
+                    "No pudimos obtener los datos."
+            }
         )
 
         Box(
@@ -71,7 +89,10 @@ fun PetDetailScreen(
         ) {
             when (uiState) {
                 PetDetailUiState.Loading -> {
-                    LoadingContent()
+                    LoadingContent(
+                        modifier = Modifier.fillMaxSize(),
+                        message = "Cargando información de la mascota..."
+                    )
                 }
 
                 is PetDetailUiState.Success -> {
@@ -85,25 +106,25 @@ fun PetDetailScreen(
                             modifier = Modifier.weight(1f)
                         ) {
                             PetDetailContent(
-                                pet = uiState.pet
+                                pet = uiState.pet,
+                                modifier = Modifier.fillMaxSize()
                             )
                         }
 
-                        Button(
+                        PrimaryActionButton(
+                            text = "Editar mascota",
                             onClick = {
                                 onEditClick(uiState.pet)
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Editar mascota")
-                        }
+                            }
+                        )
                     }
                 }
 
                 is PetDetailUiState.Error -> {
                     ErrorContent(
                         message = uiState.message,
-                        onRetry = onRetry
+                        onRetry = onRetry,
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
             }
@@ -126,7 +147,9 @@ private fun PetDetailScreenPreview() {
 
     MascotasThemeUI {
         PetDetailScreen(
-            uiState = PetDetailUiState.Success(pet)
+            uiState = PetDetailUiState.Success(
+                pet = pet
+            )
         )
     }
 }

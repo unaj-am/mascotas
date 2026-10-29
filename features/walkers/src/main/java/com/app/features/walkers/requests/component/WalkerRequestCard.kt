@@ -5,10 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -16,8 +13,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.app.core.domain.model.RequestStatus
 import com.app.core.domain.model.WalkRequest
+import com.app.core.ui.components.AppCard
+import com.app.core.ui.components.InfoRow
+import com.app.core.ui.components.StatusBadge
 import com.app.core.ui.theme.DimensUI
 
+/**
+ * Tarjeta de solicitud recibida por un paseador.
+ *
+ * La presentación utiliza componentes de core:ui.
+ * Las operaciones de aceptar y rechazar se delegan
+ * a los callbacks recibidos.
+ */
 @Composable
 fun WalkerRequestCard(
     request: WalkRequest,
@@ -29,74 +36,99 @@ fun WalkerRequestCard(
     ownerName: String = "Dueño",
     petNames: List<String> = emptyList()
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+    val statusText = when (request.status) {
+        RequestStatus.PENDING -> "Pendiente"
+        RequestStatus.ACCEPTED -> "Aceptada"
+        RequestStatus.REJECTED -> "Rechazada"
+        RequestStatus.CANCELLED -> "Cancelada"
+    }
+
+    val statusContainerColor = when (request.status) {
+        RequestStatus.PENDING ->
+            MaterialTheme.colorScheme.primaryContainer
+
+        RequestStatus.ACCEPTED ->
+            MaterialTheme.colorScheme.tertiaryContainer
+
+        RequestStatus.REJECTED,
+        RequestStatus.CANCELLED ->
+            MaterialTheme.colorScheme.surfaceVariant
+    }
+
+    val statusContentColor = when (request.status) {
+        RequestStatus.PENDING ->
+            MaterialTheme.colorScheme.onPrimaryContainer
+
+        RequestStatus.ACCEPTED ->
+            MaterialTheme.colorScheme.onTertiaryContainer
+
+        RequestStatus.REJECTED,
+        RequestStatus.CANCELLED ->
+            MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    val displayedPetNames = when {
+        petNames.isNotEmpty() ->
+            petNames.joinToString(", ")
+
+        request.petIds.size == 1 ->
+            "1 mascota"
+
+        else ->
+            "${request.petIds.size} mascotas"
+    }
+
+    AppCard(
+        modifier = modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(DimensUI.SpaceLarge),
             verticalArrangement = Arrangement.spacedBy(
-                DimensUI.SpaceMedium
+                DimensUI.SpaceLarge
             )
         ) {
-            Text(
-                text = "Solicitud de paseo",
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            Text(
-                text = "Dueño: $ownerName",
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Text(
-                text = "Fecha y hora: ${request.scheduledAt}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Text(
-                text = "Duración: ${request.durationMinutes} minutos",
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Text(
-                text = when {
-                    petNames.isNotEmpty() ->
-                        "Mascotas: ${petNames.joinToString(", ")}"
-
-                    request.petIds.size == 1 ->
-                        "1 mascota"
-
-                    else ->
-                        "${request.petIds.size} mascotas"
-                },
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            if (request.observations.isNotBlank()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 Text(
-                    text = "Observaciones: ${request.observations}",
-                    style = MaterialTheme.typography.bodyMedium
+                    text = "Solicitud de paseo",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                StatusBadge(
+                    text = statusText,
+                    containerColor = statusContainerColor,
+                    contentColor = statusContentColor
                 )
             }
 
-            Text(
-                text = "Estado: ${request.status.toDisplayName()}",
-                style = MaterialTheme.typography.labelLarge,
-                color = when (request.status) {
-                    RequestStatus.PENDING ->
-                        MaterialTheme.colorScheme.primary
-
-                    RequestStatus.ACCEPTED ->
-                        MaterialTheme.colorScheme.tertiary
-
-                    RequestStatus.REJECTED,
-                    RequestStatus.CANCELLED ->
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                }
+            InfoRow(
+                label = "Dueño",
+                value = ownerName
             )
+
+            InfoRow(
+                label = "Fecha y hora",
+                value = request.scheduledAt
+            )
+
+            InfoRow(
+                label = "Duración",
+                value = "${request.durationMinutes} minutos"
+            )
+
+            InfoRow(
+                label = "Mascotas",
+                value = displayedPetNames
+            )
+
+            if (request.observations.isNotBlank()) {
+                InfoRow(
+                    label = "Observaciones",
+                    value = request.observations
+                )
+            }
 
             if (request.status == RequestStatus.PENDING) {
                 Row(
@@ -131,11 +163,3 @@ fun WalkerRequestCard(
         }
     }
 }
-
-private fun RequestStatus.toDisplayName(): String =
-    when (this) {
-        RequestStatus.PENDING -> "Pendiente"
-        RequestStatus.ACCEPTED -> "Aceptada"
-        RequestStatus.REJECTED -> "Rechazada"
-        RequestStatus.CANCELLED -> "Cancelada"
-    }

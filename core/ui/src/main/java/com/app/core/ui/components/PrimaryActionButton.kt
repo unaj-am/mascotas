@@ -1,3 +1,4 @@
+
 package com.app.core.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
@@ -13,18 +14,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import com.app.core.ui.theme.DimensUI
 
 /**
  * Botón principal reutilizable de Mascotas.
  *
- * Responsabilidades:
- * - Ejecutar la acción recibida.
- * - Mostrar un indicador durante la carga.
- * - Evitar múltiples pulsaciones mientras carga.
- * - Respetar el sistema de diseño compartido.
+ * Permite configurar su ancho, estado de carga
+ * y habilitación sin administrar lógica de negocio.
  */
 @Composable
 fun PrimaryActionButton(
@@ -32,13 +28,22 @@ fun PrimaryActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    isLoading: Boolean = false
+    isLoading: Boolean = false,
+    fullWidth: Boolean = true
 ) {
+    val buttonModifier = if (fullWidth) {
+        modifier
+            .fillMaxWidth()
+            .heightIn(min = DimensUI.ButtonMinHeight)
+    } else {
+        modifier.heightIn(
+            min = DimensUI.ButtonMinHeight
+        )
+    }
+
     Button(
         onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = DimensUI.ButtonMinHeight),
+        modifier = buttonModifier,
         enabled = enabled && !isLoading,
         shape = MaterialTheme.shapes.medium,
         colors = ButtonDefaults.buttonColors(
@@ -57,8 +62,8 @@ fun PrimaryActionButton(
                     modifier = Modifier.size(
                         DimensUI.IconSizeSmall
                     ),
-                    color = Color.White,
-                    strokeWidth = 2.dp
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = DimensUI.SpaceXXSmall
                 )
             }
 

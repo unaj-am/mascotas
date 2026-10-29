@@ -1,3 +1,4 @@
+
 package com.app.features.home.component
 
 import androidx.compose.foundation.layout.Arrangement
@@ -5,13 +6,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.app.core.ui.components.AppCard
 import com.app.core.ui.theme.DimensUI
 
 @Composable
@@ -21,7 +22,7 @@ fun WalkerAvailabilityCard(
     onAvailabilityChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    AppCard(
         modifier = modifier.fillMaxWidth()
     ) {
         Row(
@@ -39,7 +40,8 @@ fun WalkerAvailabilityCard(
             ) {
                 Text(
                     text = "Mi disponibilidad",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(
@@ -55,7 +57,8 @@ fun WalkerAvailabilityCard(
                 if (isUpdating) {
                     Text(
                         text = "Actualizando disponibilidad...",
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

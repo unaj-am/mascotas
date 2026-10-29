@@ -6,38 +6,38 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.app.core.domain.model.Pet
+import com.app.core.ui.components.AppCard
+import com.app.core.ui.components.InfoRow
 import com.app.core.ui.theme.DimensUI
 import com.app.core.ui.theme.MascotasThemeUI
 
+/**
+ * Tarjeta específica de una mascota.
+ *
+ * Utiliza AppCard como contenedor visual e InfoRow
+ * para mostrar sus datos principales.
+ *
+ * La navegación se delega al callback onClick.
+ */
 @Composable
 fun PetCard(
     pet: Pet,
     onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    Card(
-        onClick = onClick,
+    AppCard(
         modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = DimensUI.SpaceXXSmall
-        )
+        onClick = onClick
     ) {
         Column(
-            modifier = Modifier.padding(DimensUI.SpaceLarge),
             verticalArrangement = Arrangement.spacedBy(
-                DimensUI.SpaceMedium
+                DimensUI.SpaceLarge
             )
         ) {
             Row(
@@ -77,46 +77,20 @@ fun PetCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(
-                    DimensUI.SpaceMedium
+                    DimensUI.SpaceLarge
                 )
             ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(
-                        DimensUI.SpaceXSmall
-                    )
-                ) {
-                    Text(
-                        text = "EDAD",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                InfoRow(
+                    label = "Edad",
+                    value = "${pet.age} años",
+                    modifier = Modifier.weight(1f)
+                )
 
-                    Text(
-                        text = "${pet.age} años",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(
-                        DimensUI.SpaceXSmall
-                    )
-                ) {
-                    Text(
-                        text = "PESO",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Text(
-                        text = "${pet.weight} kg",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
+                InfoRow(
+                    label = "Peso",
+                    value = "${pet.weight} kg",
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
@@ -137,7 +111,9 @@ private fun PetCardPreview() {
     MascotasThemeUI {
         PetCard(
             pet = mascota,
-            modifier = Modifier.padding(DimensUI.SpaceMedium)
+            modifier = Modifier.padding(
+                DimensUI.SpaceMedium
+            )
         )
     }
 }

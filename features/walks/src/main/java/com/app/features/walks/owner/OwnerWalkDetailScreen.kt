@@ -7,9 +7,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -22,8 +21,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.core.domain.model.Walk
 import com.app.core.domain.model.WalkStatus
+import com.app.core.ui.components.AppCard
 import com.app.core.ui.components.DomainErrorMessage
+import com.app.core.ui.components.InfoRow
 import com.app.core.ui.components.LoadingContent
+import com.app.core.ui.components.PrimaryActionButton
+import com.app.core.ui.components.SectionHeader
+import com.app.core.ui.components.StatusBadge
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -54,23 +58,23 @@ fun OwnerWalkDetailScreen(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.End
         ) {
-            Text(
-                text = "Detalle del paseo",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.weight(1f)
-            )
-
             OutlinedButton(onClick = onBack) {
                 Text("Volver")
             }
         }
 
+        SectionHeader(
+            title = "Detalle del paseo",
+            subtitle = "Consultá la información y el estado actual."
+        )
+
         when {
             state.isLoading && state.walk == null -> {
                 LoadingContent(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    message = "Cargando detalle del paseo..."
                 )
             }
 
@@ -85,7 +89,8 @@ fun OwnerWalkDetailScreen(
                 WalkDetailContent(
                     walk = state.walk!!,
                     walkerName = state.walkerName,
-                    onTrackWalk = onTrackWalk
+                    onTrackWalk = onTrackWalk,
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
@@ -96,149 +101,165 @@ fun OwnerWalkDetailScreen(
 private fun WalkDetailContent(
     walk: Walk,
     walkerName: String?,
-    onTrackWalk: (String) -> Unit
+    onTrackWalk: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Card(
-            colors = CardDefaults.cardColors(
-                containerColor =
-                    MaterialTheme.colorScheme.surfaceContainerLow
-            )
+        AppCard(
+            modifier = Modifier.fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(
+                StatusBadge(
                     text = statusLabel(walk.status),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = statusColor(walk.status)
+                    containerColor = statusBackgroundColor(walk.status),
+                    contentColor = statusTextColor(walk.status)
                 )
 
-                DetailRow(
+                InfoRow(
                     label = "Fecha programada",
                     value = formatDate(walk.scheduledAt)
                 )
 
-                DetailRow(
+                InfoRow(
                     label = "Duración prevista",
                     value = "${walk.durationMinutes} minutos"
                 )
 
-                DetailRow(
+                InfoRow(
                     label = "Mascotas",
                     value = walk.petIds.size.toString()
                 )
 
-                DetailRow(
+                InfoRow(
                     label = "Paseador",
                     value = walkerName
                         ?.takeIf { it.isNotBlank() }
-                        ?: "Cargando nombre del paseador..."
+                        ?: "Nombre no disponible"
                 )
 
-                walk.startedAt?.let {
-                    DetailRow(
+                walk.startedAt?.let { startedAt ->
+                    InfoRow(
                         label = "Inicio real",
-                        value = formatDate(it)
+                        value = formatDate(startedAt)
                     )
                 }
 
-                walk.finishedAt?.let {
-                    DetailRow(
+                walk.finishedAt?.let { finishedAt ->
+                    InfoRow(
                         label = "Finalización real",
-                        value = formatDate(it)
+                        value = formatDate(finishedAt)
                     )
                 }
 
-                walk.distanceKm?.let {
-                    DetailRow(
+                walk.distanceKm?.let { distance ->
+                    InfoRow(
                         label = "Distancia recorrida",
-                        value = "%.2f km".format(
+                        value = String.format(
                             Locale("es", "AR"),
-                            it
+                            "%.2f km",
+                            distance
                         )
                     )
                 }
 
                 if (walk.observations.isNotBlank()) {
-                    Text(
-                        text = "Observaciones",
-                        style = MaterialTheme.typography.titleSmall
-                    )
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = "Observaciones",
+                            style = MaterialTheme.typography.titleSmall
+                        )
 
-                    Text(
-                        text = walk.observations,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                        Text(
+                            text = walk.observations,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
         }
 
-        if (walk.status == WalkStatus.IN_PROGRESS) {
-            Button(
-                onClick = { onTrackWalk(walk.id) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Consultar seguimiento")
+        when (walk.status) {
+            WalkStatus.IN_PROGRESS -> {
+                PrimaryActionButton(
+                    text = "Consultar seguimiento",
+                    onClick = { onTrackWalk(walk.id) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            WalkStatus.SCHEDULED -> {
+                AppCard {
+                    Text(
+                        text = "El paseo está confirmado. El seguimiento estará disponible cuando comience.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            WalkStatus.COMPLETED -> {
+                AppCard {
+                    Text(
+                        text = "Este paseo ya finalizó. Podés consultar los datos registrados.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            WalkStatus.CANCELLED -> {
+                AppCard {
+                    Text(
+                        text = "Este paseo fue cancelado.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
-
-        if (walk.status == WalkStatus.SCHEDULED) {
-            Text(
-                text = "El paseo está confirmado. El seguimiento estará disponible cuando comience.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        if (walk.status == WalkStatus.COMPLETED) {
-            Text(
-                text = "Este paseo ya finalizó.",
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
     }
 }
 
 @Composable
-private fun DetailRow(
-    label: String,
-    value: String
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyLarge
-        )
-    }
-}
-
-@Composable
-private fun statusColor(status: WalkStatus) =
+private fun statusBackgroundColor(status: WalkStatus) =
     when (status) {
         WalkStatus.SCHEDULED ->
-            MaterialTheme.colorScheme.primary
+            MaterialTheme.colorScheme.primaryContainer
 
         WalkStatus.IN_PROGRESS ->
-            MaterialTheme.colorScheme.tertiary
+            MaterialTheme.colorScheme.tertiaryContainer
 
         WalkStatus.COMPLETED ->
-            MaterialTheme.colorScheme.secondary
+            MaterialTheme.colorScheme.secondaryContainer
 
         WalkStatus.CANCELLED ->
-            MaterialTheme.colorScheme.error
+            MaterialTheme.colorScheme.errorContainer
+    }
+
+@Composable
+private fun statusTextColor(status: WalkStatus) =
+    when (status) {
+        WalkStatus.SCHEDULED ->
+            MaterialTheme.colorScheme.onPrimaryContainer
+
+        WalkStatus.IN_PROGRESS ->
+            MaterialTheme.colorScheme.onTertiaryContainer
+
+        WalkStatus.COMPLETED ->
+            MaterialTheme.colorScheme.onSecondaryContainer
+
+        WalkStatus.CANCELLED ->
+            MaterialTheme.colorScheme.onErrorContainer
     }
 
 private fun statusLabel(status: WalkStatus): String =

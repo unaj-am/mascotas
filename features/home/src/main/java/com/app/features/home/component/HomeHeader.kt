@@ -1,3 +1,4 @@
+
 package com.app.features.home.component
 
 import androidx.compose.foundation.layout.Arrangement
@@ -18,8 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.app.core.ui.theme.DimensUI
-import com.app.core.ui.theme.PetOwnerLavender
-import com.app.core.ui.theme.PetOwnerPurple
 
 @Composable
 fun HomeHeader(
@@ -62,7 +61,7 @@ fun HomeHeader(
             Surface(
                 modifier = Modifier.size(DimensUI.IconSizeLarge),
                 shape = CircleShape,
-                color = PetOwnerLavender
+                color = MaterialTheme.colorScheme.primaryContainer
             ) {
                 Box(
                     contentAlignment = Alignment.Center
@@ -70,7 +69,7 @@ fun HomeHeader(
                     Icon(
                         imageVector = Icons.Filled.NotificationsNone,
                         contentDescription = "Notificaciones",
-                        tint = PetOwnerPurple
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }

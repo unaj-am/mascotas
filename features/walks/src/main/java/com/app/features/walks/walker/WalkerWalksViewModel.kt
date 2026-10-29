@@ -1,3 +1,4 @@
+
 package com.app.features.walks.walker
 
 import androidx.lifecycle.ViewModel
@@ -11,6 +12,7 @@ import com.app.core.domain.usecase.StartWalkUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -32,14 +34,20 @@ class WalkerWalksViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     private var walkerId: String = ""
+    private var loadJob: Job? = null
 
     fun load(
         walkerId: String,
         forceRefresh: Boolean = false
     ) {
         if (walkerId.isBlank()) {
+            loadJob?.cancel()
+            this.walkerId = ""
+
             _uiState.update {
                 it.copy(
+                    walks = emptyList(),
+                    walkDetails = emptyMap(),
                     isLoading = false,
                     errorMessage = "No se pudo identificar al paseador."
                 )
@@ -47,18 +55,40 @@ class WalkerWalksViewModel @Inject constructor(
             return
         }
 
+        val walkerChanged = this.walkerId != walkerId
         this.walkerId = walkerId
 
-        if (
-            !forceRefresh &&
-            !_uiState.value.isLoading &&
-            _uiState.value.errorMessage == null &&
-            _uiState.value.walks.isNotEmpty()
-        ) {
-            return
+        if (walkerChanged) {
+            loadJob?.cancel()
+
+            _uiState.update {
+                it.copy(
+                    walks = emptyList(),
+                    walkDetails = emptyMap(),
+                    isLoading = true,
+                    errorMessage = null,
+                    operationMessage = null,
+                    operationError = null,
+                    processingId = null
+                )
+            }
         }
 
-        viewModelScope.launch {
+        if (!forceRefresh) {
+            if (loadJob?.isActive == true) return
+
+            if (
+                !_uiState.value.isLoading &&
+                _uiState.value.errorMessage == null &&
+                _uiState.value.walks.isNotEmpty()
+            ) {
+                return
+            }
+        }
+
+        loadJob?.cancel()
+
+        loadJob = viewModelScope.launch {
             _uiState.update {
                 it.copy(
                     isLoading = true,
@@ -112,7 +142,10 @@ class WalkerWalksViewModel @Inject constructor(
                 val owner = getUserById(walk.ownerId)
 
                 owner?.let {
-                    listOf(it.name.trim(), it.lastName.trim())
+                    listOf(
+                        it.name.trim(),
+                        it.lastName.trim()
+                    )
                         .filter { name -> name.isNotBlank() }
                         .joinToString(" ")
                         .takeIf { name -> name.isNotBlank() }
@@ -153,6 +186,7 @@ class WalkerWalksViewModel @Inject constructor(
     }
 
     fun refresh() {
+        if (walkerId.isBlank()) return
         load(walkerId, forceRefresh = true)
     }
 
