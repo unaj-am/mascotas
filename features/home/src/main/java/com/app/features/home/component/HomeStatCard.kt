@@ -1,3 +1,4 @@
+
 package com.app.features.home.component
 
 import androidx.compose.foundation.layout.Arrangement
@@ -5,8 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -14,9 +13,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.app.core.ui.components.AppCard
 import com.app.core.ui.theme.DimensUI
-import com.app.core.ui.theme.PetOwnerLavender
-import com.app.core.ui.theme.PetOwnerPurple
 
 @Composable
 fun HomeStatCard(
@@ -25,15 +23,11 @@ fun HomeStatCard(
     icon: ImageVector,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(
-            containerColor = PetOwnerLavender
-        )
+    AppCard(
+        modifier = modifier
     ) {
         Column(
-            modifier = Modifier.padding(DimensUI.SpaceLarge),
+            modifier = Modifier.padding(DimensUI.SpaceSmall),
             verticalArrangement = Arrangement.spacedBy(
                 DimensUI.SpaceSmall
             )
@@ -45,7 +39,7 @@ fun HomeStatCard(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = PetOwnerPurple
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
 

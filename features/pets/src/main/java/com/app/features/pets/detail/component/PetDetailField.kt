@@ -1,35 +1,26 @@
+
 package com.app.features.pets.detail.component
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.app.core.ui.theme.DimensUI
+import com.app.core.ui.components.InfoRow
 
+/**
+ * Componente de compatibilidad para mostrar un dato
+ * en el detalle de una mascota.
+ *
+ * Delegamos la presentación visual a InfoRow,
+ * centralizando los estilos en core:ui.
+ */
 @Composable
 fun PetDetailField(
     label: String,
     value: String,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(
-            DimensUI.SpaceXSmall
-        )
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
+    InfoRow(
+        label = label,
+        value = value,
+        modifier = modifier
+    )
 }

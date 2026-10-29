@@ -1,3 +1,4 @@
+
 package com.app.features.pets.list
 
 import androidx.compose.foundation.layout.Arrangement
@@ -5,11 +6,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -20,12 +18,17 @@ import com.app.core.domain.model.Pet
 import com.app.core.ui.components.EmptyContent
 import com.app.core.ui.components.ErrorContent
 import com.app.core.ui.components.LoadingContent
-import com.app.core.ui.components.PrimaryActionButton
+import com.app.core.ui.components.SectionHeader
 import com.app.core.ui.theme.DimensUI
 import com.app.core.ui.theme.MascotasThemeUI
 import com.app.features.pets.component.PetCard
-import androidx.compose.foundation.background
 
+/**
+ * Route de la pantalla de mascotas.
+ *
+ * Conecta la interfaz con el ViewModel y solicita
+ * la carga cuando cambia el identificador del dueño.
+ */
 @Composable
 fun PetRoute(
     ownerId: String,
@@ -48,6 +51,13 @@ fun PetRoute(
         modifier = modifier
     )
 }
+
+/**
+ * Pantalla visual del listado de mascotas.
+ *
+ * No realiza consultas directamente: recibe el estado
+ * y comunica las acciones al componente superior.
+ */
 @Composable
 fun PetScreen(
     uiState: PetListUiState,
@@ -67,60 +77,53 @@ fun PetScreen(
             DimensUI.SectionSpacing
         )
     ) {
-        Text(
-            text = "MIS MASCOTAS",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Text(
-            text = "Tus compañeros",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-
-        Text(
-            text = when (uiState) {
-                is PetListUiState.Success ->
+        SectionHeader(
+            title = "Mis mascotas",
+            subtitle = when (uiState) {
+                is PetListUiState.Success -> {
                     if (uiState.pets.isEmpty()) {
-                        "Todavía no tenés mascotas registradas."
+                        "Tus compañeros de aventuras"
                     } else {
                         "Tenés ${uiState.pets.size} mascotas registradas."
                     }
+                }
 
-                PetListUiState.Loading -> "Cargando tus mascotas..."
+                PetListUiState.Loading ->
+                    "Cargando tus mascotas..."
 
                 is PetListUiState.Error ->
                     "No pudimos cargar tus mascotas."
             },
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            actionText = if (
+                uiState is PetListUiState.Success &&
+                uiState.pets.isNotEmpty()
+            ) {
+                "Agregar"
+            } else {
+                null
+            },
+            onAction = onAddPetClick
         )
-
-        if (
-            uiState is PetListUiState.Success &&
-            uiState.pets.isNotEmpty()
-        ) {
-            PrimaryActionButton(
-                text = "Agregar mascota",
-                onClick = onAddPetClick
-            )
-        }
 
         Box(
             modifier = Modifier.weight(1f)
         ) {
             when (uiState) {
                 PetListUiState.Loading -> {
-                    LoadingContent()
+                    LoadingContent(
+                        modifier = Modifier.fillMaxSize(),
+                        message = "Cargando tus mascotas..."
+                    )
                 }
 
                 is PetListUiState.Success -> {
                     if (uiState.pets.isEmpty()) {
                         EmptyContent(
+                            title = "Todavía no tenés mascotas",
                             message = "Registrá tu primera mascota para consultar sus datos desde acá.",
                             actionText = "Agregar mi primera mascota",
-                            onAction = onAddPetClick
+                            onAction = onAddPetClick,
+                            modifier = Modifier.fillMaxSize()
                         )
                     } else {
                         LazyColumn(
@@ -147,7 +150,8 @@ fun PetScreen(
                 is PetListUiState.Error -> {
                     ErrorContent(
                         message = uiState.message,
-                        onRetry = onRetry
+                        onRetry = onRetry,
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
             }

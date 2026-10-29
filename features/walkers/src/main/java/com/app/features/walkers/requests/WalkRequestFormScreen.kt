@@ -14,15 +14,29 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import com.app.core.ui.components.AppCard
 import com.app.core.ui.components.AppTextField
+import com.app.core.ui.components.DomainErrorMessage
 import com.app.core.ui.components.EmptyContent
 import com.app.core.ui.components.LoadingContent
 import com.app.core.ui.components.PrimaryActionButton
+import com.app.core.ui.components.SectionHeader
+import com.app.core.ui.components.StatusBadge
 import com.app.core.ui.components.SuccessDialog
 import com.app.core.ui.theme.DimensUI
 
+/**
+ * Formulario para solicitar un paseo.
+ *
+ * La pantalla presenta las mascotas del dueño,
+ * los datos del paseo y el estado de la operación.
+ *
+ * La lógica de selección, validación y envío permanece
+ * en el ViewModel.
+ */
 @Composable
 fun WalkRequestFormScreen(
     uiState: WalkRequestFormUiState,
@@ -35,7 +49,6 @@ fun WalkRequestFormScreen(
     onSuccess: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-
     if (uiState.isSuccess) {
         SuccessDialog(
             title = "Solicitud enviada",
@@ -53,99 +66,164 @@ fun WalkRequestFormScreen(
                 vertical = DimensUI.ScreenVerticalPadding
             ),
         verticalArrangement = Arrangement.spacedBy(
-            DimensUI.SpaceLarge
+            DimensUI.SectionSpacing
         )
     ) {
-
-        TextButton(onClick = onBack) {
+        TextButton(
+            onClick = onBack,
+            enabled = !uiState.isSubmitting
+        ) {
             Text("← Volver")
         }
 
-        Text(
-            text = "Solicitar paseo",
-            style = MaterialTheme.typography.headlineMedium
-        )
-
-        Text(
-            text = "Completá los datos para enviarle una solicitud al paseador.",
-            style = MaterialTheme.typography.bodyMedium
+        SectionHeader(
+            title = "Solicitar paseo",
+            subtitle = "Completá los datos para enviarle una solicitud al paseador."
         )
 
         if (uiState.isLoading) {
-            LoadingContent()
-        } else {
-
-            Text(
-                text = "Seleccioná tus mascotas",
-                style = MaterialTheme.typography.titleMedium
+            LoadingContent(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = DimensUI.SpaceXLarge),
+                message = "Cargando tus mascotas..."
             )
-
-            if (uiState.pets.isEmpty()) {
-                EmptyContent(
-                    message = "No tenés mascotas registradas."
-                )
-            } else {
-                uiState.pets.forEach { pet ->
-
+        } else {
+            AppCard(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(
+                        DimensUI.SpaceLarge
+                    )
+                ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Checkbox(
-                            checked = pet.id in uiState.selectedPetIds,
-                            onCheckedChange = {
-                                onPetSelected(pet.id)
+                        Text(
+                            text = "Tus mascotas",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+
+                        StatusBadge(
+                            text = if (
+                                uiState.selectedPetIds.size == 1
+                            ) {
+                                "1 seleccionada"
+                            } else {
+                                "${uiState.selectedPetIds.size} seleccionadas"
                             }
                         )
+                    }
 
-                        Text(
-                            text = pet.name,
-                            modifier = Modifier.padding(
-                                top = DimensUI.SpaceMedium
-                            )
+                    if (uiState.pets.isEmpty()) {
+                        EmptyContent(
+                            title = "No tenés mascotas registradas",
+                            message = "Necesitás registrar al menos una mascota antes de solicitar un paseo.",
+                            modifier = Modifier.fillMaxWidth()
                         )
+                    } else {
+                        Text(
+                            text = "Seleccioná una o más mascotas para el paseo.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        uiState.pets.forEach { pet ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Checkbox(
+                                    checked = pet.id in uiState.selectedPetIds,
+                                    onCheckedChange = {
+                                        onPetSelected(pet.id)
+                                    },
+                                    enabled = !uiState.isSubmitting
+                                )
+
+                                Text(
+                                    text = pet.name,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(
+                                            start = DimensUI.SpaceSmall
+                                        ),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
                     }
                 }
             }
 
-            AppTextField(
-                value = uiState.scheduledAt,
-                onValueChange = onScheduledAtChange,
-                label = "Fecha y hora",
-                placeholder = "2026-11-01T15:00",
+            AppCard(
                 modifier = Modifier.fillMaxWidth()
-            )
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(
+                        DimensUI.SpaceLarge
+                    )
+                ) {
+                    Text(
+                        text = "Datos del paseo",
+                        style = MaterialTheme.typography.titleMedium
+                    )
 
-            AppTextField(
-                value = uiState.durationMinutes,
-                onValueChange = onDurationChange,
-                label = "Duración en minutos",
-                keyboardType = KeyboardType.Number,
-                modifier = Modifier.fillMaxWidth()
-            )
+                    AppTextField(
+                        value = uiState.scheduledAt,
+                        onValueChange = onScheduledAtChange,
+                        label = "Fecha y hora",
+                        placeholder = "2026-11-01T15:00",
+                        enabled = !uiState.isSubmitting
+                    )
 
-            AppTextField(
-                value = uiState.observations,
-                onValueChange = onObservationsChange,
-                label = "Observaciones",
-                singleLine = false,
-                modifier = Modifier.fillMaxWidth()
-            )
+                    Text(
+                        text = "Formato: AAAA-MM-DDTHH:MM",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
 
-            if (uiState.errorMessage != null) {
-                Text(
-                    text = uiState.errorMessage,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium
+                    AppTextField(
+                        value = uiState.durationMinutes,
+                        onValueChange = { value ->
+                            if (value.all(Char::isDigit)) {
+                                onDurationChange(value)
+                            }
+                        },
+                        label = "Duración en minutos",
+                        placeholder = "60",
+                        keyboardType = KeyboardType.Number,
+                        enabled = !uiState.isSubmitting
+                    )
+
+                    AppTextField(
+                        value = uiState.observations,
+                        onValueChange = onObservationsChange,
+                        label = "Observaciones",
+                        placeholder = "Indicá cuidados o información relevante para el paseo.",
+                        singleLine = false,
+                        enabled = !uiState.isSubmitting
+                    )
+                }
+            }
+
+            uiState.errorMessage?.let { message ->
+                DomainErrorMessage(
+                    message = message,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
             PrimaryActionButton(
                 text = "Enviar solicitud",
                 onClick = onSubmit,
-                enabled = uiState.selectedPetIds.isNotEmpty()
-                        && !uiState.isSubmitting,
-                isLoading = uiState.isSubmitting,
-                modifier = Modifier.fillMaxWidth()
+                enabled = uiState.selectedPetIds.isNotEmpty() &&
+                        !uiState.isSubmitting,
+                isLoading = uiState.isSubmitting
             )
         }
     }

@@ -1,3 +1,4 @@
+
 package com.app.features.walks.walker
 
 import androidx.compose.foundation.layout.Arrangement
@@ -8,9 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,6 +20,7 @@ import com.app.core.domain.model.WalkStatus
 import com.app.core.ui.components.DomainErrorMessage
 import com.app.core.ui.components.EmptyContent
 import com.app.core.ui.components.LoadingContent
+import com.app.core.ui.components.SectionHeader
 import com.app.features.walks.component.WalkCard
 
 @Composable
@@ -30,20 +29,98 @@ fun WalkerHistoryScreen(
     viewModel: WalkerWalksViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    LaunchedEffect(walkerId) { viewModel.load(walkerId, forceRefresh = true) }
-    val history = state.walks.filter { it.status == WalkStatus.COMPLETED || it.status == WalkStatus.CANCELLED }.sortedByDescending { it.scheduledAt }
 
-    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        androidx.compose.foundation.layout.Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Historial", style = MaterialTheme.typography.headlineMedium)
-            TextButton(onClick = viewModel::refresh, enabled = !state.isLoading) { Text("Actualizar") }
+    LaunchedEffect(walkerId) {
+        viewModel.load(
+            walkerId = walkerId,
+            forceRefresh = true
+        )
+    }
+
+    val history = state.walks
+        .filter { walk ->
+            walk.status == WalkStatus.COMPLETED ||
+                    walk.status == WalkStatus.CANCELLED
         }
-        state.errorMessage?.let { DomainErrorMessage(message = it, onRetry = viewModel::refresh) }
+        .sortedByDescending { walk -> walk.scheduledAt }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(
+                horizontal = 20.dp,
+                vertical = 16.dp
+            ),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        SectionHeader(
+            title = "Historial de paseos",
+            subtitle = "Consultá los paseos finalizados y cancelados.",
+            actionText = "Actualizar",
+            onAction = viewModel::refresh
+        )
+
+        state.operationMessage?.let { message ->
+            androidx.compose.material3.Text(
+                text = message
+            )
+        }
+
+        state.operationError?.let { error ->
+            DomainErrorMessage(
+                message = error,
+                onRetry = viewModel::refresh
+            )
+        }
+
+        state.errorMessage?.let { error ->
+            DomainErrorMessage(
+                message = error,
+                onRetry = viewModel::refresh
+            )
+        }
+
         when {
-            state.isLoading && state.walks.isEmpty() -> LoadingContent(Modifier.weight(1f))
-            history.isEmpty() && state.errorMessage == null -> EmptyContent("Todavía no hay paseos finalizados o cancelados.", Modifier.weight(1f), "Actualizar", viewModel::refresh)
-            else -> LazyColumn(modifier = Modifier.weight(1f), contentPadding = PaddingValues(bottom = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(history, key = { it.id }) { walk -> WalkCard(walk = walk) }
+            state.isLoading && state.walks.isEmpty() -> {
+                LoadingContent(
+                    modifier = Modifier.weight(1f),
+                    message = "Cargando historial..."
+                )
+            }
+
+            history.isEmpty() && state.errorMessage == null -> {
+                EmptyContent(
+                    title = "Sin paseos en el historial",
+                    message = "Los paseos completados o cancelados aparecerán acá.",
+                    modifier = Modifier.weight(1f),
+                    actionText = "Actualizar",
+                    onAction = viewModel::refresh
+                )
+            }
+
+            else -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentPadding = PaddingValues(
+                        bottom = 20.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(
+                        items = history,
+                        key = { walk -> walk.id }
+                    ) { walk ->
+                        val details = state.walkDetails[walk.id]
+
+                        WalkCard(
+                            walk = walk,
+                            ownerName = details?.ownerName,
+                            petNames = details?.petNames.orEmpty()
+                        )
+                    }
+                }
             }
         }
     }

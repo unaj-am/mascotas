@@ -1,22 +1,28 @@
+
 package com.app.features.pets.detail.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.app.core.domain.model.Pet
+import com.app.core.ui.components.AppCard
+import com.app.core.ui.components.InfoRow
 import com.app.core.ui.theme.DimensUI
 
+/**
+ * Presenta los datos detallados de una mascota.
+ *
+ * Reutiliza AppCard como contenedor e InfoRow
+ * para mantener consistente la presentación de datos.
+ */
 @Composable
 fun PetDetailContent(
     pet: Pet,
@@ -24,36 +30,23 @@ fun PetDetailContent(
 ) {
     Column(
         modifier = modifier
-            .fillMaxSize()
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(
-            DimensUI.SpaceMedium
+            DimensUI.SpaceLarge
         )
     ) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.extraLarge,
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = DimensUI.SpaceXSmall
-            )
+        AppCard(
+            modifier = Modifier.fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(DimensUI.SpaceLarge),
                 verticalArrangement = Arrangement.spacedBy(
                     DimensUI.SpaceLarge
                 )
             ) {
-                // Foto o mensaje de ausencia de foto.
                 PetPhoto(
                     photoUri = pet.photoUri
                 )
 
-                // Cabecera de la mascota.
                 Column(
                     verticalArrangement = Arrangement.spacedBy(
                         DimensUI.SpaceXSmall
@@ -73,7 +66,17 @@ fun PetDetailContent(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+            }
+        }
 
+        AppCard(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(
+                    DimensUI.SpaceLarge
+                )
+            ) {
                 Text(
                     text = "Información general",
                     style = MaterialTheme.typography.titleMedium,
@@ -86,13 +89,13 @@ fun PetDetailContent(
                         DimensUI.SpaceLarge
                     )
                 ) {
-                    PetDetailField(
+                    InfoRow(
                         label = "Edad",
                         value = "${pet.age} años",
                         modifier = Modifier.weight(1f)
                     )
 
-                    PetDetailField(
+                    InfoRow(
                         label = "Peso",
                         value = "${pet.weight} kg",
                         modifier = Modifier.weight(1f)
@@ -105,7 +108,7 @@ fun PetDetailContent(
                         DimensUI.SpaceLarge
                     )
                 ) {
-                    PetDetailField(
+                    InfoRow(
                         label = "Tamaño",
                         value = pet.size.ifBlank {
                             "No especificado"
@@ -113,7 +116,7 @@ fun PetDetailContent(
                         modifier = Modifier.weight(1f)
                     )
 
-                    PetDetailField(
+                    InfoRow(
                         label = "Comportamiento",
                         value = pet.behavior.ifBlank {
                             "No especificado"
@@ -121,15 +124,31 @@ fun PetDetailContent(
                         modifier = Modifier.weight(1f)
                     )
                 }
+            }
+        }
 
-                PetDetailField(
+        AppCard(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(
+                    DimensUI.SpaceLarge
+                )
+            ) {
+                Text(
+                    text = "Información adicional",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                InfoRow(
                     label = "Necesidades especiales",
                     value = pet.specialNeeds.ifBlank {
                         "Ninguna registrada"
                     }
                 )
 
-                PetDetailField(
+                InfoRow(
                     label = "Observaciones",
                     value = pet.observations.ifBlank {
                         "Sin observaciones"

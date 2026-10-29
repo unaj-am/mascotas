@@ -1,3 +1,4 @@
+
 package com.app.features.home.component
 
 import androidx.compose.foundation.layout.Arrangement
@@ -10,8 +11,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Pets
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -19,9 +18,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.app.core.ui.components.AppCard
 import com.app.core.ui.theme.DimensUI
-import com.app.core.ui.theme.PetOwnerLavender
-import com.app.core.ui.theme.PetOwnerPurple
 
 @Composable
 fun HomePetsCard(
@@ -29,13 +27,9 @@ fun HomePetsCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    AppCard(
         onClick = onClick,
-        modifier = modifier,
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+        modifier = modifier
     ) {
         Row(
             modifier = Modifier.padding(DimensUI.SpaceLarge),
@@ -47,7 +41,7 @@ fun HomePetsCard(
             Surface(
                 modifier = Modifier.size(DimensUI.PetAvatarSize),
                 shape = CircleShape,
-                color = PetOwnerLavender
+                color = MaterialTheme.colorScheme.primaryContainer
             ) {
                 Box(
                     contentAlignment = Alignment.Center
@@ -55,7 +49,7 @@ fun HomePetsCard(
                     Icon(
                         imageVector = Icons.Filled.Pets,
                         contentDescription = null,
-                        tint = PetOwnerPurple,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.size(
                             DimensUI.IconSizeLarge
                         )
@@ -89,7 +83,7 @@ fun HomePetsCard(
             Icon(
                 imageVector = Icons.Filled.ArrowForward,
                 contentDescription = "Ver mascotas",
-                tint = PetOwnerPurple
+                tint = MaterialTheme.colorScheme.primary
             )
         }
     }

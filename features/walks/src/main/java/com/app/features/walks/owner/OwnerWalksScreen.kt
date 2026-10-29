@@ -4,7 +4,6 @@ package com.app.features.walks.owner
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,7 +11,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -24,6 +22,7 @@ import com.app.core.domain.model.WalkStatus
 import com.app.core.ui.components.DomainErrorMessage
 import com.app.core.ui.components.EmptyContent
 import com.app.core.ui.components.LoadingContent
+import com.app.core.ui.components.SectionHeader
 import com.app.features.walks.component.WalkCard
 import com.app.features.walks.component.WalkRequestCard
 
@@ -50,29 +49,19 @@ fun OwnerWalksScreen(
                 horizontal = 20.dp,
                 vertical = 16.dp
             ),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "Mis paseos",
-                style = MaterialTheme.typography.headlineMedium
-            )
-
-            TextButton(
-                onClick = viewModel::refresh,
-                enabled = !state.isLoading &&
-                        state.processingId == null
-            ) {
-                Text("Actualizar")
-            }
-        }
+        SectionHeader(
+            title = "Mis paseos",
+            subtitle = "Consultá tus solicitudes, próximos paseos e historial.",
+            actionText = "Actualizar",
+            onAction = viewModel::refresh
+        )
 
         state.operationMessage?.let { message ->
             Text(
                 text = message,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary
             )
         }
@@ -97,7 +86,8 @@ fun OwnerWalksScreen(
                     state.requests.isEmpty() -> {
 
                 LoadingContent(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    message = "Cargando tus paseos..."
                 )
             }
 
@@ -106,26 +96,29 @@ fun OwnerWalksScreen(
                     state.errorMessage == null -> {
 
                 EmptyContent(
-                    message = "Todavía no tenés paseos ni solicitudes. Buscá un paseador para organizar el primero.",
-                    modifier = Modifier.weight(1f)
+                    title = "Todavía no tenés paseos",
+                    message = "Buscá un paseador y enviá una solicitud para organizar tu primer paseo.",
+                    modifier = Modifier.weight(1f),
+                    actionText = "Actualizar",
+                    onAction = viewModel::refresh
                 )
             }
 
             else -> {
                 LazyColumn(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
                     contentPadding = PaddingValues(
                         bottom = 20.dp
                     ),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Solicitudes que todavía no se convirtieron
-                    // en paseos confirmados.
                     if (state.requests.isNotEmpty()) {
-                        item {
-                            Text(
-                                text = "SOLICITUDES",
-                                style = MaterialTheme.typography.titleSmall
+                        item(key = "requests-header") {
+                            SectionHeader(
+                                title = "Solicitudes",
+                                subtitle = "Estado de las solicitudes que enviaste."
                             )
                         }
 
@@ -154,12 +147,11 @@ fun OwnerWalksScreen(
                                 walk.status == WalkStatus.CANCELLED
                     }
 
-                    // Paseos programados y en curso.
                     if (upcoming.isNotEmpty()) {
-                        item {
-                            Text(
-                                text = "PRÓXIMOS Y EN CURSO",
-                                style = MaterialTheme.typography.titleSmall
+                        item(key = "upcoming-header") {
+                            SectionHeader(
+                                title = "Próximos y en curso",
+                                subtitle = "Tus paseos confirmados y los que están activos."
                             )
                         }
 
@@ -188,12 +180,11 @@ fun OwnerWalksScreen(
                         }
                     }
 
-                    // Paseos finalizados o cancelados.
                     if (previous.isNotEmpty()) {
-                        item {
-                            Text(
-                                text = "HISTORIAL",
-                                style = MaterialTheme.typography.titleSmall
+                        item(key = "history-header") {
+                            SectionHeader(
+                                title = "Historial",
+                                subtitle = "Paseos finalizados o cancelados."
                             )
                         }
 

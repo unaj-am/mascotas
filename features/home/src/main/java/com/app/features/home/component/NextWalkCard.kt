@@ -1,3 +1,4 @@
+
 package com.app.features.home.component
 
 import androidx.compose.foundation.layout.Arrangement
@@ -10,8 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.WatchLater
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -19,9 +18,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.app.core.ui.components.AppCard
 import com.app.core.ui.theme.DimensUI
-import com.app.core.ui.theme.PetOwnerPurple
-import com.app.core.ui.theme.PetTextOnDark
 
 @Composable
 fun NextWalkCard(
@@ -41,18 +39,11 @@ fun NextWalkCard(
             title = "PRÓXIMO PASEO"
         )
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.extraLarge,
-            colors = CardDefaults.cardColors(
-                containerColor = PetOwnerPurple
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = DimensUI.SpaceXSmall
-            )
+        AppCard(
+            modifier = Modifier.fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier.padding(DimensUI.SpaceXLarge),
+                modifier = Modifier.padding(DimensUI.SpaceLarge),
                 verticalArrangement = Arrangement.spacedBy(
                     DimensUI.SpaceMedium
                 )
@@ -66,13 +57,13 @@ fun NextWalkCard(
                     Icon(
                         imageVector = Icons.Filled.WatchLater,
                         contentDescription = null,
-                        tint = PetTextOnDark
+                        tint = MaterialTheme.colorScheme.primary
                     )
 
                     Text(
                         text = "Paseo programado",
                         style = MaterialTheme.typography.labelLarge,
-                        color = PetTextOnDark
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
@@ -80,14 +71,14 @@ fun NextWalkCard(
                     Text(
                         text = petName,
                         style = MaterialTheme.typography.headlineMedium,
-                        color = PetTextOnDark
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     if (!petBreed.isNullOrBlank()) {
                         Text(
                             text = petBreed,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = PetTextOnDark
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
@@ -95,20 +86,20 @@ fun NextWalkCard(
                         Text(
                             text = walkDate,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = PetTextOnDark
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 } else {
                     Text(
                         text = "Todavía no tenés paseos programados",
                         style = MaterialTheme.typography.titleMedium,
-                        color = PetTextOnDark
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Text(
                         text = "Buscá un paseador para organizar el próximo.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = PetTextOnDark
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -116,7 +107,7 @@ fun NextWalkCard(
                     onClick = onFindWalkerClick,
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.surface
+                    color = MaterialTheme.colorScheme.primaryContainer
                 ) {
                     Row(
                         modifier = Modifier.padding(
@@ -128,7 +119,7 @@ fun NextWalkCard(
                         Text(
                             text = "Buscar paseador",
                             style = MaterialTheme.typography.labelLarge,
-                            color = PetOwnerPurple
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
 
                         Spacer(
@@ -140,7 +131,7 @@ fun NextWalkCard(
                         Icon(
                             imageVector = Icons.Filled.ArrowForward,
                             contentDescription = null,
-                            tint = PetOwnerPurple
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                 }
