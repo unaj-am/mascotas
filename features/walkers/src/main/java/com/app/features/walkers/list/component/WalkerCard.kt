@@ -1,5 +1,4 @@
-
-package com.app.features.walkers.component
+package com.app.features.walkers.list.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

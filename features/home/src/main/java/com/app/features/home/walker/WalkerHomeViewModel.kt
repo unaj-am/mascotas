@@ -1,4 +1,4 @@
-package com.app.features.home
+package com.app.features.home.walker
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -6,18 +6,18 @@ import com.app.core.domain.model.RequestStatus
 import com.app.core.domain.model.UserRole
 import com.app.core.domain.model.WalkStatus
 import com.app.core.domain.repository.UserRepository
-import com.app.core.domain.usecase.GetWalkerByIdUseCase
 import com.app.core.domain.usecase.GetWalkRequestsByWalkerUseCase
+import com.app.core.domain.usecase.GetWalkerByIdUseCase
 import com.app.core.domain.usecase.GetWalksByWalkerUseCase
 import com.app.core.domain.usecase.UpdateWalkerAvailabilityUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class WalkerHomeViewModel @Inject constructor(

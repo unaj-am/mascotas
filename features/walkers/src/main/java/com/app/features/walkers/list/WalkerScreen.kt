@@ -1,15 +1,10 @@
-
 package com.app.features.walkers.list
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -17,20 +12,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.app.core.ui.components.AppCard
-import com.app.core.ui.components.AppTextField
-import com.app.core.ui.components.StatusBadge
 import com.app.core.ui.theme.DimensUI
 import com.app.features.walkers.list.component.WalkerContent
 import com.app.features.walkers.list.component.WalkerHeader
+import com.app.features.walkers.list.filter.WalkerFilterSection
+import com.app.features.walkers.list.filter.WalkerFilterState
 
 /**
  * Route del listado de paseadores.
- *
  */
 @Composable
 fun WalkerRoute(
@@ -51,10 +42,8 @@ fun WalkerRoute(
 }
 
 /**
- * Pantalla del listado con filtros locales.
+ * Pantalla del listado de paseadores.
  *
- * Los filtros se aplican sobre los paseadores
- * recibidos en el estado Success.
  */
 @Composable
 fun WalkerScreen(
@@ -76,42 +65,13 @@ fun WalkerScreen(
         mutableStateOf(false)
     }
 
-    val maxPrice = maxPriceText
-        .trim()
-        .replace(",", ".")
-        .toDoubleOrNull()
+    val filterState = WalkerFilterState(
+        serviceArea = serviceArea,
+        maxPriceText = maxPriceText,
+        onlyAvailable = onlyAvailable
+    )
 
-    val isPriceInvalid =
-        maxPriceText.isNotBlank() && maxPrice == null
-
-    val displayState = when (uiState) {
-        is WalkerUiState.Success -> {
-            val filteredWalkers = uiState.walkers.filter { walker ->
-                val matchesArea =
-                    serviceArea.isBlank() ||
-                            walker.serviceArea.contains(
-                                serviceArea.trim(),
-                                ignoreCase = true
-                            )
-
-                val matchesPrice =
-                    maxPrice == null ||
-                            walker.pricePerWalk <= maxPrice
-
-                val matchesAvailability =
-                    !onlyAvailable || walker.available
-
-                matchesArea && matchesPrice && matchesAvailability
-            }
-
-            WalkerUiState.Success(
-                walkers = filteredWalkers
-            )
-        }
-
-        WalkerUiState.Loading -> WalkerUiState.Loading
-        is WalkerUiState.Error -> uiState
-    }
+    val displayState = filterState.applyTo(uiState)
 
     Column(
         modifier = modifier
@@ -135,105 +95,21 @@ fun WalkerScreen(
         )
 
         if (uiState is WalkerUiState.Success) {
-            AppCard(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(
-                        DimensUI.SpaceMedium
-                    )
-                ) {
-                    Text(
-                        text = "Filtrar paseadores",
-                        style = MaterialTheme.typography.titleMedium
-                    )
+            val resultCount =
+                (displayState as? WalkerUiState.Success)
+                    ?.walkers
+                    ?.size
+                    ?: 0
 
-                    AppTextField(
-                        value = serviceArea,
-                        onValueChange = {
-                            serviceArea = it
-                        },
-                        label = "Ciudad o zona",
-                        placeholder = "Ej.: Chilecito"
-                    )
-
-                    AppTextField(
-                        value = maxPriceText,
-                        onValueChange = { value ->
-                            if (
-                                value.isEmpty() ||
-                                value.matches(
-                                    Regex("^\\d*([.,]\\d*)?$")
-                                )
-                            ) {
-                                maxPriceText = value
-                            }
-                        },
-                        label = "Precio máximo por paseo",
-                        placeholder = "Ej.: 5000",
-                        keyboardType = KeyboardType.Decimal,
-                        errorMessage = if (isPriceInvalid) {
-                            "Ingresá un precio válido."
-                        } else {
-                            null
-                        }
-                    )
-
-                    Text(
-                        text = "Dejá vacío el campo para no limitar el precio.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = onlyAvailable,
-                            onCheckedChange = {
-                                onlyAvailable = it
-                            }
-                        )
-
-                        Text(
-                            text = "Mostrar solo disponibles",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (displayState is WalkerUiState.Success) {
-                            StatusBadge(
-                                text = if (
-                                    displayState.walkers.size == 1
-                                ) {
-                                    "1 resultado"
-                                } else {
-                                    "${displayState.walkers.size} resultados"
-                                }
-                            )
-                        }
-
-                        TextButton(
-                            onClick = {
-                                serviceArea = ""
-                                maxPriceText = ""
-                                onlyAvailable = false
-                            },
-                            enabled = serviceArea.isNotBlank() ||
-                                    maxPriceText.isNotBlank() ||
-                                    onlyAvailable
-                        ) {
-                            Text("Limpiar filtros")
-                        }
-                    }
+            WalkerFilterSection(
+                state = filterState,
+                resultCount = resultCount,
+                onStateChange = { newState ->
+                    serviceArea = newState.serviceArea
+                    maxPriceText = newState.maxPriceText
+                    onlyAvailable = newState.onlyAvailable
                 }
-            }
+            )
         }
 
         Box(
