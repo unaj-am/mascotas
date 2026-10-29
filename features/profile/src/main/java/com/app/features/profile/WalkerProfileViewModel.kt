@@ -78,6 +78,7 @@ class WalkerProfileViewModel @Inject constructor(
                         lastName = user.lastName,
                         email = user.email,
                         phone = user.phone,
+                        profileImage = user.profileImage,
                         description = walker?.description.orEmpty(),
                         experienceYears =
                             walker?.experienceYears?.toString() ?: "0",

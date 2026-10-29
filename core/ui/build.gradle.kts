@@ -37,6 +37,7 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.material3)
+    implementation("androidx.activity:activity-compose:1.12.4")
 
     // Herramientas de desarrollo
     implementation(libs.androidx.compose.ui.tooling.preview)

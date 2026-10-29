@@ -23,6 +23,13 @@ import com.app.core.ui.theme.DimensUI
 import com.app.features.profile.component.PersonalInformationSection
 import com.app.features.profile.component.ProfileActions
 import com.app.features.profile.component.ProfileHeader
+import android.net.Uri
+
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.app.core.ui.components.ProfilePhotoPicker
 
 @Composable
 fun OwnerProfileRoute(
@@ -57,6 +64,9 @@ private fun OwnerProfileScreen(
     onRetry: () -> Unit,
     onSignOut: () -> Unit
 ) {
+    var selectedPhotoUri by remember {
+        mutableStateOf<Uri?>(null)
+    }
     when {
         state.isLoading -> {
             LoadingContent()
@@ -106,8 +116,22 @@ private fun OwnerProfileScreen(
                 ProfileHeader(
                     name = state.name,
                     lastName = state.lastName,
-                    roleLabel = "Dueño de mascotas"
+                    roleLabel = "Dueño de mascotas",
+                    photoUri = selectedPhotoUri
                 )
+
+                ProfilePhotoPicker(
+                    onPhotoSelected = { uri ->
+                        selectedPhotoUri = uri
+                    }
+                ) { openPicker ->
+                    TextButton(
+                        onClick = openPicker
+                    ) {
+                        Text("Cambiar foto de perfil")
+                    }
+                }
+
 
                 HorizontalDivider()
 
