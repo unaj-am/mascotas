@@ -65,9 +65,6 @@ fun AppNavDisplay(
     val operationState by
     petViewModel.operationState.collectAsStateWithLifecycle()
 
-    val petsUiState by
-    petViewModel.uiState.collectAsStateWithLifecycle()
-
     LaunchedEffect(ownerId) {
         petViewModel.loadPets(ownerId)
     }
@@ -90,24 +87,9 @@ fun AppNavDisplay(
                 onNotificationsClick = {
                     // Pendiente: conectar notificaciones.
                 },
-                onPetsClick = {
-                    navigationState.selectTab(
-                        TopLevelDestination.PETS
-                    )
-                },
-                onWalksClick = {
-                    navigationState.selectTab(
-                        TopLevelDestination.WALKS
-                    )
-                },
                 onFindWalkerClick = {
                     navigationState.navigate(
                         WalkerSearchDestination
-                    )
-                },
-                onHistoryClick = {
-                    navigationState.selectTab(
-                        TopLevelDestination.WALKS
                     )
                 }
             )

@@ -1,3 +1,4 @@
+
 package com.app.features.home
 
 import androidx.compose.runtime.Composable
@@ -12,10 +13,7 @@ import com.app.core.ui.components.LoadingContent
 fun OwnerHomeRoute(
     ownerId: String,
     onNotificationsClick: () -> Unit,
-    onPetsClick: () -> Unit,
-    onWalksClick: () -> Unit,
     onFindWalkerClick: () -> Unit,
-    onHistoryClick: () -> Unit,
     viewModel: OwnerHomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -45,10 +43,7 @@ fun OwnerHomeRoute(
                 nextPetBreed = state.nextPetBreed,
                 nextWalkDate = state.nextWalkDate,
                 onNotificationsClick = onNotificationsClick,
-                onPetsClick = onPetsClick,
-                onWalksClick = onWalksClick,
-                onFindWalkerClick = onFindWalkerClick,
-                onHistoryClick = onHistoryClick
+                onFindWalkerClick = onFindWalkerClick
             )
         }
     }

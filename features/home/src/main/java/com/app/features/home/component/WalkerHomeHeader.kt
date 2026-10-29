@@ -1,3 +1,4 @@
+
 package com.app.features.home.component
 
 import androidx.compose.foundation.layout.Arrangement
@@ -21,7 +22,8 @@ fun WalkerHomeHeader(
     ) {
         Text(
             text = "Hola, $userName",
-            style = MaterialTheme.typography.headlineLarge
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Text(

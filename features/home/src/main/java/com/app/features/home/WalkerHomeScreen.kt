@@ -1,3 +1,4 @@
+
 package com.app.features.home
 
 import androidx.compose.foundation.layout.Arrangement
@@ -9,8 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -19,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.app.core.domain.model.WalkRequest
+import com.app.core.ui.components.AppCard
 import com.app.core.ui.components.DomainErrorMessage
 import com.app.core.ui.theme.DimensUI
 import com.app.features.home.component.WalkerAvailabilityCard
@@ -114,7 +114,8 @@ private fun WalkerHomeContent(
         item {
             Text(
                 text = "Resumen de actividad",
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
 
@@ -160,7 +161,8 @@ private fun WalkerHomeContent(
         item {
             Text(
                 text = "Solicitudes pendientes",
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
 
@@ -209,11 +211,8 @@ private fun WalkerHomeContent(
 private fun PendingRequestPreviewCard(
     request: WalkRequest
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+    AppCard(
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier.padding(DimensUI.SpaceLarge),
@@ -223,33 +222,39 @@ private fun PendingRequestPreviewCard(
         ) {
             Text(
                 text = "Nueva solicitud",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Text(
                 text = "Fecha y hora: ${request.scheduledAt}",
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Text(
                 text = "Duración: ${request.durationMinutes} minutos",
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             val petCount = request.petIds.size
+
             Text(
                 text = if (petCount == 1) {
                     "1 mascota"
                 } else {
                     "$petCount mascotas"
                 },
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             if (request.observations.isNotBlank()) {
                 Text(
                     text = "Observaciones: ${request.observations}",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 

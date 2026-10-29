@@ -1,3 +1,4 @@
+
 package com.app.core.ui.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +16,9 @@ import androidx.compose.ui.text.input.VisualTransformation
  *
  * No administra el estado del formulario:
  * recibe el valor y notifica sus cambios.
+ *
+ * trailingContent permite agregar controles al final,
+ * por ejemplo botones para modificar un valor numérico.
  */
 @Composable
 fun AppTextField(
@@ -30,7 +34,8 @@ fun AppTextField(
     singleLine: Boolean = true,
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation =
-        VisualTransformation.None
+        VisualTransformation.None,
+    trailingContent: (@Composable () -> Unit)? = null
 ) {
     val hasError = isError || !errorMessage.isNullOrBlank()
 
@@ -60,6 +65,7 @@ fun AppTextField(
                     )
                 }
             },
+        trailingIcon = trailingContent,
         keyboardOptions = KeyboardOptions(
             keyboardType = keyboardType
         ),

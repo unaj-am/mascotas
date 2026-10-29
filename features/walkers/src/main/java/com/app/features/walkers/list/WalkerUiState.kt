@@ -15,3 +15,4 @@ sealed interface WalkerUiState {
         val message: String
     ) : WalkerUiState
 }
+

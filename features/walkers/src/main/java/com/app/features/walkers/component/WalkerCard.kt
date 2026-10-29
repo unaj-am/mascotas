@@ -1,23 +1,30 @@
+
 package com.app.features.walkers.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.app.core.domain.model.Walker
+import com.app.core.ui.components.AppCard
+import com.app.core.ui.components.InfoRow
+import com.app.core.ui.components.StatusBadge
 import com.app.core.ui.theme.DimensUI
 import com.app.core.ui.theme.MascotasThemeUI
 import java.text.NumberFormat
 import java.util.Locale
 
+/**
+ * Tarjeta específica de un paseador.
+ *
+ * Reutiliza componentes visuales de core:ui.
+ * La navegación se delega a onClick.
+ */
 @Composable
 fun WalkerCard(
     walker: Walker,
@@ -28,21 +35,13 @@ fun WalkerCard(
         Locale("es", "AR")
     )
 
-    Card(
-        onClick = onClick,
+    AppCard(
         modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = DimensUI.SpaceXXSmall
-        )
+        onClick = onClick
     ) {
         Column(
-            modifier = Modifier.padding(DimensUI.SpaceLarge),
             verticalArrangement = Arrangement.spacedBy(
-                DimensUI.SpaceMedium
+                DimensUI.SpaceLarge
             )
         ) {
             Row(
@@ -74,74 +73,59 @@ fun WalkerCard(
                     )
                 }
 
-                Text(
-                    text = "→",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.primary
+                StatusBadge(
+                    text = if (walker.available) {
+                        "Disponible"
+                    } else {
+                        "No disponible"
+                    },
+                    containerColor = if (walker.available) {
+                        MaterialTheme.colorScheme.tertiaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant
+                    },
+                    contentColor = if (walker.available) {
+                        MaterialTheme.colorScheme.onTertiaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
                 )
             }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(
-                    DimensUI.SpaceMedium
+                    DimensUI.SpaceLarge
                 )
             ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(
-                        DimensUI.SpaceXSmall
-                    )
-                ) {
-                    Text(
-                        text = "EXPERIENCIA",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                InfoRow(
+                    label = "Experiencia",
+                    value = "${walker.experienceYears} años",
+                    modifier = Modifier.weight(1f)
+                )
 
-                    Text(
-                        text = "${walker.experienceYears} años",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(
-                        DimensUI.SpaceXSmall
-                    )
-                ) {
-                    Text(
-                        text = "PRECIO POR PASEO",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Text(
-                        text = priceFormatter.format(walker.pricePerWalk),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
+                InfoRow(
+                    label = "Precio por paseo",
+                    value = priceFormatter.format(walker.pricePerWalk),
+                    modifier = Modifier.weight(1f)
+                )
             }
 
-            Text(
-                text = "Máximo de mascotas: ${walker.maxPets}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            InfoRow(
+                label = "Capacidad",
+                value = "Hasta ${walker.maxPets} mascotas"
             )
 
-            Text(
-                text = if (walker.available) {
-                    "Disponible"
-                } else {
-                    "No disponible"
-                },
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            if ((walker.rating ?: 0.0) > 0.0)  {
+                InfoRow(
+                    label = "Calificación",
+                    value = String.format(
+                        Locale("es", "AR"),
+                        "%.1f / 5",
+                        walker.rating
+                    )
+                )
+            }
         }
     }
 }
@@ -162,8 +146,7 @@ private fun WalkerCardPreview() {
 
     MascotasThemeUI {
         WalkerCard(
-            walker = walker,
-            modifier = Modifier.padding(DimensUI.SpaceMedium)
+            walker = walker
         )
     }
 }

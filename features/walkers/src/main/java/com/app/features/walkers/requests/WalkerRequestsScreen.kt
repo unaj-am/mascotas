@@ -20,13 +20,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.app.core.ui.components.AppCard
 import com.app.core.ui.components.DomainErrorMessage
 import com.app.core.ui.components.EmptyContent
 import com.app.core.ui.components.ErrorContent
 import com.app.core.ui.components.LoadingContent
+import com.app.core.ui.components.SectionHeader
 import com.app.core.ui.theme.DimensUI
 import com.app.features.walkers.requests.component.WalkerRequestCard
 
+/**
+ * Pantalla de solicitudes recibidas por un paseador.
+ *
+ */
 @Composable
 fun WalkerRequestsScreen(
     walkerId: String,
@@ -54,9 +60,21 @@ fun WalkerRequestsScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text = "Solicitudes de paseo",
-                style = MaterialTheme.typography.headlineMedium,
+            SectionHeader(
+                title = "Solicitudes de paseo",
+                subtitle = when {
+                    state.isLoading ->
+                        "Actualizando solicitudes..."
+
+                    state.requests.isEmpty() ->
+                        "Administrá las solicitudes que recibís."
+
+                    state.requests.size == 1 ->
+                        "Tenés 1 solicitud registrada."
+
+                    else ->
+                        "Tenés ${state.requests.size} solicitudes registradas."
+                },
                 modifier = Modifier.weight(1f)
             )
 
@@ -70,16 +88,22 @@ fun WalkerRequestsScreen(
         }
 
         state.operationMessage?.let { message ->
-            Text(
-                text = message,
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.bodyMedium
-            )
+            AppCard(
+                modifier = Modifier.fillMaxWidth(),
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+            ) {
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         }
 
         state.operationError?.let { message ->
             DomainErrorMessage(
                 message = message,
+                modifier = Modifier.fillMaxWidth(),
                 onRetry = viewModel::refreshRequests
             )
         }
@@ -87,7 +111,8 @@ fun WalkerRequestsScreen(
         when {
             state.isLoading && state.requests.isEmpty() -> {
                 LoadingContent(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    message = "Cargando solicitudes..."
                 )
             }
 
@@ -102,9 +127,10 @@ fun WalkerRequestsScreen(
 
             state.requests.isEmpty() -> {
                 EmptyContent(
-                    message = "Todavía no tenés solicitudes de paseo.",
+                    title = "No tenés solicitudes todavía",
+                    message = "Cuando un dueño solicite un paseo, vas a poder revisarlo desde esta pantalla.",
                     modifier = Modifier.weight(1f),
-                    actionText = "Volver a cargar",
+                    actionText = "Actualizar",
                     onAction = viewModel::refreshRequests
                 )
             }

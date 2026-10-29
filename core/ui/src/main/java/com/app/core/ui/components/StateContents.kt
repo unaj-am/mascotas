@@ -1,3 +1,4 @@
+
 package com.app.core.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
@@ -18,38 +19,60 @@ import com.app.core.ui.theme.DimensUI
 /**
  * Estado visual de carga.
  *
- * No inicia operaciones ni administra
- * el estado de la pantalla.
+ * Puede utilizarse en una pantalla completa o dentro
+ * de un contenedor más pequeño.
+ *
+ * No inicia operaciones ni administra el estado
+ * de carga de la aplicación.
  */
 @Composable
 fun LoadingContent(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.fillMaxSize(),
+    message: String? = null
 ) {
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(
-            color = MaterialTheme.colorScheme.primary
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(
+                DimensUI.SpaceLarge
+            )
+        ) {
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            if (!message.isNullOrBlank()) {
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
     }
 }
 
 /**
  * Estado visual para listas o resultados vacíos.
  *
- * El mensaje y la acción dependen de la pantalla
+ * El contenido y la acción dependen de la pantalla
  * que utilice este componente.
  */
 @Composable
 fun EmptyContent(
     message: String,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier.fillMaxSize(),
+    title: String? = null,
     actionText: String? = null,
-    onAction: (() -> Unit)? = null
+    onAction: (() -> Unit)? = null,
+    illustration: (@Composable () -> Unit)? = null
 ) {
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -61,6 +84,19 @@ fun EmptyContent(
                 DimensUI.SpaceLarge
             )
         ) {
+            if (illustration != null) {
+                illustration()
+            }
+
+            if (!title.isNullOrBlank()) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
+                )
+            }
+
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodyLarge,
@@ -79,26 +115,26 @@ fun EmptyContent(
 }
 
 /**
- * Estado visual de error de pantalla completa.
+ * Estado visual de error.
  *
- * Reutiliza DomainErrorMessage para mantener
- * consistente la presentación de errores.
+ * Reutiliza DomainErrorMessage para conservar
+ * la presentación compartida de los errores.
  */
 @Composable
 fun ErrorContent(
     message: String,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier.fillMaxSize(),
     onRetry: (() -> Unit)? = null
 ) {
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
         DomainErrorMessage(
             message = message,
-            modifier = Modifier.padding(
-                DimensUI.SpaceLarge
-            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(DimensUI.SpaceLarge),
             onRetry = onRetry
         )
     }
