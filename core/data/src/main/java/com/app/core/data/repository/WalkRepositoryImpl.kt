@@ -161,6 +161,9 @@ class WalkRepositoryImpl @Inject constructor(
                 }
 
                 WalkStatus.CANCELLED -> {
+                    require(walk.ownerId == currentUserId) {
+                        "Solo el dueño puede cancelar este paseo"
+                    }
                     require(walk.status == WalkStatus.SCHEDULED) {
                         "Solo se pueden cancelar paseos programados"
                     }
@@ -227,3 +230,4 @@ class WalkRepositoryImpl @Inject constructor(
             observations = getString("observations").orEmpty()
         )
 }
+

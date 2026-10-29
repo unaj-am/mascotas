@@ -1,4 +1,3 @@
-
 package com.app.core.domain.usecase
 
 import com.app.core.domain.model.WalkStatus

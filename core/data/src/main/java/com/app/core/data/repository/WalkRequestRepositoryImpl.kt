@@ -292,7 +292,7 @@ class WalkRequestRepositoryImpl @Inject constructor(
             observations = getString("observations").orEmpty()
         )
 
-    private fun Walk.toFirestoreMap(): Map<String, Any> =
+    private fun Walk.toFirestoreMap(): Map<String, Any?> =
         mapOf(
             "ownerId" to ownerId,
             "walkerId" to walkerId,
@@ -300,12 +300,11 @@ class WalkRequestRepositoryImpl @Inject constructor(
             "scheduledAt" to scheduledAt,
             "durationMinutes" to durationMinutes,
             "status" to status.name,
-            "startedAt" to (startedAt ?: ""),
-            "finishedAt" to (finishedAt ?: ""),
-            "distanceKm" to (distanceKm ?: 0.0),
+            "startedAt" to startedAt,
+            "finishedAt" to finishedAt,
+            "distanceKm" to distanceKm,
             "observations" to observations
         )
-
     private fun DocumentSnapshot.toWalk(): Walk =
         Walk(
             id = id,
