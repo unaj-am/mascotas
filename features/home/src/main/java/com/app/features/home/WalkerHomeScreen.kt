@@ -1,27 +1,29 @@
 package com.app.features.home
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.app.core.domain.model.WalkRequest
 import com.app.core.ui.components.DomainErrorMessage
-import com.app.core.ui.components.LoadingContent
 import com.app.core.ui.theme.DimensUI
 import com.app.features.home.component.WalkerAvailabilityCard
 import com.app.features.home.component.WalkerHomeHeader
 import com.app.features.home.component.WalkerHomeStatCard
-
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.ui.Alignment
 
 @Composable
 fun WalkerHomeScreen(
@@ -155,6 +157,33 @@ private fun WalkerHomeContent(
             }
         }
 
+        item {
+            Text(
+                text = "Solicitudes pendientes",
+                style = MaterialTheme.typography.titleLarge
+            )
+        }
+
+        if (state.pendingRequestItems.isEmpty()) {
+            item {
+                Text(
+                    text = "No tenés solicitudes pendientes.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+        } else {
+            items(
+                items = state.pendingRequestItems,
+                key = { request -> request.id }
+            ) { request ->
+                PendingRequestPreviewCard(
+                    request = request
+                )
+            }
+        }
+
         if (state.errorMessage != null) {
             item {
                 DomainErrorMessage(
@@ -172,6 +201,63 @@ private fun WalkerHomeContent(
                     color = MaterialTheme.colorScheme.primary
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun PendingRequestPreviewCard(
+    request: WalkRequest
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(DimensUI.SpaceLarge),
+            verticalArrangement = Arrangement.spacedBy(
+                DimensUI.SpaceSmall
+            )
+        ) {
+            Text(
+                text = "Nueva solicitud",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Text(
+                text = "Fecha y hora: ${request.scheduledAt}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = "Duración: ${request.durationMinutes} minutos",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            val petCount = request.petIds.size
+            Text(
+                text = if (petCount == 1) {
+                    "1 mascota"
+                } else {
+                    "$petCount mascotas"
+                },
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            if (request.observations.isNotBlank()) {
+                Text(
+                    text = "Observaciones: ${request.observations}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            Text(
+                text = "Pendiente de revisión",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }
