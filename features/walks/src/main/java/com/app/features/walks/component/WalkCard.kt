@@ -1,4 +1,3 @@
-
 package com.app.features.walks.component
 
 import androidx.compose.foundation.clickable
@@ -28,6 +27,8 @@ import java.util.Locale
 @Composable
 fun WalkCard(
     walk: Walk,
+    ownerName: String? = null,
+    petNames: List<String> = emptyList(),
     isProcessing: Boolean = false,
     showStart: Boolean = false,
     showComplete: Boolean = false,
@@ -73,6 +74,13 @@ fun WalkCard(
                 )
             }
 
+            if (!ownerName.isNullOrBlank()) {
+                Text(
+                    text = "Dueño: $ownerName",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
             Text(
                 text = formatScheduledAt(walk.scheduledAt),
                 style = MaterialTheme.typography.bodyMedium
@@ -83,10 +91,20 @@ fun WalkCard(
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            Text(
-                text = "Mascotas: ${walk.petIds.size}",
-                style = MaterialTheme.typography.bodyMedium
-            )
+            val displayedPetNames = petNames
+                .filter { it.isNotBlank() }
+
+            if (displayedPetNames.isNotEmpty()) {
+                Text(
+                    text = "Mascotas: ${displayedPetNames.joinToString(", ")}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            } else {
+                Text(
+                    text = "Mascotas: ${walk.petIds.size}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
 
             if (walk.observations.isNotBlank()) {
                 Text(
@@ -183,6 +201,13 @@ fun WalkRequestCard(
                 )
             }
 
+            if (request.ownerName.isNotBlank()) {
+                Text(
+                    text = "Dueño: ${request.ownerName}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
             Text(
                 text = formatScheduledAt(request.scheduledAt),
                 style = MaterialTheme.typography.bodyMedium
@@ -193,10 +218,17 @@ fun WalkRequestCard(
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            Text(
-                text = "Mascotas: ${request.petIds.size}",
-                style = MaterialTheme.typography.bodyMedium
-            )
+            if (request.petNames.isNotEmpty()) {
+                Text(
+                    text = "Mascotas: ${request.petNames.joinToString(", ")}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            } else {
+                Text(
+                    text = "Mascotas: ${request.petIds.size}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
 
             if (request.observations.isNotBlank()) {
                 Text(

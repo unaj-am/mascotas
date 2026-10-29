@@ -132,6 +132,10 @@ fun WalkerRequestsScreen(
                     ) { request ->
                         WalkerRequestCard(
                             request = request,
+                            ownerName = state.ownerNames[request.id]
+                                ?: "Dueño no disponible",
+                            petNames = state.petNames[request.id]
+                                ?: emptyList(),
                             isProcessing =
                                 state.processingRequestId == request.id,
                             isAnyRequestProcessing =

@@ -84,6 +84,7 @@ fun OwnerWalkDetailScreen(
             state.walk != null -> {
                 WalkDetailContent(
                     walk = state.walk!!,
+                    walkerName = state.walkerName,
                     onTrackWalk = onTrackWalk
                 )
             }
@@ -94,6 +95,7 @@ fun OwnerWalkDetailScreen(
 @Composable
 private fun WalkDetailContent(
     walk: Walk,
+    walkerName: String?,
     onTrackWalk: (String) -> Unit
 ) {
     Column(
@@ -132,8 +134,10 @@ private fun WalkDetailContent(
                 )
 
                 DetailRow(
-                    label = "Identificador del paseador",
-                    value = walk.walkerId
+                    label = "Paseador",
+                    value = walkerName
+                        ?.takeIf { it.isNotBlank() }
+                        ?: "Cargando nombre del paseador..."
                 )
 
                 walk.startedAt?.let {

@@ -4,11 +4,13 @@ package com.app.features.walkers.requests
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.core.domain.model.RequestStatus
+import com.app.core.domain.model.WalkRequest
 import com.app.core.domain.usecase.AcceptWalkRequestUseCase
 import com.app.core.domain.usecase.GetWalkRequestsByWalkerUseCase
 import com.app.core.domain.usecase.UpdateWalkRequestStatusUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,7 +24,10 @@ class WalkerRequestsViewModel @Inject constructor(
     private val updateRequestStatus: UpdateWalkRequestStatusUseCase
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(WalkerRequestsUiState())
+    private val _uiState = MutableStateFlow(
+        WalkerRequestsUiState()
+    )
+
     val uiState: StateFlow<WalkerRequestsUiState> =
         _uiState.asStateFlow()
 
@@ -31,7 +36,8 @@ class WalkerRequestsViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     isLoading = false,
-                    loadingError = "No se recibió el identificador del paseador."
+                    loadingError =
+                        "No se recibió el identificador del paseador."
                 )
             }
             return
@@ -50,14 +56,19 @@ class WalkerRequestsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val requests = getRequestsByWalker(walkerId)
+                val displayNames = loadDisplayNames(requests)
 
                 _uiState.update {
                     it.copy(
                         requests = requests,
+                        ownerNames = displayNames.first,
+                        petNames = displayNames.second,
                         isLoading = false,
                         loadingError = null
                     )
                 }
+            } catch (exception: CancellationException) {
+                throw exception
             } catch (exception: Exception) {
                 _uiState.update {
                     it.copy(
@@ -72,6 +83,7 @@ class WalkerRequestsViewModel @Inject constructor(
 
     fun refreshRequests() {
         val walkerId = _uiState.value.walkerId
+
         if (walkerId.isNotBlank()) {
             loadRequests(walkerId)
         }
@@ -121,15 +133,21 @@ class WalkerRequestsViewModel @Inject constructor(
                 val message = operation()
                 val walkerId = _uiState.value.walkerId
                 val updatedRequests = getRequestsByWalker(walkerId)
+                val displayNames = loadDisplayNames(updatedRequests)
 
                 _uiState.update {
                     it.copy(
                         requests = updatedRequests,
+                        ownerNames = displayNames.first,
+                        petNames = displayNames.second,
                         processingRequestId = null,
                         operationMessage = message,
-                        operationError = null
+                        operationError = null,
+                        loadingError = null
                     )
                 }
+            } catch (exception: CancellationException) {
+                throw exception
             } catch (exception: Exception) {
                 _uiState.update {
                     it.copy(
@@ -140,6 +158,28 @@ class WalkerRequestsViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun loadDisplayNames(
+        requests: List<WalkRequest>
+    ): Pair<Map<String, String>, Map<String, List<String>>> {
+        val ownerNames = requests.associate { request ->
+            request.id to request.ownerName
+                .takeIf { it.isNotBlank() }
+                .orEmpty()
+                .ifBlank { "Dueño no disponible" }
+        }
+
+        val petNames = requests.associate { request ->
+            request.id to request.petNames.map { name ->
+                name.takeIf { it.isNotBlank() }
+                    ?: "Mascota no disponible"
+            }.ifEmpty {
+                request.petIds.map { "Mascota no disponible" }
+            }
+        }
+
+        return ownerNames to petNames
     }
 
     fun clearMessages() {

@@ -1,4 +1,3 @@
-
 package com.app.core.data.repository
 
 import com.app.core.domain.model.RequestStatus
@@ -24,6 +23,12 @@ class WalkRequestRepositoryImpl @Inject constructor(
 
     private val walksCollection
         get() = firestore.collection("walks")
+
+    private val usersCollection
+        get() = firestore.collection("users")
+
+    private val petsCollection
+        get() = firestore.collection("pets")
 
     private fun requireCurrentUserId(): String =
         firebaseAuth.currentUser?.uid
@@ -89,7 +94,6 @@ class WalkRequestRepositoryImpl @Inject constructor(
         return snapshot.documents.map { it.toWalkRequest() }
     }
 
-
     override suspend fun createRequest(
         request: WalkRequest
     ) {
@@ -105,6 +109,10 @@ class WalkRequestRepositoryImpl @Inject constructor(
             "La solicitud debe incluir al menos una mascota"
         }
 
+        require(request.petIds.size <= 5) {
+            "Una solicitud puede incluir hasta cinco mascotas"
+        }
+
         require(request.scheduledAt.isNotBlank()) {
             "La fecha del paseo es obligatoria"
         }
@@ -117,13 +125,58 @@ class WalkRequestRepositoryImpl @Inject constructor(
             "Una nueva solicitud debe estar pendiente"
         }
 
+        // El dueño puede leer su propio documento de usuario.
+        val ownerDocument = usersCollection
+            .document(request.ownerId)
+            .get()
+            .await()
+
+        require(ownerDocument.exists()) {
+            "No se encontró el perfil del dueño"
+        }
+
+        val firstName = ownerDocument.getString("name").orEmpty().trim()
+        val lastName = ownerDocument.getString("lastName").orEmpty().trim()
+        val ownerName = listOf(firstName, lastName)
+            .filter { it.isNotBlank() }
+            .joinToString(" ")
+
+        require(ownerName.isNotBlank()) {
+            "El perfil del dueño no tiene un nombre válido"
+        }
+
+        // El dueño puede leer las mascotas que le pertenecen.
+        val petNames = request.petIds.map { petId ->
+            val petDocument = petsCollection
+                .document(petId)
+                .get()
+                .await()
+
+            require(petDocument.exists()) {
+                "No se encontró una de las mascotas seleccionadas"
+            }
+
+            require(petDocument.getString("ownerId") == request.ownerId) {
+                "Una de las mascotas seleccionadas no pertenece al dueño"
+            }
+
+            petDocument.getString("name")
+                ?.trim()
+                ?.takeIf { it.isNotBlank() }
+                ?: throw IllegalStateException(
+                    "Una de las mascotas no tiene un nombre válido"
+                )
+        }
+
         val requestRef = requestsCollection.document(request.id)
 
         requestRef.set(
-            request.toFirestoreMap()
+            request.toFirestoreMap(
+                ownerName = ownerName,
+                petNames = petNames
+            )
         ).await()
     }
-
 
     override suspend fun updateRequestStatus(
         requestId: String,
@@ -194,6 +247,7 @@ class WalkRequestRepositoryImpl @Inject constructor(
             require(request.ownerId == currentUserId) {
                 "Solo el dueño puede eliminar la solicitud"
             }
+
             require(request.status == RequestStatus.PENDING) {
                 "Solo se pueden eliminar solicitudes pendientes"
             }
@@ -227,18 +281,19 @@ class WalkRequestRepositoryImpl @Inject constructor(
                 "Solo el paseador destinatario puede aceptar la solicitud"
             }
 
-            // Si ya se aceptó, devolver el paseo existente permite
-            // reintentar sin crear otro documento.
+            // Permite reintentar sin crear un segundo paseo.
             if (request.status == RequestStatus.ACCEPTED) {
                 require(walkSnapshot.exists()) {
                     "La solicitud está aceptada, pero no existe su paseo"
                 }
+
                 return@runTransaction walkSnapshot.toWalk()
             }
 
             require(request.status == RequestStatus.PENDING) {
                 "Solo se pueden aceptar solicitudes pendientes"
             }
+
             require(!walkSnapshot.exists()) {
                 "Ya existe un paseo asociado a esta solicitud"
             }
@@ -255,6 +310,7 @@ class WalkRequestRepositoryImpl @Inject constructor(
             )
 
             transaction.set(walkRef, walk.toFirestoreMap())
+
             transaction.update(
                 requestRef,
                 "status",
@@ -265,11 +321,16 @@ class WalkRequestRepositoryImpl @Inject constructor(
         }.await()
     }
 
-    private fun WalkRequest.toFirestoreMap(): Map<String, Any> =
+    private fun WalkRequest.toFirestoreMap(
+        ownerName: String,
+        petNames: List<String>
+    ): Map<String, Any> =
         mapOf(
             "ownerId" to ownerId,
+            "ownerName" to ownerName,
             "walkerId" to walkerId,
             "petIds" to petIds,
+            "petNames" to petNames,
             "scheduledAt" to scheduledAt,
             "durationMinutes" to durationMinutes,
             "status" to status.name,
@@ -280,14 +341,22 @@ class WalkRequestRepositoryImpl @Inject constructor(
         WalkRequest(
             id = id,
             ownerId = getString("ownerId")
-                ?: throw IllegalStateException("La solicitud no tiene dueño"),
+                ?: throw IllegalStateException(
+                    "La solicitud no tiene dueño"
+                ),
+            ownerName = getString("ownerName").orEmpty(),
             walkerId = getString("walkerId")
-                ?: throw IllegalStateException("La solicitud no tiene paseador"),
+                ?: throw IllegalStateException(
+                    "La solicitud no tiene paseador"
+                ),
             petIds = get("petIds") as? List<String> ?: emptyList(),
+            petNames = get("petNames") as? List<String> ?: emptyList(),
             scheduledAt = getString("scheduledAt").orEmpty(),
             durationMinutes = getLong("durationMinutes")?.toInt() ?: 0,
             status = getString("status")?.let {
-                runCatching { RequestStatus.valueOf(it) }.getOrNull()
+                runCatching {
+                    RequestStatus.valueOf(it)
+                }.getOrNull()
             } ?: RequestStatus.PENDING,
             observations = getString("observations").orEmpty()
         )
@@ -305,18 +374,25 @@ class WalkRequestRepositoryImpl @Inject constructor(
             "distanceKm" to distanceKm,
             "observations" to observations
         )
+
     private fun DocumentSnapshot.toWalk(): Walk =
         Walk(
             id = id,
             ownerId = getString("ownerId")
-                ?: throw IllegalStateException("El paseo no tiene dueño"),
+                ?: throw IllegalStateException(
+                    "El paseo no tiene dueño"
+                ),
             walkerId = getString("walkerId")
-                ?: throw IllegalStateException("El paseo no tiene paseador"),
+                ?: throw IllegalStateException(
+                    "El paseo no tiene paseador"
+                ),
             petIds = get("petIds") as? List<String> ?: emptyList(),
             scheduledAt = getString("scheduledAt").orEmpty(),
             durationMinutes = getLong("durationMinutes")?.toInt() ?: 0,
             status = getString("status")?.let {
-                runCatching { WalkStatus.valueOf(it) }.getOrNull()
+                runCatching {
+                    WalkStatus.valueOf(it)
+                }.getOrNull()
             } ?: WalkStatus.SCHEDULED,
             startedAt = getString("startedAt")?.takeIf { it.isNotBlank() },
             finishedAt = getString("finishedAt")?.takeIf { it.isNotBlank() },

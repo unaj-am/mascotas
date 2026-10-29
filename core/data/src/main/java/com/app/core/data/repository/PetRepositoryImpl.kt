@@ -1,3 +1,4 @@
+
 package com.app.core.data.repository
 
 import com.app.core.domain.model.Pet
@@ -47,7 +48,11 @@ class PetRepositoryImpl @Inject constructor(
     override suspend fun getPetById(
         petId: String
     ): Pet? {
-        val currentUserId = requireCurrentUserId()
+        requireCurrentUserId()
+
+        require(petId.isNotBlank()) {
+            "El identificador de la mascota no puede estar vacío"
+        }
 
         val document = petsCollection
             .document(petId)
@@ -58,13 +63,7 @@ class PetRepositoryImpl @Inject constructor(
             return null
         }
 
-        val pet = document.toPet()
-
-        require(pet.ownerId == currentUserId) {
-            "No podés consultar una mascota de otro usuario"
-        }
-
-        return pet
+        return document.toPet()
     }
 
     override suspend fun savePet(
