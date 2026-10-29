@@ -1,3 +1,4 @@
+
 package com.app.mascotas.navigation
 
 import androidx.activity.compose.BackHandler
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -36,16 +36,16 @@ import com.app.features.pets.detail.PetDetailRoute
 import com.app.features.pets.detail.PetDetailUiState
 import com.app.features.pets.detail.PetDetailViewModel
 import com.app.features.pets.form.PetFormScreen
-import com.app.features.pets.list.PetListUiState
 import com.app.features.pets.list.PetOperationUiState
 import com.app.features.pets.list.PetRoute
 import com.app.features.pets.list.PetViewModel
+import com.app.features.profile.OwnerProfileRoute
+import com.app.features.tracking.WalkTrackingScreen
 import com.app.features.walkers.list.WalkerRoute
 import com.app.features.walkers.list.WalkerViewModel
-import com.app.features.profile.OwnerProfileRoute
 import com.app.features.walkers.requests.WalkRequestFormRoute
+import com.app.features.walks.owner.OwnerWalkDetailScreen
 import com.app.features.walks.owner.OwnerWalksScreen
-import com.app.features.tracking.WalkTrackingScreen
 
 @Composable
 fun AppNavDisplay(
@@ -88,8 +88,7 @@ fun AppNavDisplay(
             OwnerHomeRoute(
                 ownerId = ownerId,
                 onNotificationsClick = {
-                    // Conectar cuando se implemente
-                    // la pantalla de notificaciones.
+                    // Pendiente: conectar notificaciones.
                 },
                 onPetsClick = {
                     navigationState.selectTab(
@@ -102,8 +101,9 @@ fun AppNavDisplay(
                     )
                 },
                 onFindWalkerClick = {
-                    navigationState.navigate(WalkerSearchDestination)
-
+                    navigationState.navigate(
+                        WalkerSearchDestination
+                    )
                 },
                 onHistoryClick = {
                     navigationState.selectTab(
@@ -126,7 +126,28 @@ fun AppNavDisplay(
             OwnerWalksScreen(
                 ownerId = ownerId,
                 onTrackWalk = { walkId ->
-                    navigationState.navigate(WalkTrackingDestination(walkId))
+                    navigationState.navigate(
+                        WalkTrackingDestination(walkId)
+                    )
+                },
+                onOpenWalk = { walkId ->
+                    navigationState.navigate(
+                        OwnerWalkDetailDestination(walkId)
+                    )
+                }
+            )
+        }
+
+        entry<OwnerWalkDetailDestination> { destination ->
+            OwnerWalkDetailScreen(
+                walkId = destination.walkId,
+                onBack = {
+                    navigationState.goBackFrom(destination)
+                },
+                onTrackWalk = { walkId ->
+                    navigationState.navigate(
+                        WalkTrackingDestination(walkId)
+                    )
                 }
             )
         }
@@ -134,10 +155,11 @@ fun AppNavDisplay(
         entry<WalkTrackingDestination> { destination ->
             WalkTrackingScreen(
                 walkId = destination.walkId,
-                onBack = { navigationState.goBackFrom(destination) }
+                onBack = {
+                    navigationState.goBackFrom(destination)
+                }
             )
         }
-
 
         entry<WalkerSearchDestination> {
             WalkerRoute(
@@ -155,7 +177,6 @@ fun AppNavDisplay(
             )
         }
 
-
         entry<WalkRequestFormDestination> { destination ->
             WalkRequestFormRoute(
                 ownerId = ownerId,
@@ -164,13 +185,12 @@ fun AppNavDisplay(
                     navigationState.goBack()
                 },
                 onSuccess = {
-                    navigationState.goBack()
-                    navigationState.navigateToTabRoot(TopLevelDestination.WALKS)
+                    navigationState.navigateToTabRoot(
+                        TopLevelDestination.WALKS
+                    )
                 }
             )
         }
-
-
 
         entry<ProfileDestination> {
             OwnerProfileRoute(
@@ -222,7 +242,9 @@ fun AppNavDisplay(
                 } else {
                     (detailUiState as? PetDetailUiState.Success)
                         ?.pet
-                        ?.takeIf { it.id == destination.petId }
+                        ?.takeIf {
+                            it.id == destination.petId
+                        }
                 }
 
             LaunchedEffect(destination.petId) {
