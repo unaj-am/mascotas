@@ -33,7 +33,10 @@ class WalkerHomeViewModel @Inject constructor(
 
     private var currentUserId: String? = null
 
-    fun loadHome(userId: String, forceRefresh: Boolean = false) {
+    fun loadHome(
+        userId: String,
+        forceRefresh: Boolean = false
+    ) {
         if (userId.isBlank()) {
             _uiState.update {
                 it.copy(
@@ -79,24 +82,32 @@ class WalkerHomeViewModel @Inject constructor(
                 val requests =
                     getWalkRequestsByWalkerUseCase(userId)
 
+                // Conservamos únicamente las solicitudes pendientes.
+                val pendingRequests = requests.filter { request ->
+                    request.status == RequestStatus.PENDING
+                }
+
                 val walks = getWalksByWalkerUseCase(userId)
 
-                _uiState.update {
-                    it.copy(
+                _uiState.update { currentState ->
+                    currentState.copy(
                         userName = user.name,
                         available = walker?.available ?: false,
-                        pendingRequests = requests.count {
-                                request ->
-                            request.status == RequestStatus.PENDING
-                        },
-                        scheduledWalks = walks.count {
-                                walk ->
+
+                        // Contador de solicitudes pendientes.
+                        pendingRequests = pendingRequests.size,
+
+                        // Lista completa para mostrar las solicitudes.
+                        pendingRequestItems = pendingRequests,
+
+                        scheduledWalks = walks.count { walk ->
                             walk.status == WalkStatus.SCHEDULED
                         },
-                        activeWalks = walks.count {
-                                walk ->
+
+                        activeWalks = walks.count { walk ->
                             walk.status == WalkStatus.IN_PROGRESS
                         },
+
                         rating = walker?.rating,
                         isLoading = false,
                         errorMessage = null

@@ -1,9 +1,7 @@
-
 package com.app.features.walkers.requests
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
 
@@ -34,6 +32,9 @@ fun WalkRequestFormRoute(
             )
         },
         onBack = onBack,
-        onSuccess = onSuccess
+        onSuccess = {
+            viewModel.consumeSuccess()
+            onSuccess()
+        }
     )
 }

@@ -1,4 +1,3 @@
-
 package com.app.features.walkers.requests
 
 import androidx.lifecycle.ViewModel
@@ -8,8 +7,8 @@ import com.app.core.domain.model.WalkRequest
 import com.app.core.domain.usecase.CreateWalkRequestUseCase
 import com.app.core.domain.usecase.GetPetsByOwnerUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import java.util.UUID
+import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -47,6 +46,7 @@ class WalkRequestFormViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     errorMessage = e.message
+                        ?: "No se pudieron cargar las mascotas."
                 )
             }
         }
@@ -54,7 +54,8 @@ class WalkRequestFormViewModel @Inject constructor(
 
     fun togglePet(petId: String) {
         val selected = _uiState.value
-            .selectedPetIds.toMutableSet()
+            .selectedPetIds
+            .toMutableSet()
 
         if (!selected.add(petId)) {
             selected.remove(petId)
@@ -82,7 +83,8 @@ class WalkRequestFormViewModel @Inject constructor(
 
     fun updateObservations(value: String) {
         _uiState.value = _uiState.value.copy(
-            observations = value
+            observations = value,
+            errorMessage = null
         )
     }
 
@@ -98,7 +100,9 @@ class WalkRequestFormViewModel @Inject constructor(
 
         when {
             ownerId.isBlank() || walkerId.isBlank() -> {
-                setError("No se pudo identificar al usuario o paseador.")
+                setError(
+                    "No se pudo identificar al usuario o paseador."
+                )
                 return
             }
 
@@ -121,6 +125,7 @@ class WalkRequestFormViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isSubmitting = true,
+                isSuccess = false,
                 errorMessage = null
             )
 
@@ -131,7 +136,7 @@ class WalkRequestFormViewModel @Inject constructor(
                     walkerId = walkerId,
                     petIds = state.selectedPetIds.toList(),
                     scheduledAt = state.scheduledAt,
-                    durationMinutes = duration!!,
+                    durationMinutes = duration,
                     status = RequestStatus.PENDING,
                     observations = state.observations.trim()
                 )
@@ -140,17 +145,31 @@ class WalkRequestFormViewModel @Inject constructor(
 
                 _uiState.value = _uiState.value.copy(
                     isSubmitting = false,
-                    isSuccess = true
+                    isSuccess = true,
+                    errorMessage = null
                 )
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isSubmitting = false,
+                    isSuccess = false,
                     errorMessage = e.message
                         ?: "No se pudo enviar la solicitud."
                 )
             }
+        }
+    }
+
+    /**
+     * Consume el estado de éxito antes de abandonar el formulario.
+     * Evita que la modal vuelva a mostrarse al recuperar la pantalla.
+     */
+    fun consumeSuccess() {
+        if (_uiState.value.isSuccess) {
+            _uiState.value = _uiState.value.copy(
+                isSuccess = false
+            )
         }
     }
 
