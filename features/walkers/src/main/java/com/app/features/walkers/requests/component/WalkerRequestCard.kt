@@ -25,7 +25,9 @@ fun WalkerRequestCard(
     isAnyRequestProcessing: Boolean,
     onAccept: () -> Unit,
     onReject: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    ownerName: String = "Dueño",
+    petNames: List<String> = emptyList()
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -40,12 +42,12 @@ fun WalkerRequestCard(
             )
         ) {
             Text(
-                text = "Solicitud ${request.id}",
+                text = "Solicitud de paseo",
                 style = MaterialTheme.typography.titleMedium
             )
 
             Text(
-                text = "Dueño: ${request.ownerId}",
+                text = "Dueño: $ownerName",
                 style = MaterialTheme.typography.bodyMedium
             )
 
@@ -60,7 +62,16 @@ fun WalkerRequestCard(
             )
 
             Text(
-                text = "Mascotas: ${request.petIds.joinToString()}",
+                text = when {
+                    petNames.isNotEmpty() ->
+                        "Mascotas: ${petNames.joinToString(", ")}"
+
+                    request.petIds.size == 1 ->
+                        "1 mascota"
+
+                    else ->
+                        "${request.petIds.size} mascotas"
+                },
                 style = MaterialTheme.typography.bodyMedium
             )
 

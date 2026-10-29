@@ -39,10 +39,10 @@ class WalkerRepositoryImpl @Inject constructor(
     override suspend fun getWalkerById(
         userId: String
     ): Walker? {
-        val currentUserId = requireCurrentUserId()
+        requireCurrentUserId()
 
-        require(userId == currentUserId) {
-            "No podés consultar el perfil de otro paseador"
+        require(userId.isNotBlank()) {
+            "El identificador del paseador no puede estar vacío"
         }
 
         val document = walkersCollection

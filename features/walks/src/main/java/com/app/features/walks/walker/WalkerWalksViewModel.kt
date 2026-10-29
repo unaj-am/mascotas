@@ -2,13 +2,18 @@ package com.app.features.walks.walker
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.app.core.domain.model.WalkStatus
+import com.app.core.domain.model.Walk
 import com.app.core.domain.usecase.CompleteWalkUseCase
+import com.app.core.domain.usecase.GetPetByIdUseCase
+import com.app.core.domain.usecase.GetUserByIdUseCase
 import com.app.core.domain.usecase.GetWalksByWalkerUseCase
 import com.app.core.domain.usecase.StartWalkUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -18,48 +23,188 @@ import kotlinx.coroutines.launch
 class WalkerWalksViewModel @Inject constructor(
     private val getWalksByWalker: GetWalksByWalkerUseCase,
     private val startWalk: StartWalkUseCase,
-    private val completeWalk: CompleteWalkUseCase
+    private val completeWalk: CompleteWalkUseCase,
+    private val getUserById: GetUserByIdUseCase,
+    private val getPetById: GetPetByIdUseCase
 ) : ViewModel() {
+
     private val _uiState = MutableStateFlow(WalkerWalksUiState())
     val uiState = _uiState.asStateFlow()
+
     private var walkerId: String = ""
 
-    fun load(walkerId: String, forceRefresh: Boolean = false) {
+    fun load(
+        walkerId: String,
+        forceRefresh: Boolean = false
+    ) {
         if (walkerId.isBlank()) {
-            _uiState.update { it.copy(isLoading = false, errorMessage = "No se pudo identificar al paseador.") }
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    errorMessage = "No se pudo identificar al paseador."
+                )
+            }
             return
         }
+
         this.walkerId = walkerId
-        if (!forceRefresh && !_uiState.value.isLoading && _uiState.value.errorMessage == null && _uiState.value.walks.isNotEmpty()) return
+
+        if (
+            !forceRefresh &&
+            !_uiState.value.isLoading &&
+            _uiState.value.errorMessage == null &&
+            _uiState.value.walks.isNotEmpty()
+        ) {
+            return
+        }
+
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null, operationError = null) }
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null,
+                    operationError = null
+                )
+            }
+
             try {
-                val walks = getWalksByWalker(walkerId).sortedBy { it.scheduledAt }
-                _uiState.update { it.copy(walks = walks, isLoading = false, errorMessage = null) }
+                val (walks, details) = coroutineScope {
+                    val loadedWalks = getWalksByWalker(walkerId)
+                        .sortedBy { it.scheduledAt }
+
+                    val loadedDetails = loadedWalks.map { walk ->
+                        async {
+                            walk.id to loadWalkDetails(walk)
+                        }
+                    }.awaitAll().toMap()
+
+                    loadedWalks to loadedDetails
+                }
+
+                _uiState.update {
+                    it.copy(
+                        walks = walks,
+                        walkDetails = details,
+                        isLoading = false,
+                        errorMessage = null
+                    )
+                }
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
-                _uiState.update { it.copy(isLoading = false, errorMessage = error.message ?: "No se pudieron cargar los paseos.") }
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = error.message
+                            ?: "No se pudieron cargar los paseos."
+                    )
+                }
             }
         }
     }
 
-    fun refresh() = load(walkerId, forceRefresh = true)
-    fun start(walkId: String) = perform(walkId, "El paseo comenzó.") { startWalk(walkId) }
-    fun complete(walkId: String) = perform(walkId, "El paseo se marcó como finalizado.") { completeWalk(walkId) }
+    private suspend fun loadWalkDetails(
+        walk: Walk
+    ): WalkerWalkDetails = coroutineScope {
 
-    private fun perform(id: String, successMessage: String, operation: suspend () -> Unit) {
+        val ownerNameDeferred = async {
+            try {
+                val owner = getUserById(walk.ownerId)
+
+                owner?.let {
+                    listOf(it.name.trim(), it.lastName.trim())
+                        .filter { name -> name.isNotBlank() }
+                        .joinToString(" ")
+                        .takeIf { name -> name.isNotBlank() }
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                null
+            }
+        }
+
+        val petNamesDeferred = walk.petIds.map { petId ->
+            async {
+                try {
+                    getPetById(petId)
+                        ?.name
+                        ?.trim()
+                        ?.takeIf { name -> name.isNotBlank() }
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (_: Exception) {
+                    null
+                }
+            }
+        }
+
+        val ownerName = ownerNameDeferred.await()
+            ?: "Dueño no disponible"
+
+        val petNames = petNamesDeferred
+            .awaitAll()
+            .filterNotNull()
+
+        WalkerWalkDetails(
+            ownerName = ownerName,
+            petNames = petNames
+        )
+    }
+
+    fun refresh() {
+        load(walkerId, forceRefresh = true)
+    }
+
+    fun start(walkId: String) {
+        perform(walkId, "El paseo comenzó.") {
+            startWalk(walkId)
+        }
+    }
+
+    fun complete(walkId: String) {
+        perform(walkId, "El paseo se marcó como finalizado.") {
+            completeWalk(walkId)
+        }
+    }
+
+    private fun perform(
+        id: String,
+        successMessage: String,
+        operation: suspend () -> Unit
+    ) {
         if (_uiState.value.processingId != null) return
+
         viewModelScope.launch {
-            _uiState.update { it.copy(processingId = id, operationMessage = null, operationError = null) }
+            _uiState.update {
+                it.copy(
+                    processingId = id,
+                    operationMessage = null,
+                    operationError = null
+                )
+            }
+
             try {
                 operation()
-                _uiState.update { it.copy(processingId = null, operationMessage = successMessage) }
+
+                _uiState.update {
+                    it.copy(
+                        processingId = null,
+                        operationMessage = successMessage
+                    )
+                }
+
                 load(walkerId, forceRefresh = true)
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
-                _uiState.update { it.copy(processingId = null, operationError = error.message ?: "No se pudo actualizar el paseo.") }
+                _uiState.update {
+                    it.copy(
+                        processingId = null,
+                        operationError = error.message
+                            ?: "No se pudo actualizar el paseo."
+                    )
+                }
             }
         }
     }

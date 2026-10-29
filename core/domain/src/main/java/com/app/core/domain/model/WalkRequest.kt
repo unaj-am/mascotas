@@ -1,3 +1,4 @@
+
 package com.app.core.domain.model
 
 data class WalkRequest(
@@ -8,5 +9,9 @@ data class WalkRequest(
     val scheduledAt: String,
     val durationMinutes: Int,
     val status: RequestStatus = RequestStatus.PENDING,
-    val observations: String = ""
+    val observations: String = "",
+
+    // Datos para mostrar la solicitud sin consultar documentos privados.
+    val ownerName: String = "",
+    val petNames: List<String> = emptyList()
 )

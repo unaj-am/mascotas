@@ -3,7 +3,7 @@ package com.app.features.walkers.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.app.core.domain.usecase.GetAvailableWalkersUseCase
+import com.app.core.domain.usecase.GetWalkersUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class WalkerViewModel @Inject constructor(
-    private val getAvailableWalkersUseCase: GetAvailableWalkersUseCase
+    private val getWalkersUseCase: GetWalkersUseCase
 ) : ViewModel() {
 
     private val _uiState =
@@ -30,7 +30,7 @@ class WalkerViewModel @Inject constructor(
             _uiState.value = WalkerUiState.Loading
 
             try {
-                val walkers = getAvailableWalkersUseCase()
+                val walkers = getWalkersUseCase()
 
                 _uiState.value = WalkerUiState.Success(
                     walkers = walkers
@@ -40,7 +40,7 @@ class WalkerViewModel @Inject constructor(
             } catch (exception: Exception) {
                 _uiState.value = WalkerUiState.Error(
                     message = exception.message
-                        ?: "No se pudieron cargar los paseadores disponibles."
+                        ?: "No se pudieron cargar los paseadores."
                 )
             }
         }

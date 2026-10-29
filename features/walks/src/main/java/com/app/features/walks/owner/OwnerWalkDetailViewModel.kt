@@ -1,8 +1,8 @@
-
 package com.app.features.walks.owner
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.app.core.domain.usecase.GetUserByIdUseCase
 import com.app.core.domain.usecase.GetWalkByIdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -14,7 +14,8 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class OwnerWalkDetailViewModel @Inject constructor(
-    private val getWalkById: GetWalkByIdUseCase
+    private val getWalkById: GetWalkByIdUseCase,
+    private val getUserById: GetUserByIdUseCase
 ) : ViewModel() {
 
     private val _uiState =
@@ -31,7 +32,8 @@ class OwnerWalkDetailViewModel @Inject constructor(
         if (walkId.isBlank()) {
             _uiState.value = OwnerWalkDetailUiState(
                 isLoading = false,
-                errorMessage = "No se recibió el identificador del paseo."
+                errorMessage =
+                    "No se recibió el identificador del paseo."
             )
             return
         }
@@ -61,10 +63,38 @@ class OwnerWalkDetailViewModel @Inject constructor(
                         "No se encontró el paseo solicitado."
                     )
 
+                // Mostramos primero el paseo, sin esperar
+                // a que se cargue el perfil del paseador.
                 _uiState.value = OwnerWalkDetailUiState(
                     walk = walk,
                     isLoading = false
                 )
+
+                // El nombre se obtiene del usuario asociado
+                // al walkerId almacenado en el paseo.
+                val walkerName = try {
+                    val user = getUserById(walk.walkerId)
+
+                    listOf(
+                        user?.name.orEmpty().trim(),
+                        user?.lastName.orEmpty().trim()
+                    )
+                        .filter { it.isNotBlank() }
+                        .joinToString(" ")
+                        .takeIf { it.isNotBlank() }
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (_: Exception) {
+                    null
+                }
+
+                _uiState.update {
+                    if (it.walk?.id == walk.id) {
+                        it.copy(walkerName = walkerName)
+                    } else {
+                        it
+                    }
+                }
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {

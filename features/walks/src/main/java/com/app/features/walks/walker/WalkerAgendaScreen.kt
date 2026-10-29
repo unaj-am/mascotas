@@ -3,6 +3,7 @@ package com.app.features.walks.walker
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -32,27 +33,111 @@ fun WalkerAgendaScreen(
     viewModel: WalkerWalksViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    LaunchedEffect(walkerId) { viewModel.load(walkerId, forceRefresh = true) }
-    val agenda = state.walks.filter { it.status == WalkStatus.SCHEDULED || it.status == WalkStatus.IN_PROGRESS }
 
-    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        androidx.compose.foundation.layout.Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Agenda", style = MaterialTheme.typography.headlineMedium)
-            TextButton(onClick = viewModel::refresh, enabled = !state.isLoading) { Text("Actualizar") }
+    LaunchedEffect(walkerId) {
+        viewModel.load(walkerId, forceRefresh = true)
+    }
+
+    val agenda = state.walks.filter {
+        it.status == WalkStatus.SCHEDULED ||
+                it.status == WalkStatus.IN_PROGRESS
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Agenda",
+                style = MaterialTheme.typography.headlineMedium
+            )
+
+            TextButton(
+                onClick = viewModel::refresh,
+                enabled = !state.isLoading
+            ) {
+                Text("Actualizar")
+            }
         }
-        androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TextButton(onClick = onActiveWalkClick) { Text("Paseo activo") }
-            TextButton(onClick = onHistoryClick) { Text("Historial") }
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            TextButton(onClick = onActiveWalkClick) {
+                Text("Paseo activo")
+            }
+
+            TextButton(onClick = onHistoryClick) {
+                Text("Historial")
+            }
         }
-        state.operationMessage?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
-        state.operationError?.let { DomainErrorMessage(message = it, onRetry = viewModel::refresh) }
-        state.errorMessage?.let { DomainErrorMessage(message = it, onRetry = viewModel::refresh) }
+
+        state.operationMessage?.let {
+            Text(
+                text = it,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        state.operationError?.let {
+            DomainErrorMessage(
+                message = it,
+                onRetry = viewModel::refresh
+            )
+        }
+
+        state.errorMessage?.let {
+            DomainErrorMessage(
+                message = it,
+                onRetry = viewModel::refresh
+            )
+        }
+
         when {
-            state.isLoading && state.walks.isEmpty() -> LoadingContent(Modifier.weight(1f))
-            agenda.isEmpty() && state.errorMessage == null -> EmptyContent("No tenés paseos programados. Las solicitudes aceptadas aparecerán acá.", Modifier.weight(1f), "Actualizar", viewModel::refresh)
-            else -> LazyColumn(modifier = Modifier.weight(1f), contentPadding = PaddingValues(bottom = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(agenda, key = { it.id }) { walk ->
-                    WalkCard(walk = walk, isProcessing = state.processingId == walk.id, showStart = walk.status == WalkStatus.SCHEDULED, showComplete = walk.status == WalkStatus.IN_PROGRESS, onStart = { viewModel.start(walk.id) }, onComplete = { viewModel.complete(walk.id) })
+            state.isLoading && state.walks.isEmpty() -> {
+                LoadingContent(
+                    Modifier.weight(1f)
+                )
+            }
+
+            agenda.isEmpty() && state.errorMessage == null -> {
+                EmptyContent(
+                    "No hay paseos programados",
+                    Modifier.weight(1f),
+                    "Actualizar",
+                    viewModel::refresh
+                )
+            }
+
+            else -> {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(bottom = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(
+                        items = agenda,
+                        key = { it.id }
+                    ) { walk ->
+                        val details = state.walkDetails[walk.id]
+
+                        WalkCard(
+                            walk = walk,
+                            ownerName = details?.ownerName,
+                            petNames = details?.petNames.orEmpty(),
+                            isProcessing = state.processingId == walk.id,
+                            showStart = walk.status == WalkStatus.SCHEDULED,
+                            showComplete = walk.status == WalkStatus.IN_PROGRESS,
+                            onStart = { viewModel.start(walk.id) },
+                            onComplete = { viewModel.complete(walk.id) }
+                        )
+                    }
                 }
             }
         }
