@@ -25,6 +25,7 @@ android {
 dependencies {
     implementation(project(":core:database"))
     implementation(project(":core:domain"))
+    implementation(project(":core:cloudinary"))
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.core.ktx)
     implementation(libs.material)
@@ -37,4 +38,6 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.firebase.firestore)
+
+
 }

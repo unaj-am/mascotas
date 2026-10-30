@@ -27,6 +27,13 @@ import com.app.features.profile.component.WalkerPersonalInfoSection
 import com.app.features.profile.component.WalkerProfessionalInfoSection
 import com.app.features.profile.component.WalkerProfileActions
 
+import android.net.Uri
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.app.core.ui.components.ProfilePhotoPicker
+import com.app.features.profile.component.ProfileHeader
+
 @Composable
 fun WalkerProfileScreen(
     userId: String,
@@ -37,6 +44,10 @@ fun WalkerProfileScreen(
 
     LaunchedEffect(userId) {
         viewModel.loadProfile(userId)
+    }
+
+    var selectedPhotoUri by remember {
+        mutableStateOf<Uri?>(null)
     }
 
     when {
@@ -86,6 +97,26 @@ fun WalkerProfileScreen(
                     text = "Mi perfil de paseador",
                     style = MaterialTheme.typography.headlineLarge
                 )
+
+                ProfileHeader(
+                    name = state.name,
+                    lastName = state.lastName,
+                    roleLabel = "Paseador",
+                    photoUri = selectedPhotoUri
+                )
+
+                ProfilePhotoPicker(
+                    onPhotoSelected = { uri ->
+                        selectedPhotoUri = uri
+                    }
+                ) { openPicker ->
+                    TextButton(
+                        onClick = openPicker
+                    ) {
+                        Text("Cambiar foto de perfil")
+                    }
+                }
+
 
                 WalkerPersonalInfoSection(
                     name = state.name,
