@@ -54,6 +54,15 @@ class UserRemoteDataSource @Inject constructor(
             .await()
     }
 
+    suspend fun updateProfileImage(
+        userId: String,
+        imageUrl: String
+    ) {
+        usersCollection
+            .document(userId)
+            .update("profileImage", imageUrl)
+            .await()
+    }
     private fun User.toFirestoreMap(): Map<String, Any?> {
         return mapOf(
             "name" to name,

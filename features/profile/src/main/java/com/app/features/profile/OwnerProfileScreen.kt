@@ -31,6 +31,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.app.core.ui.components.ProfilePhotoPicker
 
+
+
 @Composable
 fun OwnerProfileRoute(
     userId: String,
@@ -50,6 +52,7 @@ fun OwnerProfileRoute(
         onPhoneChange = viewModel::onPhoneChange,
         onSave = viewModel::saveProfile,
         onRetry = viewModel::retryLoadProfile,
+        onPhotoSelected = viewModel::uploadProfilePhoto,
         onSignOut = onSignOut
     )
 }
@@ -62,10 +65,16 @@ private fun OwnerProfileScreen(
     onPhoneChange: (String) -> Unit,
     onSave: () -> Unit,
     onRetry: () -> Unit,
+    onPhotoSelected: (Uri) -> Unit,
     onSignOut: () -> Unit
-) {
+){
     var selectedPhotoUri by remember {
         mutableStateOf<Uri?>(null)
+    }
+    LaunchedEffect(state.isUploadingPhoto, state.photoErrorMessage) {
+        if (!state.isUploadingPhoto) {
+            selectedPhotoUri = null
+        }
     }
     when {
         state.isLoading -> {
@@ -117,31 +126,45 @@ private fun OwnerProfileScreen(
                     name = state.name,
                     lastName = state.lastName,
                     roleLabel = "Dueño de mascotas",
-                    photoUri = selectedPhotoUri
+                    photoUri = selectedPhotoUri,
+                    profileImageUrl = state.profileImage
                 )
 
                 ProfilePhotoPicker(
                     onPhotoSelected = { uri ->
                         selectedPhotoUri = uri
+                        onPhotoSelected(uri)
                     }
                 ) { openPicker ->
                     TextButton(
-                        onClick = openPicker
+                        onClick = openPicker,
+                        enabled = !state.isUploadingPhoto && !state.isSaving
                     ) {
-                        Text("Cambiar foto de perfil")
+                        Text(
+                            if (state.isUploadingPhoto) {
+                                "Subiendo fotografía..."
+                            } else {
+                                "Cambiar foto de perfil"
+                            }
+                        )
                     }
                 }
-
+                state.photoErrorMessage?.let { message ->
+                    Text(
+                        text = message,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
 
                 HorizontalDivider()
 
                 PersonalInformationSection(
-                    name = state.name,
-                    lastName = state.lastName,
-                    email = state.email,
-                    phone = state.phone,
-                    enabled = !state.isSaving,
-                    onNameChange = onNameChange,
+                        name = state.name,
+                        lastName = state.lastName,
+                        email = state.email,
+                        phone = state.phone,
+                        enabled = !state.isSaving,
+                        onNameChange = onNameChange,
                     onLastNameChange = onLastNameChange,
                     onPhoneChange = onPhoneChange
                 )

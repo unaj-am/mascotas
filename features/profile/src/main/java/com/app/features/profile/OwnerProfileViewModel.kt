@@ -15,11 +15,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.app.cloudinary.CloudinaryPhotoUploader
+import com.app.core.domain.repository.UserRepository
+import android.net.Uri
 
 @HiltViewModel
 class OwnerProfileViewModel @Inject constructor(
     private val getUserByIdUseCase: GetUserByIdUseCase,
-    private val updateUserUseCase: UpdateUserUseCase
+    private val updateUserUseCase: UpdateUserUseCase,
+    private val cloudinaryPhotoUploader: CloudinaryPhotoUploader,
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(OwnerProfileUiState())
@@ -28,6 +33,65 @@ class OwnerProfileViewModel @Inject constructor(
         _uiState.asStateFlow()
 
     private var currentUser: User? = null
+
+    fun uploadProfilePhoto(uri: Uri) {
+        val user = currentUser ?: run {
+            _uiState.update {
+                it.copy(
+                    photoErrorMessage = "No se pudo identificar al usuario."
+                )
+            }
+            return
+        }
+
+        if (
+            _uiState.value.isLoading ||
+            _uiState.value.isUploadingPhoto ||
+            _uiState.value.isSaving
+        ) return
+
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isUploadingPhoto = true,
+                    photoErrorMessage = null
+                )
+            }
+
+            try {
+                val imageUrl = cloudinaryPhotoUploader.uploadPhoto(uri)
+
+                userRepository.updateProfileImage(
+                    userId = user.id,
+                    imageUrl = imageUrl
+                )
+
+                currentUser = user.copy(
+                    profileImage = imageUrl
+                )
+
+                _uiState.update {
+                    it.copy(
+                        profileImage = imageUrl,
+                        isUploadingPhoto = false,
+                        photoErrorMessage = null
+                    )
+                }
+
+            } catch (error: CancellationException) {
+                throw error
+
+            } catch (error: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isUploadingPhoto = false,
+                        photoErrorMessage = error.message
+                            ?: "No se pudo guardar la fotografía."
+                    )
+                }
+            }
+        }
+    }
 
     fun loadProfile(userId: String) {
         if (userId.isBlank()) {
