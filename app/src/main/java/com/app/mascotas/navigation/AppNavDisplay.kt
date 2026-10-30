@@ -83,6 +83,7 @@ fun AppNavDisplay(
         entry<HomeDestination> {
             OwnerHomeRoute(
                 ownerId = ownerId,
+                isVisible = navigationState.currentTab == TopLevelDestination.HOME,
                 onNotificationsClick = {
                     // Pendiente: conectar notificaciones.
                 },

@@ -5,45 +5,20 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.core.ui.theme.DimensUI
 import com.app.features.walkers.list.component.WalkerContent
 import com.app.features.walkers.list.component.WalkerHeader
-import com.app.features.walkers.list.filter.WalkerFilterSection
-import com.app.features.walkers.list.filter.WalkerFilterState
+import com.app.features.walkers.list.component.WalkerFilterSection
+import com.app.features.walkers.list.component.WalkerFilterState
 
 /**
  * Route del listado de paseadores.
- */
-@Composable
-fun WalkerRoute(
-    viewModel: WalkerViewModel,
-    onWalkerClick: (String) -> Unit = {},
-    onBack: () -> Unit = {},
-    modifier: Modifier = Modifier
-) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    WalkerScreen(
-        uiState = uiState,
-        onWalkerClick = onWalkerClick,
-        onRetry = viewModel::loadWalkers,
-        onBack = onBack,
-        modifier = modifier
-    )
-}
-
-/**
- * Pantalla del listado de paseadores.
- *
  */
 @Composable
 fun WalkerScreen(
@@ -84,12 +59,6 @@ fun WalkerScreen(
             DimensUI.SectionSpacing
         )
     ) {
-        TextButton(
-            onClick = onBack
-        ) {
-            Text("← Volver")
-        }
-
         WalkerHeader(
             uiState = displayState
         )

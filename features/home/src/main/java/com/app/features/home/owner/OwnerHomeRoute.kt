@@ -14,12 +14,18 @@ fun OwnerHomeRoute(
     ownerId: String,
     onNotificationsClick: () -> Unit,
     onFindWalkerClick: () -> Unit,
+    isVisible: Boolean = true,
     viewModel: OwnerHomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(ownerId) {
-        viewModel.loadHome(ownerId)
+    LaunchedEffect(ownerId, isVisible) {
+        if (isVisible) {
+            viewModel.loadHome(
+                ownerId = ownerId,
+                forceRefresh = true
+            )
+        }
     }
 
     when {

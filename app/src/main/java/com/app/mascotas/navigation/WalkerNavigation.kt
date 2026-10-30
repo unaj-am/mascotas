@@ -19,13 +19,12 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.app.features.home.walker.WalkerHomeRoute
 import com.app.features.profile.WalkerProfileScreen
-import com.app.features.walkers.requests.WalkerRequestsScreen
-import com.app.features.walks.walker.WalkerActiveWalkScreen
-import com.app.features.walks.walker.WalkerAgendaScreen
-import com.app.features.walks.walker.WalkerHistoryScreen
 import com.app.mascotas.ui.AppShell
 import com.app.mascotas.ui.AppTab
 import com.app.features.walkers.requests.WalkerRequestsRoute
+import com.app.features.walks.walker.WalkerActiveWalkRoute
+import com.app.features.walks.walker.WalkerAgendaRoute
+import com.app.features.walks.walker.WalkerHistoryRoute
 @Composable
 fun WalkerNavigation(
     userId: String,
@@ -55,17 +54,27 @@ fun WalkerNavigation(
             WalkerRequestsRoute(walkerId = userId)
         }
         entry<WalkerAgendaDestination> {
-            WalkerAgendaScreen(
+            WalkerAgendaRoute(
                 walkerId = userId,
-                onActiveWalkClick = { backStack.add(WalkerActiveWalkDestination) },
-                onHistoryClick = { backStack.add(WalkerHistoryDestination) }
+                onActiveWalkClick = {
+                    backStack.add(WalkerActiveWalkDestination)
+                },
+                onHistoryClick = {
+                    backStack.add(WalkerHistoryDestination)
+                }
             )
         }
+
         entry<WalkerActiveWalkDestination> {
-            WalkerActiveWalkScreen(walkerId = userId)
+            WalkerActiveWalkRoute(
+                walkerId = userId
+            )
         }
+
         entry<WalkerHistoryDestination> {
-            WalkerHistoryScreen(walkerId = userId)
+            WalkerHistoryRoute(
+                walkerId = userId
+            )
         }
         entry<WalkerProfileDestination> {
             WalkerProfileScreen(userId = userId, onSignOut = onSignOut)

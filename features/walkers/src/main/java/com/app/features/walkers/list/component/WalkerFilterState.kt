@@ -1,12 +1,8 @@
-package com.app.features.walkers.list.filter
+package com.app.features.walkers.list.component
 
 import com.app.core.domain.model.Walker
 import com.app.features.walkers.list.WalkerUiState
 
-/**
- * Estado de los filtros del listado de paseadores.
- *
- */
 data class WalkerFilterState(
     val serviceArea: String = "",
     val maxPriceText: String = "",
@@ -27,9 +23,18 @@ data class WalkerFilterState(
                 maxPriceText.isNotBlank() ||
                 onlyAvailable
 
+    val activeFilterCount: Int
+        get() = listOf(
+            serviceArea.isNotBlank(),
+            maxPriceText.isNotBlank(),
+            onlyAvailable
+        ).count { it }
+
     fun clear(): WalkerFilterState = WalkerFilterState()
 
-    fun filterWalkers(walkers: List<Walker>): List<Walker> {
+    fun filterWalkers(
+        walkers: List<Walker>
+    ): List<Walker> {
         val priceLimit = maxPrice
 
         return walkers.filter { walker ->
@@ -51,7 +56,6 @@ data class WalkerFilterState(
         }
     }
 
-
     fun applyTo(uiState: WalkerUiState): WalkerUiState {
         return when (uiState) {
             is WalkerUiState.Success -> {
@@ -60,9 +64,11 @@ data class WalkerFilterState(
                 )
             }
 
-            WalkerUiState.Loading -> WalkerUiState.Loading
+            WalkerUiState.Loading ->
+                WalkerUiState.Loading
 
-            is WalkerUiState.Error -> uiState
+            is WalkerUiState.Error ->
+                uiState
         }
     }
 }
