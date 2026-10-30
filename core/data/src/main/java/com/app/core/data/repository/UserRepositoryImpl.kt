@@ -22,4 +22,14 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun updateUser(user: User) {
         userRemoteDataSource.updateUser(user)
     }
+
+    override suspend fun updateProfileImage(
+        userId: String,
+        imageUrl: String
+    ) {
+        userRemoteDataSource.updateProfileImage(
+            userId = userId,
+            imageUrl = imageUrl
+        )
+    }
 }
