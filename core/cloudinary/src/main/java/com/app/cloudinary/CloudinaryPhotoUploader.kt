@@ -11,9 +11,11 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.io.IOException
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 
-class CloudinaryPhotoUploader(
-    private val context: Context
+class CloudinaryPhotoUploader @Inject constructor(
+    @ApplicationContext private val context: Context
 ) {
     private val client = OkHttpClient()
 

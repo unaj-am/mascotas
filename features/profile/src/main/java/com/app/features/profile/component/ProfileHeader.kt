@@ -23,14 +23,16 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 
 @Composable
 fun ProfileHeader(
     name: String,
     lastName: String,
     roleLabel: String,
-    photoUri: Uri? = null
-) {
+    photoUri: Uri? = null,
+    profileImageUrl: String? = null
+)  {
     val context = LocalContext.current
 
     val bitmap = remember(photoUri) {
@@ -56,22 +58,37 @@ fun ProfileHeader(
                 ),
             contentAlignment = Alignment.Center
         ) {
-            if (bitmap != null) {
-                Image(
-                    bitmap = bitmap.asImageBitmap(),
-                    contentDescription = "Foto de perfil",
-                    modifier = Modifier
-                        .size(88.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Foto de perfil",
-                    modifier = Modifier.size(44.dp),
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                )
+            when {
+                bitmap != null -> {
+                    Image(
+                        bitmap = bitmap.asImageBitmap(),
+                        contentDescription = "Foto de perfil",
+                        modifier = Modifier
+                            .size(88.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+
+                !profileImageUrl.isNullOrBlank() -> {
+                    AsyncImage(
+                        model = profileImageUrl,
+                        contentDescription = "Foto de perfil",
+                        modifier = Modifier
+                            .size(88.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+
+                else -> {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Foto de perfil",
+                        modifier = Modifier.size(44.dp),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
             }
         }
 
