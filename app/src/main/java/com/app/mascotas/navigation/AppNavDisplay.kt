@@ -31,7 +31,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.app.core.domain.model.Pet
 import com.app.core.ui.components.ErrorContent
 import com.app.core.ui.components.LoadingContent
-import com.app.features.home.OwnerHomeRoute
+import com.app.features.home.owner.OwnerHomeRoute
 import com.app.features.pets.detail.PetDetailRoute
 import com.app.features.pets.detail.PetDetailUiState
 import com.app.features.pets.detail.PetDetailViewModel
@@ -43,10 +43,9 @@ import com.app.features.profile.OwnerProfileRoute
 import com.app.features.tracking.WalkTrackingScreen
 import com.app.features.walkers.list.WalkerRoute
 import com.app.features.walkers.list.WalkerViewModel
-import com.app.features.walkers.requests.WalkRequestFormRoute
-import com.app.features.walks.owner.OwnerWalkDetailScreen
-import com.app.features.walks.owner.OwnerWalksScreen
-
+import com.app.features.walkers.requestform.WalkRequestFormRoute
+import com.app.features.walks.owner.OwnerWalkDetailRoute
+import com.app.features.walks.owner.OwnerWalksRoute
 @Composable
 fun AppNavDisplay(
     navigationState: NavigationState,
@@ -105,7 +104,7 @@ fun AppNavDisplay(
         }
 
         entry<WalksDestination> {
-            OwnerWalksScreen(
+            OwnerWalksRoute(
                 ownerId = ownerId,
                 onTrackWalk = { walkId ->
                     navigationState.navigate(
@@ -121,7 +120,7 @@ fun AppNavDisplay(
         }
 
         entry<OwnerWalkDetailDestination> { destination ->
-            OwnerWalkDetailScreen(
+            OwnerWalkDetailRoute(
                 walkId = destination.walkId,
                 onBack = {
                     navigationState.goBackFrom(destination)

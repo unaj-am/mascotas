@@ -1,5 +1,4 @@
-
-package com.app.features.home
+package com.app.features.home.owner
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues

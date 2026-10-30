@@ -1,4 +1,4 @@
-package com.app.features.home
+package com.app.features.home.owner
 
 data class OwnerHomeUiState(
     val userName: String = "",

@@ -1,4 +1,4 @@
-package com.app.features.home
+package com.app.features.home.walker
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect

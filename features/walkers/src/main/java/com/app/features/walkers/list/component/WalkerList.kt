@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.app.core.domain.model.Walker
 import com.app.core.ui.theme.DimensUI
-import com.app.features.walkers.component.WalkerCard
 
 @Composable
 fun WalkerList(
