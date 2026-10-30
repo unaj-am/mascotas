@@ -1,5 +1,5 @@
 
-package com.app.features.home
+package com.app.features.home.owner
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect

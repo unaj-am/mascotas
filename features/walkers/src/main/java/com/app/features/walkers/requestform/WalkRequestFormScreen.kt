@@ -1,5 +1,4 @@
-
-package com.app.features.walkers.requests
+package com.app.features.walkers.requestform
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,11 +30,6 @@ import com.app.core.ui.theme.DimensUI
 /**
  * Formulario para solicitar un paseo.
  *
- * La pantalla presenta las mascotas del dueño,
- * los datos del paseo y el estado de la operación.
- *
- * La lógica de selección, validación y envío permanece
- * en el ViewModel.
  */
 @Composable
 fun WalkRequestFormScreen(

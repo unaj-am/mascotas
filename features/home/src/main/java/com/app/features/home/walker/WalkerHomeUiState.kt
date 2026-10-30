@@ -1,4 +1,4 @@
-package com.app.features.home
+package com.app.features.home.walker
 
 import com.app.core.domain.model.WalkRequest
 

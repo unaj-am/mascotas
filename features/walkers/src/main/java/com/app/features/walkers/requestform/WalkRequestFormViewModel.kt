@@ -1,4 +1,4 @@
-package com.app.features.walkers.requests
+package com.app.features.walkers.requestform
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,13 +7,12 @@ import com.app.core.domain.model.WalkRequest
 import com.app.core.domain.usecase.CreateWalkRequestUseCase
 import com.app.core.domain.usecase.GetPetsByOwnerUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.util.UUID
-import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
+import java.util.UUID
+import javax.inject.Inject
 @HiltViewModel
 class WalkRequestFormViewModel @Inject constructor(
     private val getPetsByOwnerUseCase: GetPetsByOwnerUseCase,
