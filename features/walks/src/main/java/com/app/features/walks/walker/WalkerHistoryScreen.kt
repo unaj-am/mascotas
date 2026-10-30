@@ -1,48 +1,30 @@
-
 package com.app.features.walks.walker
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.core.domain.model.WalkStatus
-import com.app.core.ui.components.DomainErrorMessage
-import com.app.core.ui.components.EmptyContent
-import com.app.core.ui.components.LoadingContent
-import com.app.core.ui.components.SectionHeader
-import com.app.features.walks.component.WalkCard
+import com.app.features.walks.walker.component.WalkerWalksContent
+import com.app.features.walks.walker.component.WalkerWalksFeedback
+import com.app.features.walks.walker.component.WalkerWalksHeader
 
 @Composable
 fun WalkerHistoryScreen(
-    walkerId: String,
-    viewModel: WalkerWalksViewModel = hiltViewModel()
+    state: WalkerWalksUiState,
+    onRefresh: () -> Unit
 ) {
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
-
-    LaunchedEffect(walkerId) {
-        viewModel.load(
-            walkerId = walkerId,
-            forceRefresh = true
-        )
-    }
-
     val history = state.walks
         .filter { walk ->
             walk.status == WalkStatus.COMPLETED ||
                     walk.status == WalkStatus.CANCELLED
         }
-        .sortedByDescending { walk -> walk.scheduledAt }
+        .sortedByDescending { walk ->
+            walk.scheduledAt
+        }
 
     Column(
         modifier = Modifier
@@ -53,75 +35,30 @@ fun WalkerHistoryScreen(
             ),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        SectionHeader(
+        WalkerWalksHeader(
             title = "Historial de paseos",
             subtitle = "Consultá los paseos finalizados y cancelados.",
-            actionText = "Actualizar",
-            onAction = viewModel::refresh
+            onRefresh = onRefresh
         )
 
-        state.operationMessage?.let { message ->
-            androidx.compose.material3.Text(
-                text = message
-            )
-        }
+        WalkerWalksFeedback(
+            operationMessage = state.operationMessage,
+            operationError = state.operationError,
+            loadingError = state.errorMessage,
+            onRetry = onRefresh
+        )
 
-        state.operationError?.let { error ->
-            DomainErrorMessage(
-                message = error,
-                onRetry = viewModel::refresh
-            )
-        }
-
-        state.errorMessage?.let { error ->
-            DomainErrorMessage(
-                message = error,
-                onRetry = viewModel::refresh
-            )
-        }
-
-        when {
-            state.isLoading && state.walks.isEmpty() -> {
-                LoadingContent(
-                    modifier = Modifier.weight(1f),
-                    message = "Cargando historial..."
-                )
-            }
-
-            history.isEmpty() && state.errorMessage == null -> {
-                EmptyContent(
-                    title = "Sin paseos en el historial",
-                    message = "Los paseos completados o cancelados aparecerán acá.",
-                    modifier = Modifier.weight(1f),
-                    actionText = "Actualizar",
-                    onAction = viewModel::refresh
-                )
-            }
-
-            else -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentPadding = PaddingValues(
-                        bottom = 20.dp
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(
-                        items = history,
-                        key = { walk -> walk.id }
-                    ) { walk ->
-                        val details = state.walkDetails[walk.id]
-
-                        WalkCard(
-                            walk = walk,
-                            ownerName = details?.ownerName,
-                            petNames = details?.petNames.orEmpty()
-                        )
-                    }
-                }
-            }
-        }
+        WalkerWalksContent(
+            state = state,
+            displayedWalks = history,
+            loadingMessage = "Cargando historial...",
+            emptyTitle = "Sin paseos en el historial",
+            emptyMessage = "Los paseos completados o cancelados aparecerán acá.",
+            onRefresh = onRefresh,
+            onStart = {},
+            onComplete = {},
+            showActions = false,
+            modifier = Modifier.weight(1f)
+        )
     }
 }

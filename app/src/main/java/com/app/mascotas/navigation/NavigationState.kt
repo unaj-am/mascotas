@@ -55,11 +55,8 @@ class NavigationState(
     }
 
     fun selectTab(tab: TopLevelDestination) {
-        if (tab == currentTab) {
-            popToRoot(tab)
-        } else {
-            currentTab = tab
-        }
+        popToRoot(tab)
+        currentTab = tab
     }
 
     fun navigateToTabRoot(tab: TopLevelDestination) {
