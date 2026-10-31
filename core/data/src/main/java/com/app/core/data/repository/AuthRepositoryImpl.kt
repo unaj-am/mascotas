@@ -1,7 +1,7 @@
 
 package com.app.core.data.repository
 
-import com.app.core.datasource.remote.FirebaseAuthDataSource
+import com.app.core.data.datasource.FirebaseAuthDataSource
 import com.app.core.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject

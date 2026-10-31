@@ -1,4 +1,5 @@
-package com.app.core.data.datasource.remote
+
+package com.app.core.data.datasource
 
 import com.app.core.domain.model.Pet
 import com.google.firebase.firestore.DocumentSnapshot
