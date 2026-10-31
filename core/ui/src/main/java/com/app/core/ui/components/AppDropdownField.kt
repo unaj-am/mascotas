@@ -6,6 +6,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,12 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 
-/**
- * Selector desplegable compartido.
- *
- * Recibe las opciones y el valor desde el componente
- * que lo utiliza. No conoce reglas de negocio.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppDropdownField(
@@ -51,6 +46,8 @@ fun AppDropdownField(
             value = value,
             onValueChange = {},
             readOnly = true,
+            enabled = enabled,
+            singleLine = true,
             label = {
                 Text(text = label)
             },
@@ -73,9 +70,8 @@ fun AppDropdownField(
                 .semantics {
                     contentDescription = label
                 },
-            enabled = enabled,
-            singleLine = true,
-            shape = androidx.compose.material3.MaterialTheme.shapes.medium
+            shape = AppFieldDefaults.shape,
+            colors = AppFieldDefaults.colors()
         )
 
         ExposedDropdownMenu(
@@ -87,7 +83,10 @@ fun AppDropdownField(
             options.forEach { option ->
                 DropdownMenuItem(
                     text = {
-                        Text(text = option)
+                        Text(
+                            text = option,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     },
                     onClick = {
                         onValueChange(option)

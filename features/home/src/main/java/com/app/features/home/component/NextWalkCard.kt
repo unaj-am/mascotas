@@ -6,10 +6,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.WatchLater
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -18,9 +16,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.dp
 import com.app.core.ui.components.AppCard
+import com.app.core.ui.components.PrimaryActionButton
 import com.app.core.ui.theme.DimensUI
-
 @Composable
 fun NextWalkCard(
     petName: String?,
@@ -36,16 +36,16 @@ fun NextWalkCard(
         )
     ) {
         HomeSectionHeader(
-            title = "PRÓXIMO PASEO"
+            title = "Próximo paseo"
         )
 
         AppCard(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = DimensUI.CardPaddingLarge
         ) {
             Column(
-                modifier = Modifier.padding(DimensUI.SpaceLarge),
                 verticalArrangement = Arrangement.spacedBy(
-                    DimensUI.SpaceMedium
+                    DimensUI.SpaceLarge
                 )
             ) {
                 Row(
@@ -54,87 +54,88 @@ fun NextWalkCard(
                         DimensUI.SpaceSmall
                     )
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.WatchLater,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer
+                    ) {
+                        androidx.compose.foundation.layout.Box(
+                            modifier = Modifier.size(44.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.WatchLater,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
 
                     Text(
                         text = "Paseo programado",
-                        style = MaterialTheme.typography.labelLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
                 if (!petName.isNullOrBlank()) {
-                    Text(
-                        text = petName,
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    if (!petBreed.isNullOrBlank()) {
-                        Text(
-                            text = petBreed,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(
+                            DimensUI.SpaceXSmall
                         )
-                    }
-
-                    if (!walkDate.isNullOrBlank()) {
-                        Text(
-                            text = walkDate,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                } else {
-                    Text(
-                        text = "Todavía no tenés paseos programados",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Text(
-                        text = "Buscá un paseador para organizar el próximo.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                Surface(
-                    onClick = onFindWalkerClick,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.primaryContainer
-                ) {
-                    Row(
-                        modifier = Modifier.padding(
-                            DimensUI.SpaceMedium
-                        ),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = "Buscar paseador",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            text = petName,
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
-                        Spacer(
-                            modifier = Modifier.size(
-                                DimensUI.SpaceSmall
+                        if (!petBreed.isNullOrBlank()) {
+                            Text(
+                                text = petBreed,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                        }
+
+                        if (!walkDate.isNullOrBlank()) {
+                            Spacer(
+                                modifier = Modifier.size(
+                                    DimensUI.SpaceXSmall
+                                )
+                            )
+
+                            Text(
+                                text = walkDate,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                } else {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(
+                            DimensUI.SpaceXSmall
+                        )
+                    ) {
+                        Text(
+                            text = "Todavía no tenés paseos programados",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
-                        Icon(
-                            imageVector = Icons.Filled.ArrowForward,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        Text(
+                            text = "Buscá un paseador para organizar el próximo.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
+
+                PrimaryActionButton(
+                    text = "Buscar paseador",
+                    onClick = onFindWalkerClick,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }

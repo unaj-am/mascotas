@@ -1,3 +1,4 @@
+
 package com.app.features.walks.walker
 
 import androidx.compose.foundation.layout.Arrangement
@@ -6,8 +7,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.app.core.domain.model.WalkStatus
+import com.app.core.ui.components.AppAnimatedVisibility
+import com.app.core.ui.theme.DimensUI
 import com.app.features.walks.walker.component.WalkerAgendaNavigation
 import com.app.features.walks.walker.component.WalkerWalksContent
 import com.app.features.walks.walker.component.WalkerWalksFeedback
@@ -31,21 +33,27 @@ fun WalkerAgendaScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(
-                horizontal = 20.dp,
-                vertical = 16.dp
+                horizontal = DimensUI.ScreenHorizontalPadding,
+                vertical = DimensUI.ScreenTopPadding
             ),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(
+            DimensUI.SectionSpacingCompact
+        )
     ) {
-        WalkerWalksHeader(
-            title = "Agenda",
-            subtitle = "Organizá los paseos programados y consultá los que están en curso.",
-            onRefresh = onRefresh
-        )
+        AppAnimatedVisibility(visible = true) {
+            WalkerWalksHeader(
+                title = "Agenda",
+                subtitle = "Organizá los paseos programados y consultá los que están en curso.",
+                onRefresh = onRefresh
+            )
+        }
 
-        WalkerAgendaNavigation(
-            onActiveWalkClick = onActiveWalkClick,
-            onHistoryClick = onHistoryClick
-        )
+        AppAnimatedVisibility(visible = true) {
+            WalkerAgendaNavigation(
+                onActiveWalkClick = onActiveWalkClick,
+                onHistoryClick = onHistoryClick
+            )
+        }
 
         WalkerWalksFeedback(
             operationMessage = state.operationMessage,
@@ -54,17 +62,22 @@ fun WalkerAgendaScreen(
             onRetry = onRefresh
         )
 
-        WalkerWalksContent(
-            state = state,
-            displayedWalks = agenda,
-            loadingMessage = "Cargando agenda...",
-            emptyTitle = "Agenda vacía",
-            emptyMessage = "No tenés paseos programados ni paseos en curso.",
-            onRefresh = onRefresh,
-            onStart = onStart,
-            onComplete = onComplete,
-            showActions = true,
+        AppAnimatedVisibility(
+            visible = true,
             modifier = Modifier.weight(1f)
-        )
+        ) {
+            WalkerWalksContent(
+                state = state,
+                displayedWalks = agenda,
+                loadingMessage = "Cargando agenda...",
+                emptyTitle = "Agenda vacía",
+                emptyMessage = "No tenés paseos programados ni paseos en curso.",
+                onRefresh = onRefresh,
+                onStart = onStart,
+                onComplete = onComplete,
+                showActions = true,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 }

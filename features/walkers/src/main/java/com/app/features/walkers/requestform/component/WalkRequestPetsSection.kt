@@ -1,3 +1,4 @@
+
 package com.app.features.walkers.requestform.component
 
 import androidx.compose.foundation.layout.Arrangement
@@ -24,11 +25,12 @@ fun WalkRequestPetsSection(
     modifier: Modifier = Modifier
 ) {
     AppCard(
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = DimensUI.CardPaddingLarge
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(
-                DimensUI.SpaceLarge
+                DimensUI.SpaceMedium
             )
         ) {
             Row(
@@ -38,7 +40,8 @@ fun WalkRequestPetsSection(
             ) {
                 Text(
                     text = "Tus mascotas",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 StatusBadge(
@@ -49,6 +52,12 @@ fun WalkRequestPetsSection(
                 )
             }
 
+            Text(
+                text = "Seleccioná una o más mascotas para el paseo.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
             if (pets.isEmpty()) {
                 EmptyContent(
                     title = "No tenés mascotas registradas",
@@ -56,19 +65,19 @@ fun WalkRequestPetsSection(
                     modifier = Modifier.fillMaxWidth()
                 )
             } else {
-                Text(
-                    text = "Seleccioná una o más mascotas para el paseo.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                pets.forEach { pet ->
-                    WalkRequestPetItem(
-                        pet = pet,
-                        isSelected = pet.id in selectedPetIds,
-                        enabled = !isSubmitting,
-                        onPetSelected = onPetSelected
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(
+                        DimensUI.SpaceSmall
                     )
+                ) {
+                    pets.forEach { pet ->
+                        WalkRequestPetItem(
+                            pet = pet,
+                            isSelected = pet.id in selectedPetIds,
+                            enabled = !isSubmitting,
+                            onPetSelected = onPetSelected
+                        )
+                    }
                 }
             }
         }

@@ -1,14 +1,16 @@
+
 package com.app.features.walkers.requestform.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import com.app.core.ui.components.AppCard
+import com.app.core.ui.components.AppFormSection
 import com.app.core.ui.components.AppTextField
 import com.app.core.ui.theme.DimensUI
 
@@ -24,53 +26,54 @@ fun WalkRequestDetailsSection(
     modifier: Modifier = Modifier
 ) {
     AppCard(
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = DimensUI.CardPaddingLarge
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(
-                DimensUI.SpaceLarge
-            )
+        AppFormSection(
+            title = "Datos del paseo",
+            description = "Indicá cuándo y durante cuánto tiempo necesitás el servicio."
         ) {
-            Text(
-                text = "Datos del paseo",
-                style = MaterialTheme.typography.titleMedium
-            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(
+                    DimensUI.SpaceLarge
+                )
+            ) {
+                AppTextField(
+                    value = scheduledAt,
+                    onValueChange = onScheduledAtChange,
+                    label = "Fecha y hora",
+                    placeholder = "2026-11-01T15:00",
+                    enabled = !isSubmitting
+                )
 
-            AppTextField(
-                value = scheduledAt,
-                onValueChange = onScheduledAtChange,
-                label = "Fecha y hora",
-                placeholder = "2026-11-01T15:00",
-                enabled = !isSubmitting
-            )
+                Text(
+                    text = "Formato requerido: AAAA-MM-DDTHH:MM",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
 
-            Text(
-                text = "Formato: AAAA-MM-DDTHH:MM",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+                AppTextField(
+                    value = durationMinutes,
+                    onValueChange = { value ->
+                        if (value.all(Char::isDigit)) {
+                            onDurationChange(value)
+                        }
+                    },
+                    label = "Duración en minutos",
+                    placeholder = "60",
+                    keyboardType = KeyboardType.Number,
+                    enabled = !isSubmitting
+                )
 
-            AppTextField(
-                value = durationMinutes,
-                onValueChange = { value ->
-                    if (value.all(Char::isDigit)) {
-                        onDurationChange(value)
-                    }
-                },
-                label = "Duración en minutos",
-                placeholder = "60",
-                keyboardType = KeyboardType.Number,
-                enabled = !isSubmitting
-            )
-
-            AppTextField(
-                value = observations,
-                onValueChange = onObservationsChange,
-                label = "Observaciones",
-                placeholder = "Indicá cuidados o información relevante para el paseo.",
-                singleLine = false,
-                enabled = !isSubmitting
-            )
+                AppTextField(
+                    value = observations,
+                    onValueChange = onObservationsChange,
+                    label = "Observaciones",
+                    placeholder = "Indicá cuidados o información relevante para el paseo.",
+                    singleLine = false,
+                    enabled = !isSubmitting
+                )
+            }
         }
     }
 }

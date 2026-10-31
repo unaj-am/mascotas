@@ -1,13 +1,14 @@
+
 package com.app.features.walkers.requests.component
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.app.core.ui.components.SectionHeader
+import com.app.core.ui.components.TextActionButton
 
 @Composable
 fun WalkerRequestsHeader(
@@ -38,11 +39,10 @@ fun WalkerRequestsHeader(
             modifier = Modifier.weight(1f)
         )
 
-        TextButton(
+        TextActionButton(
+            text = if (isLoading) "Actualizando..." else "Actualizar",
             onClick = onRefresh,
             enabled = !isLoading && !isProcessing
-        ) {
-            Text("Actualizar")
-        }
+        )
     }
 }

@@ -11,18 +11,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import com.app.core.ui.theme.DimensUI
+import com.app.core.ui.theme.ShapeUI
 
-/**
- * Tarjeta visual reutilizable de Mascotas.
- *
- * Permite mostrar contenido personalizado dentro
- * de un contenedor con estilo consistente.
- *
- * Si onClick es null, la tarjeta no es pulsable.
- * No contiene lógica de negocio.
- */
 @Composable
 fun AppCard(
     modifier: Modifier = Modifier,
@@ -30,8 +22,7 @@ fun AppCard(
     containerColor: Color? = null,
     contentColor: Color? = null,
     border: BorderStroke? = null,
-    contentPadding: androidx.compose.ui.unit.Dp =
-        DimensUI.SpaceLarge,
+    contentPadding: Dp = DimensUI.CardPadding,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val resolvedContainerColor =
@@ -45,36 +36,44 @@ fun AppCard(
         contentColor = resolvedContentColor
     )
 
-    val cardElevation = CardDefaults.cardElevation(
-        defaultElevation = 2.dp
+    val cardBorder = border ?: BorderStroke(
+        width = DimensUI.DividerThickness,
+        color = MaterialTheme.colorScheme.outlineVariant
     )
+
+    val cardElevation = CardDefaults.cardElevation(
+        defaultElevation = DimensUI.SpaceXSmall,
+        pressedElevation = DimensUI.SpaceSmall,
+        focusedElevation = DimensUI.SpaceXSmall,
+        hoveredElevation = DimensUI.SpaceSmall,
+        disabledElevation = DimensUI.SpaceNone
+    )
+
+    val cardContent: @Composable ColumnScope.() -> Unit = {
+        Column(
+            modifier = Modifier.padding(contentPadding),
+            content = content
+        )
+    }
 
     if (onClick == null) {
         Card(
             modifier = modifier,
-            shape = MaterialTheme.shapes.large,
+            shape = ShapeUI.Card,
             colors = cardColors,
             elevation = cardElevation,
-            border = border
-        ) {
-            Column(
-                modifier = Modifier.padding(contentPadding),
-                content = content
-            )
-        }
+            border = cardBorder,
+            content = cardContent
+        )
     } else {
         Card(
             onClick = onClick,
             modifier = modifier,
-            shape = MaterialTheme.shapes.large,
+            shape = ShapeUI.Card,
             colors = cardColors,
             elevation = cardElevation,
-            border = border
-        ) {
-            Column(
-                modifier = Modifier.padding(contentPadding),
-                content = content
-            )
-        }
+            border = cardBorder,
+            content = cardContent
+        )
     }
 }

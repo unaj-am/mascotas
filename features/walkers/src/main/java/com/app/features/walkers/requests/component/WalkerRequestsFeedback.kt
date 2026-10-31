@@ -1,12 +1,15 @@
+
 package com.app.features.walkers.requests.component
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.app.core.ui.components.AppCard
+import com.app.core.ui.components.AppFeedbackType
+import com.app.core.ui.components.AppInlineFeedback
 import com.app.core.ui.components.DomainErrorMessage
+import com.app.core.ui.theme.DimensUI
 
 @Composable
 fun WalkerRequestsFeedback(
@@ -14,24 +17,28 @@ fun WalkerRequestsFeedback(
     operationError: String?,
     onRetry: () -> Unit
 ) {
-    operationMessage?.let { message ->
-        AppCard(
-            modifier = Modifier.fillMaxWidth(),
-            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-        ) {
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyMedium
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(
+            DimensUI.SpaceSmall
+        )
+    ) {
+        operationMessage?.let { message ->
+            AppInlineFeedback(
+                message = message,
+                type = AppFeedbackType.SUCCESS,
+                title = "Operación completada"
             )
         }
-    }
 
-    operationError?.let { message ->
-        DomainErrorMessage(
-            message = message,
-            modifier = Modifier.fillMaxWidth(),
-            onRetry = onRetry
-        )
+        operationError?.let { message ->
+            AppInlineFeedback(
+                message = message,
+                type = AppFeedbackType.ERROR,
+                title = "No se pudo completar la operación",
+                actionLabel = "Reintentar",
+                onAction = onRetry
+            )
+        }
     }
 }

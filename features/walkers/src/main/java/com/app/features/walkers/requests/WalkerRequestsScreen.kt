@@ -1,3 +1,4 @@
+
 package com.app.features.walkers.requests
 
 import androidx.compose.foundation.layout.Arrangement
@@ -6,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.app.core.ui.components.AppAnimatedVisibility
 import com.app.core.ui.theme.DimensUI
 import com.app.features.walkers.requests.component.WalkerRequestsContent
 import com.app.features.walkers.requests.component.WalkerRequestsFeedback
@@ -29,25 +31,42 @@ fun WalkerRequestsScreen(
             DimensUI.SectionSpacing
         )
     ) {
-        WalkerRequestsHeader(
-            requestCount = state.requests.size,
-            isLoading = state.isLoading,
-            isProcessing = state.processingRequestId != null,
-            onRefresh = onRefresh
-        )
+        AppAnimatedVisibility(
+            visible = true,
+            durationMillis = 260
+        ) {
+            WalkerRequestsHeader(
+                requestCount = state.requests.size,
+                isLoading = state.isLoading,
+                isProcessing = state.processingRequestId != null,
+                onRefresh = onRefresh
+            )
+        }
 
-        WalkerRequestsFeedback(
-            operationMessage = state.operationMessage,
-            operationError = state.operationError,
-            onRetry = onRefresh
-        )
+        AppAnimatedVisibility(
+            visible = state.operationMessage != null ||
+                    state.operationError != null,
+            durationMillis = 220
+        ) {
+            WalkerRequestsFeedback(
+                operationMessage = state.operationMessage,
+                operationError = state.operationError,
+                onRetry = onRefresh
+            )
+        }
 
-        WalkerRequestsContent(
-            state = state,
-            onRefresh = onRefresh,
-            onAcceptRequest = onAcceptRequest,
-            onRejectRequest = onRejectRequest,
-            modifier = Modifier.weight(1f)
-        )
+        AppAnimatedVisibility(
+            visible = true,
+            modifier = Modifier.weight(1f),
+            durationMillis = 320
+        ) {
+            WalkerRequestsContent(
+                state = state,
+                onRefresh = onRefresh,
+                onAcceptRequest = onAcceptRequest,
+                onRejectRequest = onRejectRequest,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 }

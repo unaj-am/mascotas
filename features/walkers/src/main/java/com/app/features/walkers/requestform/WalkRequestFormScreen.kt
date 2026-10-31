@@ -1,36 +1,25 @@
+
 package com.app.features.walkers.requestform
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
-import com.app.core.ui.components.AppCard
-import com.app.core.ui.components.AppTextField
-import com.app.core.ui.components.DomainErrorMessage
-import com.app.core.ui.components.EmptyContent
+import com.app.core.ui.components.AppAnimatedVisibility
 import com.app.core.ui.components.LoadingContent
-import com.app.core.ui.components.PrimaryActionButton
 import com.app.core.ui.components.SectionHeader
-import com.app.core.ui.components.StatusBadge
 import com.app.core.ui.components.SuccessDialog
+import com.app.core.ui.components.TextActionButton
 import com.app.core.ui.theme.DimensUI
+import com.app.features.walkers.requestform.component.WalkRequestDetailsSection
+import com.app.features.walkers.requestform.component.WalkRequestPetsSection
+import com.app.features.walkers.requestform.component.WalkRequestSubmitSection
 
-/**
- * Formulario para solicitar un paseo.
- *
- */
 @Composable
 fun WalkRequestFormScreen(
     uiState: WalkRequestFormUiState,
@@ -63,17 +52,21 @@ fun WalkRequestFormScreen(
             DimensUI.SectionSpacing
         )
     ) {
-        TextButton(
+        TextActionButton(
+            text = "← Volver",
             onClick = onBack,
             enabled = !uiState.isSubmitting
-        ) {
-            Text("← Volver")
-        }
-
-        SectionHeader(
-            title = "Solicitar paseo",
-            subtitle = "Completá los datos para enviarle una solicitud al paseador."
         )
+
+        AppAnimatedVisibility(
+            visible = true,
+            durationMillis = 260
+        ) {
+            SectionHeader(
+                title = "Solicitar paseo",
+                subtitle = "Completá los datos para enviarle una solicitud al paseador."
+            )
+        }
 
         if (uiState.isLoading) {
             LoadingContent(
@@ -83,142 +76,44 @@ fun WalkRequestFormScreen(
                 message = "Cargando tus mascotas..."
             )
         } else {
-            AppCard(
-                modifier = Modifier.fillMaxWidth()
+            AppAnimatedVisibility(
+                visible = true,
+                durationMillis = 280
             ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(
-                        DimensUI.SpaceLarge
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Tus mascotas",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-
-                        StatusBadge(
-                            text = if (
-                                uiState.selectedPetIds.size == 1
-                            ) {
-                                "1 seleccionada"
-                            } else {
-                                "${uiState.selectedPetIds.size} seleccionadas"
-                            }
-                        )
-                    }
-
-                    if (uiState.pets.isEmpty()) {
-                        EmptyContent(
-                            title = "No tenés mascotas registradas",
-                            message = "Necesitás registrar al menos una mascota antes de solicitar un paseo.",
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    } else {
-                        Text(
-                            text = "Seleccioná una o más mascotas para el paseo.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        uiState.pets.forEach { pet ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Checkbox(
-                                    checked = pet.id in uiState.selectedPetIds,
-                                    onCheckedChange = {
-                                        onPetSelected(pet.id)
-                                    },
-                                    enabled = !uiState.isSubmitting
-                                )
-
-                                Text(
-                                    text = pet.name,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(
-                                            start = DimensUI.SpaceSmall
-                                        ),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            AppCard(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(
-                        DimensUI.SpaceLarge
-                    )
-                ) {
-                    Text(
-                        text = "Datos del paseo",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-
-                    AppTextField(
-                        value = uiState.scheduledAt,
-                        onValueChange = onScheduledAtChange,
-                        label = "Fecha y hora",
-                        placeholder = "2026-11-01T15:00",
-                        enabled = !uiState.isSubmitting
-                    )
-
-                    Text(
-                        text = "Formato: AAAA-MM-DDTHH:MM",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    AppTextField(
-                        value = uiState.durationMinutes,
-                        onValueChange = { value ->
-                            if (value.all(Char::isDigit)) {
-                                onDurationChange(value)
-                            }
-                        },
-                        label = "Duración en minutos",
-                        placeholder = "60",
-                        keyboardType = KeyboardType.Number,
-                        enabled = !uiState.isSubmitting
-                    )
-
-                    AppTextField(
-                        value = uiState.observations,
-                        onValueChange = onObservationsChange,
-                        label = "Observaciones",
-                        placeholder = "Indicá cuidados o información relevante para el paseo.",
-                        singleLine = false,
-                        enabled = !uiState.isSubmitting
-                    )
-                }
-            }
-
-            uiState.errorMessage?.let { message ->
-                DomainErrorMessage(
-                    message = message,
-                    modifier = Modifier.fillMaxWidth()
+                WalkRequestPetsSection(
+                    pets = uiState.pets,
+                    selectedPetIds = uiState.selectedPetIds,
+                    isSubmitting = uiState.isSubmitting,
+                    onPetSelected = onPetSelected
                 )
             }
 
-            PrimaryActionButton(
-                text = "Enviar solicitud",
-                onClick = onSubmit,
-                enabled = uiState.selectedPetIds.isNotEmpty() &&
-                        !uiState.isSubmitting,
-                isLoading = uiState.isSubmitting
-            )
+            AppAnimatedVisibility(
+                visible = true,
+                durationMillis = 320
+            ) {
+                WalkRequestDetailsSection(
+                    scheduledAt = uiState.scheduledAt,
+                    durationMinutes = uiState.durationMinutes,
+                    observations = uiState.observations,
+                    isSubmitting = uiState.isSubmitting,
+                    onScheduledAtChange = onScheduledAtChange,
+                    onDurationChange = onDurationChange,
+                    onObservationsChange = onObservationsChange
+                )
+            }
+
+            AppAnimatedVisibility(
+                visible = true,
+                durationMillis = 360
+            ) {
+                WalkRequestSubmitSection(
+                    errorMessage = uiState.errorMessage,
+                    hasSelectedPets = uiState.selectedPetIds.isNotEmpty(),
+                    isSubmitting = uiState.isSubmitting,
+                    onSubmit = onSubmit
+                )
+            }
         }
     }
 }

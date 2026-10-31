@@ -1,3 +1,4 @@
+
 package com.app.features.walks.owner.component
 
 import androidx.compose.foundation.layout.Arrangement
@@ -7,11 +8,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.app.core.domain.model.Walk
 import com.app.core.ui.components.AppCard
 import com.app.core.ui.components.InfoRow
 import com.app.core.ui.components.StatusBadge
+import com.app.core.ui.theme.DimensUI
 import com.app.features.walks.owner.util.formatWalkDate
 import com.app.features.walks.owner.util.walkStatusBackgroundColor
 import com.app.features.walks.owner.util.walkStatusLabel
@@ -25,71 +26,117 @@ fun WalkDetailInfoCard(
     modifier: Modifier = Modifier
 ) {
     AppCard(
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = DimensUI.CardPaddingLarge
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(
+                DimensUI.SpaceLarge
+            )
         ) {
-            StatusBadge(
-                text = walkStatusLabel(walk.status),
-                containerColor = walkStatusBackgroundColor(walk.status),
-                contentColor = walkStatusTextColor(walk.status)
-            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(
+                    DimensUI.SpaceSmall
+                )
+            ) {
+                Text(
+                    text = "Información general",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
 
-            InfoRow(
-                label = "Fecha programada",
-                value = formatWalkDate(walk.scheduledAt)
-            )
-
-            InfoRow(
-                label = "Duración prevista",
-                value = "${walk.durationMinutes} minutos"
-            )
-
-            InfoRow(
-                label = "Mascotas",
-                value = walk.petIds.size.toString()
-            )
-
-            InfoRow(
-                label = "Paseador",
-                value = walkerName
-                    ?.takeIf { it.isNotBlank() }
-                    ?: "Nombre no disponible"
-            )
-
-            walk.startedAt?.let { startedAt ->
-                InfoRow(
-                    label = "Inicio real",
-                    value = formatWalkDate(startedAt)
+                StatusBadge(
+                    text = walkStatusLabel(walk.status),
+                    containerColor = walkStatusBackgroundColor(walk.status),
+                    contentColor = walkStatusTextColor(walk.status)
                 )
             }
 
-            walk.finishedAt?.let { finishedAt ->
+            Column(
+                verticalArrangement = Arrangement.spacedBy(
+                    DimensUI.SpaceMedium
+                )
+            ) {
                 InfoRow(
-                    label = "Finalización real",
-                    value = formatWalkDate(finishedAt)
+                    label = "Fecha programada",
+                    value = formatWalkDate(walk.scheduledAt)
+                )
+
+                InfoRow(
+                    label = "Duración prevista",
+                    value = "${walk.durationMinutes} minutos"
+                )
+
+                InfoRow(
+                    label = "Mascotas",
+                    value = if (walk.petIds.size == 1) {
+                        "1 mascota"
+                    } else {
+                        "${walk.petIds.size} mascotas"
+                    }
+                )
+
+                InfoRow(
+                    label = "Paseador",
+                    value = walkerName
+                        ?.takeIf { it.isNotBlank() }
+                        ?: "Nombre no disponible"
                 )
             }
 
-            walk.distanceKm?.let { distance ->
-                InfoRow(
-                    label = "Distancia recorrida",
-                    value = String.format(
-                        Locale("es", "AR"),
-                        "%.2f km",
-                        distance
+            if (
+                walk.startedAt != null ||
+                walk.finishedAt != null ||
+                walk.distanceKm != null
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(
+                        DimensUI.SpaceMedium
                     )
-                )
+                ) {
+                    Text(
+                        text = "Datos del recorrido",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    walk.startedAt?.let { startedAt ->
+                        InfoRow(
+                            label = "Inicio real",
+                            value = formatWalkDate(startedAt)
+                        )
+                    }
+
+                    walk.finishedAt?.let { finishedAt ->
+                        InfoRow(
+                            label = "Finalización real",
+                            value = formatWalkDate(finishedAt)
+                        )
+                    }
+
+                    walk.distanceKm?.let { distance ->
+                        InfoRow(
+                            label = "Distancia recorrida",
+                            value = String.format(
+                                Locale("es", "AR"),
+                                "%.2f km",
+                                distance
+                            )
+                        )
+                    }
+                }
             }
 
             if (walk.observations.isNotBlank()) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                    verticalArrangement = Arrangement.spacedBy(
+                        DimensUI.SpaceSmall
+                    )
                 ) {
                     Text(
                         text = "Observaciones",
-                        style = MaterialTheme.typography.titleSmall
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Text(

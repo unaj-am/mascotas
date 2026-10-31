@@ -5,26 +5,20 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.app.core.domain.model.RequestStatus
 import com.app.core.domain.model.WalkRequest
 import com.app.core.ui.components.AppCard
 import com.app.core.ui.components.InfoRow
+import com.app.core.ui.components.OutlinedActionButton
+import com.app.core.ui.components.PrimaryActionButton
 import com.app.core.ui.components.StatusBadge
 import com.app.core.ui.theme.DimensUI
 
-/**
- * Tarjeta de solicitud recibida por un paseador.
- *
- * La presentación utiliza componentes de core:ui.
- * Las operaciones de aceptar y rechazar se delegan
- * a los callbacks recibidos.
- */
 @Composable
 fun WalkerRequestCard(
     request: WalkRequest,
@@ -79,7 +73,8 @@ fun WalkerRequestCard(
     }
 
     AppCard(
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = DimensUI.CardPaddingLarge
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(
@@ -88,13 +83,27 @@ fun WalkerRequestCard(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = "Solicitud de paseo",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(
+                        DimensUI.SpaceXSmall
+                    )
+                ) {
+                    Text(
+                        text = "Solicitud de paseo",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Text(
+                        text = ownerName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
 
                 StatusBadge(
                     text = statusText,
@@ -102,11 +111,6 @@ fun WalkerRequestCard(
                     contentColor = statusContentColor
                 )
             }
-
-            InfoRow(
-                label = "Dueño",
-                value = ownerName
-            )
 
             InfoRow(
                 label = "Fecha y hora",
@@ -137,27 +141,22 @@ fun WalkerRequestCard(
                         DimensUI.SpaceSmall
                     )
                 ) {
-                    Button(
+                    PrimaryActionButton(
+                        text = "Aceptar",
                         onClick = onAccept,
+                        modifier = Modifier.weight(1f),
                         enabled = !isAnyRequestProcessing,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = if (isProcessing) {
-                                "Procesando..."
-                            } else {
-                                "Aceptar"
-                            }
-                        )
-                    }
+                        isLoading = isProcessing,
+                        fullWidth = false
+                    )
 
-                    OutlinedButton(
+                    OutlinedActionButton(
+                        text = "Rechazar",
                         onClick = onReject,
+                        modifier = Modifier.weight(1f),
                         enabled = !isAnyRequestProcessing,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Rechazar")
-                    }
+                        fullWidth = false
+                    )
                 }
             }
         }

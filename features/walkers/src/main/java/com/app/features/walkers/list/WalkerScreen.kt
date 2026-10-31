@@ -1,3 +1,4 @@
+
 package com.app.features.walkers.list
 
 import androidx.compose.foundation.layout.Arrangement
@@ -11,15 +12,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.app.core.ui.components.AppAnimatedVisibility
 import com.app.core.ui.theme.DimensUI
 import com.app.features.walkers.list.component.WalkerContent
 import com.app.features.walkers.list.component.WalkerHeader
 import com.app.features.walkers.list.component.WalkerFilterSection
 import com.app.features.walkers.list.component.WalkerFilterState
 
-/**
- * Route del listado de paseadores.
- */
 @Composable
 fun WalkerScreen(
     uiState: WalkerUiState,
@@ -56,12 +55,17 @@ fun WalkerScreen(
                 vertical = DimensUI.ScreenVerticalPadding
             ),
         verticalArrangement = Arrangement.spacedBy(
-            DimensUI.SectionSpacing
+            DimensUI.SectionSpacingCompact
         )
     ) {
-        WalkerHeader(
-            uiState = displayState
-        )
+        AppAnimatedVisibility(
+            visible = true,
+            durationMillis = 260
+        ) {
+            WalkerHeader(
+                uiState = displayState
+            )
+        }
 
         if (uiState is WalkerUiState.Success) {
             val resultCount =
@@ -70,27 +74,38 @@ fun WalkerScreen(
                     ?.size
                     ?: 0
 
-            WalkerFilterSection(
-                state = filterState,
-                resultCount = resultCount,
-                onStateChange = { newState ->
-                    serviceArea = newState.serviceArea
-                    maxPriceText = newState.maxPriceText
-                    onlyAvailable = newState.onlyAvailable
-                }
-            )
+            AppAnimatedVisibility(
+                visible = true,
+                durationMillis = 300
+            ) {
+                WalkerFilterSection(
+                    state = filterState,
+                    resultCount = resultCount,
+                    onStateChange = { newState ->
+                        serviceArea = newState.serviceArea
+                        maxPriceText = newState.maxPriceText
+                        onlyAvailable = newState.onlyAvailable
+                    }
+                )
+            }
         }
 
         Box(
             modifier = Modifier.weight(1f)
         ) {
-            WalkerContent(
-                uiState = displayState,
-                onWalkerClick = onWalkerClick,
-                onRetry = onRetry,
-                onBack = onBack,
-                modifier = Modifier.fillMaxSize()
-            )
+            AppAnimatedVisibility(
+                visible = true,
+                modifier = Modifier.fillMaxSize(),
+                durationMillis = 340
+            ) {
+                WalkerContent(
+                    uiState = displayState,
+                    onWalkerClick = onWalkerClick,
+                    onRetry = onRetry,
+                    onBack = onBack,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         }
     }
 }

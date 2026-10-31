@@ -11,15 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 
-/**
- * Campo de texto reutilizable de Mascotas.
- *
- * No administra el estado del formulario:
- * recibe el valor y notifica sus cambios.
- *
- * trailingContent permite agregar controles al final,
- * por ejemplo botones para modificar un valor numérico.
- */
 @Composable
 fun AppTextField(
     value: String,
@@ -35,7 +26,8 @@ fun AppTextField(
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation =
         VisualTransformation.None,
-    trailingContent: (@Composable () -> Unit)? = null
+    trailingContent: (@Composable () -> Unit)? = null,
+    leadingContent: (@Composable () -> Unit)? = null
 ) {
     val hasError = isError || !errorMessage.isNullOrBlank()
 
@@ -50,26 +42,28 @@ fun AppTextField(
         label = {
             Text(text = label)
         },
-        placeholder = placeholder?.let { placeholderText ->
+        placeholder = placeholder?.let { text ->
             {
-                Text(text = placeholderText)
+                Text(text = text)
             }
         },
+        leadingIcon = leadingContent,
+        trailingIcon = trailingContent,
         supportingText = errorMessage
             ?.takeIf { it.isNotBlank() }
             ?.let { message ->
                 {
                     Text(
                         text = message,
-                        color = MaterialTheme.colorScheme.error
+                        style = MaterialTheme.typography.bodySmall
                     )
                 }
             },
-        trailingIcon = trailingContent,
         keyboardOptions = KeyboardOptions(
             keyboardType = keyboardType
         ),
         visualTransformation = visualTransformation,
-        shape = MaterialTheme.shapes.medium
+        shape = AppFieldDefaults.shape,
+        colors = AppFieldDefaults.colors()
     )
 }
