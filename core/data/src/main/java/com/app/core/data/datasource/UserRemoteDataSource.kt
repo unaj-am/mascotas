@@ -1,4 +1,5 @@
-package com.app.core.data.datasource.remote
+
+package com.app.core.data.datasource
 
 import com.app.core.domain.model.User
 import com.app.core.domain.model.UserRole
@@ -63,6 +64,7 @@ class UserRemoteDataSource @Inject constructor(
             .update("profileImage", imageUrl)
             .await()
     }
+
     private fun User.toFirestoreMap(): Map<String, Any?> {
         return mapOf(
             "name" to name,

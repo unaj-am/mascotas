@@ -1,6 +1,7 @@
+
 package com.app.core.data.repository
 
-import com.app.core.data.datasource.remote.UserRemoteDataSource
+import com.app.core.data.datasource.UserRemoteDataSource
 import com.app.core.domain.model.User
 import com.app.core.domain.repository.UserRepository
 import javax.inject.Inject
