@@ -36,28 +36,66 @@ class AppSessionViewModel @Inject constructor(
     val uiState: StateFlow<AppSessionState> = _uiState.asStateFlow()
 
     private var validationJob: Job? = null
+    private var resendJob: Job? = null
+    private var signOutJob: Job? = null
+
+    private var operationId = 0L
 
     init {
         viewModelScope.launch {
             observeAuthStateUseCase().collect { userId ->
-                validationJob?.cancel()
-
                 if (userId.isNullOrBlank()) {
+                    invalidateOperations()
                     _uiState.value = AppSessionState.SignedOut
                 } else {
-                    validationJob = launch {
-                        validateSession(userId)
-                    }
+                    startSessionValidation(userId)
                 }
             }
         }
     }
 
-    private suspend fun validateSession(userId: String) {
+    private fun invalidateOperations() {
+        operationId++
+
+        validationJob?.cancel()
+        validationJob = null
+
+        resendJob?.cancel()
+        resendJob = null
+
+        signOutJob?.cancel()
+        signOutJob = null
+    }
+
+    private fun startSessionValidation(userId: String) {
+        operationId++
+        val currentOperation = operationId
+
+        validationJob?.cancel()
+        resendJob?.cancel()
+        signOutJob?.cancel()
+
+        resendJob = null
+        signOutJob = null
+
         _uiState.value = AppSessionState.Loading
 
+        validationJob = viewModelScope.launch {
+            validateSession(
+                userId = userId,
+                currentOperation = currentOperation
+            )
+        }
+    }
+
+    private suspend fun validateSession(
+        userId: String,
+        currentOperation: Long
+    ) {
         try {
             val verificationResult = isEmailVerifiedUseCase()
+
+            if (!isCurrentOperation(currentOperation)) return
 
             val verified = verificationResult.getOrElse { error ->
                 if (error is CancellationException) throw error
@@ -76,6 +114,8 @@ class AppSessionViewModel @Inject constructor(
 
             val user = userRepository.getUserById(userId)
 
+            if (!isCurrentOperation(currentOperation)) return
+
             if (user == null) {
                 _uiState.value = AppSessionState.Error(
                     "No se encontró el perfil del usuario en Firestore. " +
@@ -91,7 +131,8 @@ class AppSessionViewModel @Inject constructor(
                 return
             }
 
-            if (user.role != UserRole.OWNER &&
+            if (
+                user.role != UserRole.OWNER &&
                 user.role != UserRole.WALKER
             ) {
                 _uiState.value = AppSessionState.Error(
@@ -104,28 +145,54 @@ class AppSessionViewModel @Inject constructor(
                 userId = user.id,
                 role = user.role
             )
+
         } catch (error: CancellationException) {
             throw error
         } catch (_: Exception) {
-            _uiState.value = AppSessionState.Error(
-                "No se pudo validar tu sesión. " +
-                        "Revisá tu conexión e intentá nuevamente."
-            )
+            if (isCurrentOperation(currentOperation)) {
+                _uiState.value = AppSessionState.Error(
+                    "No se pudo validar tu sesión. " +
+                            "Revisá tu conexión e intentá nuevamente."
+                )
+            }
         }
     }
 
     fun retrySessionValidation() {
-        viewModelScope.launch {
-            val userId = getCurrentUserIdUseCase()
+        if (signOutJob?.isActive == true) return
 
-            if (userId.isNullOrBlank()) {
-                _uiState.value = AppSessionState.SignedOut
-                return@launch
-            }
+        operationId++
+        val currentOperation = operationId
 
-            validationJob?.cancel()
-            validationJob = launch {
-                validateSession(userId)
+        validationJob?.cancel()
+        resendJob?.cancel()
+
+        validationJob = viewModelScope.launch {
+            try {
+                _uiState.value = AppSessionState.Loading
+
+                val userId = getCurrentUserIdUseCase()
+
+                if (!isCurrentOperation(currentOperation)) return@launch
+
+                if (userId.isNullOrBlank()) {
+                    _uiState.value = AppSessionState.SignedOut
+                    return@launch
+                }
+
+                validateSession(
+                    userId = userId,
+                    currentOperation = currentOperation
+                )
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                if (isCurrentOperation(currentOperation)) {
+                    _uiState.value = AppSessionState.Error(
+                        "No se pudo validar tu sesión. " +
+                                "Revisá tu conexión e intentá nuevamente."
+                    )
+                }
             }
         }
     }
@@ -133,60 +200,93 @@ class AppSessionViewModel @Inject constructor(
     fun resendVerificationEmail() {
         val currentState = _uiState.value
 
-        if (currentState !is AppSessionState.NeedsVerification ||
-            currentState.isLoading
+        if (
+            currentState !is AppSessionState.NeedsVerification ||
+            currentState.isLoading ||
+            resendJob?.isActive == true ||
+            signOutJob?.isActive == true
         ) {
             return
         }
 
-        viewModelScope.launch {
-            _uiState.value = currentState.copy(
-                isLoading = true,
-                message = null
-            )
+        val currentOperation = operationId
 
+        _uiState.value = currentState.copy(
+            isLoading = true,
+            message = null
+        )
+
+        resendJob = viewModelScope.launch {
             try {
                 resendEmailVerificationUseCase().fold(
                     onSuccess = {
-                        _uiState.value =
-                            AppSessionState.NeedsVerification(
-                                message = "Se solicitó el envío del correo. " +
-                                        "Revisá tu bandeja de entrada y spam."
-                            )
+                        if (isCurrentOperation(currentOperation)) {
+                            _uiState.value =
+                                AppSessionState.NeedsVerification(
+                                    message = "Se solicitó el envío del correo. " +
+                                            "Revisá tu bandeja de entrada y spam."
+                                )
+                        }
                     },
                     onFailure = { error ->
                         if (error is CancellationException) throw error
 
-                        _uiState.value =
-                            AppSessionState.NeedsVerification(
-                                message = "No se pudo reenviar el correo. " +
-                                        "Intentá nuevamente."
-                            )
+                        if (isCurrentOperation(currentOperation)) {
+                            _uiState.value =
+                                AppSessionState.NeedsVerification(
+                                    message = "No se pudo reenviar el correo. " +
+                                            "Intentá nuevamente."
+                                )
+                        }
                     }
                 )
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
-                _uiState.value = AppSessionState.NeedsVerification(
-                    message = "No se pudo reenviar el correo. " +
-                            "Intentá nuevamente."
-                )
+                if (isCurrentOperation(currentOperation)) {
+                    _uiState.value = AppSessionState.NeedsVerification(
+                        message = "No se pudo reenviar el correo. " +
+                                "Intentá nuevamente."
+                    )
+                }
             }
         }
     }
 
     fun signOut() {
-        viewModelScope.launch {
+        if (signOutJob?.isActive == true) return
+
+        operationId++
+        val currentOperation = operationId
+
+        validationJob?.cancel()
+        resendJob?.cancel()
+
+        validationJob = null
+        resendJob = null
+
+        _uiState.value = AppSessionState.Loading
+
+        signOutJob = viewModelScope.launch {
             try {
                 signOutUseCase()
-                _uiState.value = AppSessionState.SignedOut
+
+                if (isCurrentOperation(currentOperation)) {
+                    _uiState.value = AppSessionState.SignedOut
+                }
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
-                _uiState.value = AppSessionState.Error(
-                    "No se pudo cerrar la sesión. Intentá nuevamente."
-                )
+                if (isCurrentOperation(currentOperation)) {
+                    _uiState.value = AppSessionState.Error(
+                        "No se pudo cerrar la sesión. Intentá nuevamente."
+                    )
+                }
             }
         }
+    }
+
+    private fun isCurrentOperation(id: Long): Boolean {
+        return operationId == id
     }
 }

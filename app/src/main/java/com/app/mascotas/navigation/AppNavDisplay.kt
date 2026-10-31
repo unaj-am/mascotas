@@ -1,7 +1,6 @@
 
 package com.app.mascotas.navigation
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -70,13 +69,6 @@ fun AppNavDisplay(
 
     val currentForm =
         navigationState.currentKey as? PetFormDestination
-
-    BackHandler(
-        enabled = currentForm != null &&
-                operationState is PetOperationUiState.Loading
-    ) {
-        // Evita abandonar el formulario durante el guardado.
-    }
 
     val destinationProvider = entryProvider<NavKey> {
 
@@ -167,6 +159,12 @@ fun AppNavDisplay(
                     navigationState.goBack()
                 },
                 onSuccess = {
+                    // Limpiar el flujo de búsqueda y solicitud iniciado desde Inicio.
+                    navigationState.navigateToTabRoot(
+                        TopLevelDestination.HOME
+                    )
+
+                    // Mostrar la sección de paseos.
                     navigationState.navigateToTabRoot(
                         TopLevelDestination.WALKS
                     )
@@ -312,7 +310,15 @@ fun AppNavDisplay(
 
     NavDisplay(
         entries = visibleEntries,
-        onBack = navigationState::goBack,
+        onBack = {
+            val isSavingPet =
+                currentForm != null &&
+                        operationState is PetOperationUiState.Loading
+
+            if (!isSavingPet) {
+                navigationState.goBack()
+            }
+        },
         modifier = modifier
     )
 }
