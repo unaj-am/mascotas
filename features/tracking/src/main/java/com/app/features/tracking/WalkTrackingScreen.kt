@@ -2,10 +2,13 @@
 package com.app.features.tracking
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -13,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -24,11 +28,22 @@ import com.app.core.ui.components.InfoRow
 import com.app.core.ui.components.LoadingContent
 import com.app.core.ui.components.SectionHeader
 import com.app.core.ui.components.StatusBadge
+import org.maplibre.compose.camera.CameraPosition
+import org.maplibre.compose.camera.rememberCameraState
+import org.maplibre.compose.map.GestureOptions
+import org.maplibre.compose.map.MapOptions
+import org.maplibre.compose.map.MaplibreMap
+import org.maplibre.compose.map.OrnamentOptions
+import org.maplibre.compose.style.BaseStyle
+import org.maplibre.spatialk.geojson.Position
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+
+private const val OPEN_FREE_MAP_STYLE =
+    "https://tiles.openfreemap.org/styles/liberty"
 
 @Composable
 fun WalkTrackingScreen(
@@ -95,10 +110,16 @@ private fun WalkTrackingContent(
     onRefresh: () -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+
+        // Mapa del seguimiento
+        if (walk.status == WalkStatus.IN_PROGRESS) {
+            WalkTrackingMap()
+        }
+
+        // Información del paseo
         AppCard(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -173,7 +194,7 @@ private fun WalkTrackingContent(
                         )
 
                         Text(
-                            text = "El servicio está en desarrollo. Esta pantalla muestra el estado registrado; el mapa y la ubicación en tiempo real deben integrarse por separado.",
+                            text = "El mapa está disponible. La ubicación del paseador y el recorrido en tiempo real se incorporarán mediante GPS y Firestore.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -220,6 +241,61 @@ private fun WalkTrackingContent(
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * Mapa base de seguimiento.
+ */
+@Composable
+private fun WalkTrackingMap() {
+
+    val cameraState = rememberCameraState(
+        firstPosition = CameraPosition(
+            target = Position(
+                latitude = -34.6037,
+                longitude = -58.3816
+            ),
+            zoom = 12.0
+        )
+    )
+
+    AppCard(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Mapa del recorrido",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(280.dp)
+                    .clip(RoundedCornerShape(12.dp))
+            ) {
+                MaplibreMap(
+                    modifier = Modifier.fillMaxSize(),
+                    baseStyle = BaseStyle.Uri(
+                        OPEN_FREE_MAP_STYLE
+                    ),
+                    cameraState = cameraState,
+                    options = MapOptions(
+                        gestureOptions = GestureOptions.Standard,
+                        ornamentOptions = OrnamentOptions.OnlyLogo
+                    )
+                )
+            }
+
+            Text(
+                text = "Vista inicial de referencia. El mapa se centrará en la ubicación real del paseador cuando conectemos el GPS.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
