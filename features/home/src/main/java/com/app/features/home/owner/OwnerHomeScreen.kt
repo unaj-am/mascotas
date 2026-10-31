@@ -1,3 +1,4 @@
+
 package com.app.features.home.owner
 
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +12,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.app.core.ui.components.AppAnimatedVisibility
 import com.app.core.ui.theme.DimensUI
 import com.app.features.home.component.HomeHeader
 import com.app.features.home.component.HomeStatCard
@@ -27,54 +29,69 @@ fun OwnerHomeScreen(
     onNotificationsClick: () -> Unit,
     onFindWalkerClick: () -> Unit,
     modifier: Modifier = Modifier
-){
+) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             horizontal = DimensUI.ScreenHorizontalPadding,
-            vertical = DimensUI.SpaceLarge
+            vertical = DimensUI.ScreenVerticalPadding
         ),
         verticalArrangement = Arrangement.spacedBy(
-            DimensUI.SpaceXLarge
+            DimensUI.SectionSpacing
         )
     ) {
         item {
-            HomeHeader(
-                userName = userName,
-                onNotificationsClick = onNotificationsClick
-            )
-        }
-
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(
-                    DimensUI.SpaceMedium
-                )
+            AppAnimatedVisibility(
+                visible = true,
+                durationMillis = 260
             ) {
-                HomeStatCard(
-                    modifier = Modifier.weight(1f),
-                    title = "Próximos paseos",
-                    value = upcomingWalksCount,
-                    icon = Icons.Filled.CalendarMonth
-                )
-
-                HomeStatCard(
-                    modifier = Modifier.weight(1f),
-                    title = "Mis mascotas",
-                    value = petsCount,
-                    icon = Icons.Filled.Pets
+                HomeHeader(
+                    userName = userName,
+                    onNotificationsClick = onNotificationsClick
                 )
             }
         }
 
         item {
-            NextWalkCard(
-                petName = nextPetName,
-                petBreed = nextPetBreed,
-                walkDate = nextWalkDate,
-                onFindWalkerClick = onFindWalkerClick
-            )
+            AppAnimatedVisibility(
+                visible = true,
+                durationMillis = 300
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        DimensUI.SpaceMedium
+                    )
+                ) {
+                    HomeStatCard(
+                        modifier = Modifier.weight(1f),
+                        title = "Próximos paseos",
+                        value = upcomingWalksCount,
+                        icon = Icons.Filled.CalendarMonth
+                    )
+
+                    HomeStatCard(
+                        modifier = Modifier.weight(1f),
+                        title = "Mis mascotas",
+                        value = petsCount,
+                        icon = Icons.Filled.Pets
+                    )
+                }
+            }
+        }
+
+        item {
+            AppAnimatedVisibility(
+                visible = true,
+                durationMillis = 340
+            ) {
+                NextWalkCard(
+                    petName = nextPetName,
+                    petBreed = nextPetBreed,
+                    walkDate = nextWalkDate,
+                    onFindWalkerClick = onFindWalkerClick
+                )
+            }
         }
     }
 }

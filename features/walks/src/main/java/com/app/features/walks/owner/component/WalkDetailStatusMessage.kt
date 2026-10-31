@@ -1,14 +1,11 @@
+
 package com.app.features.walks.owner.component
 
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.app.core.domain.model.Walk
 import com.app.core.domain.model.WalkStatus
-import com.app.core.ui.components.AppCard
-import com.app.core.ui.components.PrimaryActionButton
+import com.app.core.ui.components.AppFeedbackType
+import com.app.core.ui.components.AppInlineFeedback
 
 @Composable
 fun WalkDetailStatusMessage(
@@ -17,43 +14,39 @@ fun WalkDetailStatusMessage(
 ) {
     when (walk.status) {
         WalkStatus.IN_PROGRESS -> {
-            PrimaryActionButton(
-                text = "Consultar seguimiento",
-                onClick = {
+            AppInlineFeedback(
+                title = "Paseo en curso",
+                message = "El paseador inició el recorrido. Podés consultar su seguimiento.",
+                type = AppFeedbackType.INFO,
+                actionLabel = "Ver seguimiento",
+                onAction = {
                     onTrackWalk(walk.id)
-                },
-                modifier = Modifier.fillMaxWidth()
+                }
             )
         }
 
         WalkStatus.SCHEDULED -> {
-            AppCard {
-                Text(
-                    text = "El paseo está confirmado. El seguimiento estará disponible cuando comience.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            AppInlineFeedback(
+                title = "Paseo confirmado",
+                message = "El paseo está confirmado. El seguimiento estará disponible cuando comience.",
+                type = AppFeedbackType.INFO
+            )
         }
 
         WalkStatus.COMPLETED -> {
-            AppCard {
-                Text(
-                    text = "Este paseo ya finalizó. Podés consultar los datos registrados.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            AppInlineFeedback(
+                title = "Paseo finalizado",
+                message = "Este paseo ya finalizó. Podés consultar los datos registrados.",
+                type = AppFeedbackType.SUCCESS
+            )
         }
 
         WalkStatus.CANCELLED -> {
-            AppCard {
-                Text(
-                    text = "Este paseo fue cancelado.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
+            AppInlineFeedback(
+                title = "Paseo cancelado",
+                message = "Este paseo fue cancelado.",
+                type = AppFeedbackType.ERROR
+            )
         }
     }
 }

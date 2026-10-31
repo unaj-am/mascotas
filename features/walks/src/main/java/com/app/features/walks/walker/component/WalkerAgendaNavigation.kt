@@ -1,13 +1,13 @@
+
 package com.app.features.walks.walker.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import com.app.core.ui.components.SecondaryActionButton
+import com.app.core.ui.theme.DimensUI
 
 @Composable
 fun WalkerAgendaNavigation(
@@ -16,20 +16,20 @@ fun WalkerAgendaNavigation(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(
+            DimensUI.SpaceMedium
+        )
     ) {
-        OutlinedButton(
+        SecondaryActionButton(
+            text = "Paseos activos",
             onClick = onActiveWalkClick,
             modifier = Modifier.weight(1f)
-        ) {
-            Text("Paseo activo")
-        }
+        )
 
-        OutlinedButton(
+        SecondaryActionButton(
+            text = "Historial",
             onClick = onHistoryClick,
             modifier = Modifier.weight(1f)
-        ) {
-            Text("Historial")
-        }
+        )
     }
 }

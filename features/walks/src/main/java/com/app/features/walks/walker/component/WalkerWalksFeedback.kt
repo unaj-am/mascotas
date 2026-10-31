@@ -1,9 +1,10 @@
+
 package com.app.features.walks.walker.component
 
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import com.app.core.ui.components.DomainErrorMessage
+import com.app.core.ui.components.AppAnimatedVisibility
+import com.app.core.ui.components.AppFeedbackType
+import com.app.core.ui.components.AppInlineFeedback
 
 @Composable
 fun WalkerWalksFeedback(
@@ -12,25 +13,37 @@ fun WalkerWalksFeedback(
     loadingError: String?,
     onRetry: () -> Unit
 ) {
-    operationMessage?.let { message ->
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary
+    AppAnimatedVisibility(
+        visible = !operationMessage.isNullOrBlank()
+    ) {
+        AppInlineFeedback(
+            title = "Operación realizada",
+            message = operationMessage.orEmpty(),
+            type = AppFeedbackType.SUCCESS
         )
     }
 
-    operationError?.let { error ->
-        DomainErrorMessage(
-            message = error,
-            onRetry = onRetry
+    AppAnimatedVisibility(
+        visible = !operationError.isNullOrBlank()
+    ) {
+        AppInlineFeedback(
+            title = "No se pudo completar la operación",
+            message = operationError.orEmpty(),
+            type = AppFeedbackType.ERROR,
+            actionLabel = "Reintentar",
+            onAction = onRetry
         )
     }
 
-    loadingError?.let { error ->
-        DomainErrorMessage(
-            message = error,
-            onRetry = onRetry
+    AppAnimatedVisibility(
+        visible = !loadingError.isNullOrBlank()
+    ) {
+        AppInlineFeedback(
+            title = "No se pudo cargar la información",
+            message = loadingError.orEmpty(),
+            type = AppFeedbackType.ERROR,
+            actionLabel = "Reintentar",
+            onAction = onRetry
         )
     }
 }

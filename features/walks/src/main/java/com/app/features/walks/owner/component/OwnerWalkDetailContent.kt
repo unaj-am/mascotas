@@ -1,3 +1,4 @@
+
 package com.app.features.walks.owner.component
 
 import androidx.compose.foundation.layout.Arrangement
@@ -7,8 +8,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.app.core.domain.model.Walk
+import com.app.core.ui.theme.DimensUI
 
 @Composable
 fun OwnerWalkDetailContent(
@@ -21,7 +22,9 @@ fun OwnerWalkDetailContent(
         modifier = modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(
+            DimensUI.SectionSpacingCompact
+        )
     ) {
         WalkDetailInfoCard(
             walk = walk,
@@ -34,3 +37,4 @@ fun OwnerWalkDetailContent(
         )
     }
 }
+

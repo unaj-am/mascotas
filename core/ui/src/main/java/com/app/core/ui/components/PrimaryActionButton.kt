@@ -14,14 +14,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
 import com.app.core.ui.theme.DimensUI
+import com.app.core.ui.theme.ShapeUI
 
-/**
- * Botón principal reutilizable de Mascotas.
- *
- * Permite configurar su ancho, estado de carga
- * y habilitación sin administrar lógica de negocio.
- */
 @Composable
 fun PrimaryActionButton(
     text: String,
@@ -31,24 +29,30 @@ fun PrimaryActionButton(
     isLoading: Boolean = false,
     fullWidth: Boolean = true
 ) {
-    val buttonModifier = if (fullWidth) {
-        modifier
-            .fillMaxWidth()
-            .heightIn(min = DimensUI.ButtonMinHeight)
-    } else {
-        modifier.heightIn(
-            min = DimensUI.ButtonMinHeight
+    val buttonModifier = modifier
+        .then(
+            if (fullWidth) Modifier.fillMaxWidth()
+            else Modifier
         )
-    }
+        .heightIn(min = DimensUI.ButtonHeight)
 
     Button(
         onClick = onClick,
         modifier = buttonModifier,
         enabled = enabled && !isLoading,
-        shape = MaterialTheme.shapes.medium,
+        shape = ShapeUI.Button,
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = DimensUI.SpaceXSmall,
+            pressedElevation = DimensUI.SpaceXXSmall,
+            disabledElevation = DimensUI.SpaceNone
+        ),
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            disabledContainerColor =
+                MaterialTheme.colorScheme.surfaceVariant,
+            disabledContentColor =
+                MaterialTheme.colorScheme.onSurfaceVariant
         )
     ) {
         Row(
@@ -59,9 +63,12 @@ fun PrimaryActionButton(
         ) {
             if (isLoading) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(
-                        DimensUI.IconSizeSmall
-                    ),
+                    modifier = Modifier
+                        .size(DimensUI.IconSizeSmall)
+                        .semantics {
+                            progressBarRangeInfo =
+                                ProgressBarRangeInfo.Indeterminate
+                        },
                     color = MaterialTheme.colorScheme.onPrimary,
                     strokeWidth = DimensUI.SpaceXXSmall
                 )

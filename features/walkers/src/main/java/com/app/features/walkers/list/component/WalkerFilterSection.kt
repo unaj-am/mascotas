@@ -1,13 +1,14 @@
+
 package com.app.features.walkers.list.component
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.Checkbox
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -16,9 +17,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import com.app.core.ui.components.AppAnimatedVisibility
 import com.app.core.ui.components.AppCard
+import com.app.core.ui.components.AppCheckboxRow
+import com.app.core.ui.components.AppFilterChip
 import com.app.core.ui.components.AppTextField
 import com.app.core.ui.components.StatusBadge
+import com.app.core.ui.components.TextActionButton
 import com.app.core.ui.theme.DimensUI
 
 @Composable
@@ -40,27 +45,22 @@ fun WalkerFilterSection(
                 DimensUI.SpaceMedium
             )
         ) {
-
-            // Encabezado compacto
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                TextButton(
+                AppFilterChip(
+                    text = if (expanded) {
+                        "Ocultar filtros"
+                    } else {
+                        "Filtrar paseadores"
+                    },
+                    selected = expanded,
                     onClick = {
                         expanded = !expanded
                     }
-                ) {
-                    Text(
-                        text = if (expanded) {
-                            "Ocultar filtros ▲"
-                        } else {
-                            "Filtros ▼"
-                        },
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
+                )
 
                 StatusBadge(
                     text = when (resultCount) {
@@ -70,81 +70,137 @@ fun WalkerFilterSection(
                 )
             }
 
-            // Indicador de filtros activos
             if (state.hasActiveFilters) {
-                StatusBadge(
-                    text = "${state.activeFilterCount} filtros activos"
-                )
-            }
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(
+                        DimensUI.SpaceSmall
+                    )
+                ) {
+                    Text(
+                        text = "Filtros aplicados",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
 
-            // Contenido desplegable
-            if (expanded) {
-
-                AppTextField(
-                    value = state.serviceArea,
-                    onValueChange = { value ->
-                        onStateChange(
-                            state.copy(serviceArea = value)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            DimensUI.SpaceSmall
                         )
-                    },
-                    label = "Ciudad o zona",
-                    placeholder = "Ej.: Chilecito"
-                )
-
-                AppTextField(
-                    value = state.maxPriceText,
-                    onValueChange = { value ->
-                        if (
-                            value.isEmpty() ||
-                            value.matches(
-                                Regex("^\\d*([.,]\\d*)?$")
-                            )
-                        ) {
-                            onStateChange(
-                                state.copy(maxPriceText = value)
+                    ) {
+                        if (state.serviceArea.isNotBlank()) {
+                            AppFilterChip(
+                                text = "Zona: ${state.serviceArea}",
+                                selected = true,
+                                onClick = {
+                                    onStateChange(
+                                        state.copy(serviceArea = "")
+                                    )
+                                }
                             )
                         }
-                    },
-                    label = "Precio máximo por paseo",
-                    placeholder = "Ej.: 5000",
-                    keyboardType = KeyboardType.Decimal,
-                    errorMessage = if (state.isPriceInvalid) {
-                        "Ingresá un precio válido."
-                    } else {
-                        null
-                    }
-                )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                        if (state.maxPriceText.isNotBlank()) {
+                            AppFilterChip(
+                                text = "Precio máximo",
+                                selected = true,
+                                onClick = {
+                                    onStateChange(
+                                        state.copy(maxPriceText = "")
+                                    )
+                                }
+                            )
+                        }
+
+                        if (state.onlyAvailable) {
+                            AppFilterChip(
+                                text = "Disponibles",
+                                selected = true,
+                                onClick = {
+                                    onStateChange(
+                                        state.copy(onlyAvailable = false)
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            AppAnimatedVisibility(
+                visible = expanded,
+                durationMillis = 220
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(
+                        DimensUI.SpaceMedium
+                    )
                 ) {
-                    Checkbox(
+                    Text(
+                        text = "Personalizá tu búsqueda",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    AppTextField(
+                        value = state.serviceArea,
+                        onValueChange = { value ->
+                            onStateChange(
+                                state.copy(serviceArea = value)
+                            )
+                        },
+                        label = "Ciudad o zona",
+                        placeholder = "Ej.: Quilmes"
+                    )
+
+                    AppTextField(
+                        value = state.maxPriceText,
+                        onValueChange = { value ->
+                            if (
+                                value.isEmpty() ||
+                                value.matches(
+                                    Regex("^\\d*([.,]\\d*)?$")
+                                )
+                            ) {
+                                onStateChange(
+                                    state.copy(maxPriceText = value)
+                                )
+                            }
+                        },
+                        label = "Precio máximo por paseo",
+                        placeholder = "Ej.: 5000",
+                        keyboardType = KeyboardType.Decimal,
+                        errorMessage = if (state.isPriceInvalid) {
+                            "Ingresá un precio válido."
+                        } else {
+                            null
+                        }
+                    )
+
+                    AppCheckboxRow(
                         checked = state.onlyAvailable,
                         onCheckedChange = { checked ->
                             onStateChange(
                                 state.copy(onlyAvailable = checked)
                             )
-                        }
-                    )
-
-                    Text(
-                        text = "Mostrar solo disponibles",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(
-                        onClick = {
-                            onStateChange(state.clear())
                         },
-                        enabled = state.hasActiveFilters
+                        label = "Mostrar solo paseadores disponibles",
+                        description = "Oculta los paseadores que no reciben solicitudes."
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
                     ) {
-                        Text("Limpiar filtros")
+                        TextActionButton(
+                            text = "Limpiar filtros",
+                            onClick = {
+                                onStateChange(state.clear())
+                            },
+                            enabled = state.hasActiveFilters
+                        )
                     }
                 }
             }

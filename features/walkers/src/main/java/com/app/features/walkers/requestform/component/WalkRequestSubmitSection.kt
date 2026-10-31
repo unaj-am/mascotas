@@ -1,10 +1,14 @@
+
 package com.app.features.walkers.requestform.component
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.app.core.ui.components.DomainErrorMessage
 import com.app.core.ui.components.PrimaryActionButton
+import com.app.core.ui.theme.DimensUI
 
 @Composable
 fun WalkRequestSubmitSection(
@@ -14,8 +18,11 @@ fun WalkRequestSubmitSection(
     onSubmit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    androidx.compose.foundation.layout.Column(
-        modifier = modifier.fillMaxWidth()
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(
+            DimensUI.SpaceMedium
+        )
     ) {
         errorMessage?.let { message ->
             DomainErrorMessage(
@@ -28,7 +35,8 @@ fun WalkRequestSubmitSection(
             text = "Enviar solicitud",
             onClick = onSubmit,
             enabled = hasSelectedPets && !isSubmitting,
-            isLoading = isSubmitting
+            isLoading = isSubmitting,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }

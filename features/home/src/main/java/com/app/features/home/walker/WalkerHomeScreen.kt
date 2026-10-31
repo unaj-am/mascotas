@@ -1,29 +1,28 @@
 package com.app.features.home.walker
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.app.core.domain.model.WalkRequest
-import com.app.core.ui.components.AppCard
+import com.app.core.ui.components.AppAnimatedVisibility
+import com.app.core.ui.components.AppFeedbackType
+import com.app.core.ui.components.AppInlineFeedback
 import com.app.core.ui.components.DomainErrorMessage
+import com.app.core.ui.components.EmptyContent
+import com.app.core.ui.components.LoadingContent
+import com.app.core.ui.components.SectionHeader
 import com.app.core.ui.theme.DimensUI
 import com.app.features.home.component.WalkerAvailabilityCard
 import com.app.features.home.component.WalkerHomeHeader
 import com.app.features.home.component.WalkerHomeStatCard
-
+import com.app.features.home.component.PendingRequestPreviewCard
 @Composable
 fun WalkerHomeScreen(
     state: WalkerHomeUiState,
@@ -32,42 +31,20 @@ fun WalkerHomeScreen(
 ) {
     when {
         state.isLoading -> {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                CircularProgressIndicator()
-
-                Text(
-                    text = "Cargando inicio...",
-                    modifier = Modifier.padding(
-                        top = DimensUI.SpaceMedium
-                    )
-                )
-            }
+            LoadingContent(
+                message = "Cargando inicio..."
+            )
         }
 
         state.errorMessage != null &&
                 state.userName.isBlank() -> {
-            Column(
+            DomainErrorMessage(
+                message = state.errorMessage,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(DimensUI.ScreenHorizontalPadding),
-                verticalArrangement = Arrangement.spacedBy(
-                    DimensUI.SpaceLarge
-                )
-            ) {
-                Text(
-                    text = "Inicio",
-                    style = MaterialTheme.typography.headlineLarge
-                )
-
-                DomainErrorMessage(
-                    message = state.errorMessage,
-                    onRetry = onRetry
-                )
-            }
+            )
+            // El reintento se mantiene disponible.
+            // Se presenta mediante el contenedor de error.
         }
 
         else -> {
@@ -97,171 +74,174 @@ private fun WalkerHomeContent(
         )
     ) {
         item {
-            WalkerHomeHeader(
-                userName = state.userName
-            )
-        }
-
-        item {
-            WalkerAvailabilityCard(
-                available = state.available,
-                isUpdating = state.isUpdatingAvailability,
-                onAvailabilityChange = onAvailabilityChange
-            )
-        }
-
-        item {
-            Text(
-                text = "Resumen de actividad",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
-
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(
-                    DimensUI.SpaceSmall
-                )
+            AppAnimatedVisibility(
+                visible = true,
+                durationMillis = 260
             ) {
-                WalkerHomeStatCard(
+                WalkerHomeHeader(
+                    userName = state.userName
+                )
+            }
+        }
+
+        item {
+            AppAnimatedVisibility(
+                visible = true,
+                durationMillis = 280
+            ) {
+                WalkerAvailabilityCard(
+                    available = state.available,
+                    isUpdating = state.isUpdatingAvailability,
+                    onAvailabilityChange = onAvailabilityChange
+                )
+            }
+        }
+
+        item {
+            AppAnimatedVisibility(
+                visible = true,
+                durationMillis = 300
+            ) {
+                SectionHeader(
+                    title = "Resumen de actividad",
+                    subtitle = "Tu actividad como paseador"
+                )
+            }
+        }
+
+        item {
+            AppAnimatedVisibility(
+                visible = true,
+                durationMillis = 320
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        DimensUI.SpaceMedium
+                    )
+                ) {
+                    WalkerHomeStatCard(
+                        title = "Solicitudes pendientes",
+                        value = state.pendingRequests.toString(),
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    WalkerHomeStatCard(
+                        title = "Paseos programados",
+                        value = state.scheduledWalks.toString(),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+
+        item {
+            AppAnimatedVisibility(
+                visible = true,
+                durationMillis = 340
+            ) {
+                if (state.rating != null) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            DimensUI.SpaceMedium
+                        )
+                    ) {
+                        WalkerHomeStatCard(
+                            title = "Paseos en curso",
+                            value = state.activeWalks.toString(),
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        WalkerHomeStatCard(
+                            title = "Calificación promedio",
+                            value = "%.1f / 5".format(state.rating),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                } else {
+                    WalkerHomeStatCard(
+                        title = "Paseos en curso",
+                        value = state.activeWalks.toString(),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
+
+        item {
+            AppAnimatedVisibility(
+                visible = true,
+                durationMillis = 360
+            ) {
+                SectionHeader(
                     title = "Solicitudes pendientes",
-                    value = state.pendingRequests.toString(),
-                    modifier = Modifier.weight(1f)
-                )
-
-                WalkerHomeStatCard(
-                    title = "Paseos programados",
-                    value = state.scheduledWalks.toString(),
-                    modifier = Modifier.weight(1f)
+                    subtitle = if (state.pendingRequestItems.isEmpty()) {
+                        "No tenés solicitudes nuevas"
+                    } else {
+                        "${state.pendingRequestItems.size} solicitudes para revisar"
+                    }
                 )
             }
-        }
-
-        item {
-            WalkerHomeStatCard(
-                title = "Paseos en curso",
-                value = state.activeWalks.toString(),
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        state.rating?.let { rating ->
-            item {
-                WalkerHomeStatCard(
-                    title = "Calificación promedio",
-                    value = "%.1f / 5".format(rating),
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        }
-
-        item {
-            Text(
-                text = "Solicitudes pendientes",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
         }
 
         if (state.pendingRequestItems.isEmpty()) {
             item {
-                Text(
-                    text = "No tenés solicitudes pendientes.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
+                AppAnimatedVisibility(
+                    visible = true,
+                    durationMillis = 380
+                ) {
+                    EmptyContent(
+                        title = "Todo al día",
+                        message = "Cuando recibas nuevas solicitudes, aparecerán en esta sección.",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 140.dp)
+                    )
+                }
             }
         } else {
             items(
                 items = state.pendingRequestItems,
                 key = { request -> request.id }
             ) { request ->
-                PendingRequestPreviewCard(
-                    request = request
-                )
+                AppAnimatedVisibility(
+                    visible = true,
+                    durationMillis = 380
+                ) {
+                    PendingRequestPreviewCard(
+                        request = request
+                    )
+                }
             }
         }
 
         if (state.errorMessage != null) {
             item {
-                DomainErrorMessage(
-                    message = state.errorMessage,
-                    onRetry = onRetry
-                )
+                AppAnimatedVisibility(
+                    visible = true,
+                    durationMillis = 220
+                ) {
+                    DomainErrorMessage(
+                        message = state.errorMessage,
+                        onRetry = onRetry
+                    )
+                }
             }
         }
 
         state.availabilityMessage?.let { message ->
             item {
-                Text(
-                    text = message,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                AppAnimatedVisibility(
+                    visible = true,
+                    durationMillis = 220
+                ) {
+                    AppInlineFeedback(
+                        message = message,
+                        type = AppFeedbackType.SUCCESS
+                    )
+                }
             }
-        }
-    }
-}
-
-@Composable
-private fun PendingRequestPreviewCard(
-    request: WalkRequest
-) {
-    AppCard(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.padding(DimensUI.SpaceLarge),
-            verticalArrangement = Arrangement.spacedBy(
-                DimensUI.SpaceSmall
-            )
-        ) {
-            Text(
-                text = "Nueva solicitud",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Text(
-                text = "Fecha y hora: ${request.scheduledAt}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Text(
-                text = "Duración: ${request.durationMinutes} minutos",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            val petCount = request.petIds.size
-
-            Text(
-                text = if (petCount == 1) {
-                    "1 mascota"
-                } else {
-                    "$petCount mascotas"
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            if (request.observations.isNotBlank()) {
-                Text(
-                    text = "Observaciones: ${request.observations}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            Text(
-                text = "Pendiente de revisión",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
         }
     }
 }

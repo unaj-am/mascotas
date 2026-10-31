@@ -1,3 +1,4 @@
+
 package com.app.features.walks.walker.component
 
 import androidx.compose.foundation.layout.Arrangement
@@ -7,9 +8,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.app.core.domain.model.Walk
 import com.app.core.domain.model.WalkStatus
+import com.app.core.ui.theme.DimensUI
 import com.app.features.walks.component.WalkCard
 import com.app.features.walks.walker.WalkerWalksUiState
 
@@ -25,22 +26,25 @@ fun WalkerWalksList(
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(
-            bottom = 20.dp
+            bottom = DimensUI.SpaceXLarge
         ),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(
+            DimensUI.CardSpacing
+        )
     ) {
         items(
             items = walks,
             key = { walk -> walk.id }
         ) { walk ->
             val details = state.walkDetails[walk.id]
+            val isProcessing = showActions &&
+                    state.processingId == walk.id
 
             WalkCard(
                 walk = walk,
                 ownerName = details?.ownerName,
                 petNames = details?.petNames.orEmpty(),
-                isProcessing = showActions &&
-                        state.processingId != null,
+                isProcessing = isProcessing,
                 showStart = showActions &&
                         walk.status == WalkStatus.SCHEDULED,
                 showComplete = showActions &&

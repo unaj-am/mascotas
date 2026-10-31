@@ -4,9 +4,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.app.core.domain.model.Walker
@@ -18,12 +22,6 @@ import com.app.core.ui.theme.MascotasThemeUI
 import java.text.NumberFormat
 import java.util.Locale
 
-/**
- * Tarjeta específica de un paseador.
- *
- * Reutiliza componentes visuales de core:ui.
- * La navegación se delega a onClick.
- */
 @Composable
 fun WalkerCard(
     walker: Walker,
@@ -40,14 +38,15 @@ fun WalkerCard(
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(
-                DimensUI.SpaceLarge
+                DimensUI.SpaceMedium
             )
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(
-                    DimensUI.SpaceMedium
-                )
+                    DimensUI.SpaceSmall
+                ),
+                verticalAlignment = Alignment.Top
             ) {
                 Column(
                     modifier = Modifier.weight(1f),
@@ -99,31 +98,79 @@ fun WalkerCard(
             ) {
                 InfoRow(
                     label = "Experiencia",
-                    value = "${walker.experienceYears} años",
+                    value = if (walker.experienceYears == 1) {
+                        "1 año"
+                    } else {
+                        "${walker.experienceYears} años"
+                    },
                     modifier = Modifier.weight(1f)
                 )
 
                 InfoRow(
-                    label = "Precio por paseo",
-                    value = priceFormatter.format(walker.pricePerWalk),
+                    label = "Capacidad",
+                    value = "Hasta ${walker.maxPets} mascotas",
                     modifier = Modifier.weight(1f)
                 )
             }
 
-            InfoRow(
-                label = "Capacidad",
-                value = "Hasta ${walker.maxPets} mascotas"
-            )
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(DimensUI.SpaceMedium),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ) {
+                Row(
+                    modifier = Modifier.padding(
+                        horizontal = DimensUI.SpaceLarge,
+                        vertical = DimensUI.SpaceMedium
+                    ),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(
+                            DimensUI.SpaceXXSmall
+                        )
+                    ) {
+                        Text(
+                            text = "Precio por paseo",
+                            style = MaterialTheme.typography.labelMedium
+                        )
 
-            if ((walker.rating ?: 0.0) > 0.0)  {
-                InfoRow(
-                    label = "Calificación",
-                    value = String.format(
-                        Locale("es", "AR"),
-                        "%.1f / 5",
-                        walker.rating
-                    )
-                )
+                        Text(
+                            text = priceFormatter.format(
+                                walker.pricePerWalk
+                            ),
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    }
+
+                    val rating = walker.rating
+
+                    if (rating != null && rating > 0.0) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(
+                                DimensUI.SpaceXSmall
+                            )
+                        ) {
+                            Text(
+                                text = "★",
+                                color = MaterialTheme.colorScheme.tertiary,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+
+                            Text(
+                                text = String.format(
+                                    Locale("es", "AR"),
+                                    "%.1f / 5",
+                                    rating
+                                ),
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                        }
+                    }
+                }
             }
         }
     }
