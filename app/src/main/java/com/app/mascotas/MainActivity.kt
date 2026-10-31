@@ -6,14 +6,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -23,6 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.core.domain.model.UserRole
+import com.app.core.ui.components.DomainErrorMessage
+import com.app.core.ui.components.LoadingContent
+import com.app.core.ui.components.SecondaryActionButton
 import com.app.core.ui.theme.DimensUI
 import com.app.core.ui.theme.MascotasThemeUI
 import com.app.features.auth.login.LoginScreen
@@ -33,7 +32,7 @@ import com.app.mascotas.navigation.OwnerNavigation
 import com.app.mascotas.navigation.WalkerNavigation
 import com.app.mascotas.session.AppSessionViewModel
 import dagger.hilt.android.AndroidEntryPoint
-
+import androidx.compose.runtime.Composable
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
@@ -56,130 +55,127 @@ class MainActivity : ComponentActivity() {
                     ?.role == UserRole.WALKER
 
             MascotasThemeUI(isWalker = isWalkerTheme) {
-                when {
-                    showRegister -> {
-                        BackHandler {
+                if (showRegister) {
+                    BackHandler {
+                        showRegister = false
+                    }
+
+                    RegisterScreen(
+                        onRegisterSuccess = {
+                            showRegister = false
+                        },
+                        onNavigateToLogin = {
                             showRegister = false
                         }
+                    )
+                } else {
+                    when (val state = sessionState) {
 
-                        RegisterScreen(
-                            onRegisterSuccess = {
-                                showRegister = false
-                            },
-                            onNavigateToLogin = {
-                                showRegister = false
-                            }
-                        )
-                    }
-
-                    sessionState is AppSessionState.Loading -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .safeDrawingPadding(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
+                        AppSessionState.Loading -> {
+                            LoadingContent(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .safeDrawingPadding(),
+                                message = "Verificando sesión..."
+                            )
                         }
-                    }
 
-                    sessionState is AppSessionState.SignedOut -> {
-                        LoginScreen(
-                            onLoginSuccess = {
-                                // Firebase notifica el cambio de sesión.
-                                // AppSessionViewModel valida el perfil.
-                            },
-                            onNavigateToRegister = {
-                                showRegister = true
-                            }
-                        )
-                    }
-
-                    sessionState is AppSessionState.NeedsVerification -> {
-                        val state =
-                            sessionState as AppSessionState.NeedsVerification
-
-                        EmailVerificationScreen(
-                            isLoading = state.isLoading,
-                            message = state.message,
-                            onCheckVerification = {
-                                sessionViewModel.retrySessionValidation()
-                            },
-                            onResendEmail = {
-                                sessionViewModel.resendVerificationEmail()
-                            },
-                            onSignOut = {
-                                sessionViewModel.signOut()
-                            }
-                        )
-                    }
-
-                    sessionState is AppSessionState.Authenticated -> {
-                        val state =
-                            sessionState as AppSessionState.Authenticated
-
-                        when (state.role) {
-                            UserRole.OWNER -> {
-                                OwnerNavigation(
-                                    ownerId = state.userId,
-                                    onSignOut = {
-                                        sessionViewModel.signOut()
-                                    }
-                                )
-                            }
-
-                            UserRole.WALKER -> {
-                                WalkerNavigation(
-                                    userId = state.userId,
-                                    onSignOut = {
-                                        sessionViewModel.signOut()
-                                    }
-                                )
-                            }
-                        }
-                    }
-
-                    sessionState is AppSessionState.Error -> {
-                        val state =
-                            sessionState as AppSessionState.Error
-
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .safeDrawingPadding()
-                                .padding(
-                                    horizontal =
-                                        DimensUI.ScreenHorizontalPadding,
-                                    vertical =
-                                        DimensUI.ScreenVerticalPadding
-                                ),
-                            verticalArrangement = Arrangement.spacedBy(
-                                DimensUI.SpaceLarge,
-                                Alignment.CenterVertically
-                            ),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(text = state.message)
-
-                            Button(
-                                onClick = {
-                                    sessionViewModel.retrySessionValidation()
+                        AppSessionState.SignedOut -> {
+                            LoginScreen(
+                                onLoginSuccess = {
+                                    // Firebase notifica el cambio de sesión.
+                                    // AppSessionViewModel valida el perfil.
+                                },
+                                onNavigateToRegister = {
+                                    showRegister = true
                                 }
-                            ) {
-                                Text("Reintentar")
-                            }
+                            )
+                        }
 
-                            Button(
-                                onClick = {
+                        is AppSessionState.NeedsVerification -> {
+                            EmailVerificationScreen(
+                                isLoading = state.isLoading,
+                                message = state.message,
+                                onCheckVerification = {
+                                    sessionViewModel.retrySessionValidation()
+                                },
+                                onResendEmail = {
+                                    sessionViewModel.resendVerificationEmail()
+                                },
+                                onSignOut = {
                                     sessionViewModel.signOut()
                                 }
-                            ) {
-                                Text("Cerrar sesión")
+                            )
+                        }
+
+                        is AppSessionState.Authenticated -> {
+                            when (state.role) {
+                                UserRole.OWNER -> {
+                                    OwnerNavigation(
+                                        ownerId = state.userId,
+                                        onSignOut = {
+                                            sessionViewModel.signOut()
+                                        }
+                                    )
+                                }
+
+                                UserRole.WALKER -> {
+                                    WalkerNavigation(
+                                        userId = state.userId,
+                                        onSignOut = {
+                                            sessionViewModel.signOut()
+                                        }
+                                    )
+                                }
                             }
+                        }
+
+                        is AppSessionState.Error -> {
+                            SessionErrorContent(
+                                message = state.message,
+                                onRetry = {
+                                    sessionViewModel.retrySessionValidation()
+                                },
+                                onSignOut = {
+                                    sessionViewModel.signOut()
+                                }
+                            )
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SessionErrorContent(
+    message: String,
+    onRetry: () -> Unit,
+    onSignOut: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .safeDrawingPadding()
+            .padding(
+                horizontal = DimensUI.ScreenHorizontalPadding,
+                vertical = DimensUI.ScreenVerticalPadding
+            ),
+        verticalArrangement = Arrangement.spacedBy(
+            DimensUI.SpaceLarge,
+            Alignment.CenterVertically
+        ),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        DomainErrorMessage(
+            message = message,
+            onRetry = onRetry
+        )
+
+        SecondaryActionButton(
+            text = "Cerrar sesión",
+            onClick = onSignOut
+        )
     }
 }
