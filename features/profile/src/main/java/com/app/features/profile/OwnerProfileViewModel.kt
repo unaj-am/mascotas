@@ -19,6 +19,7 @@ import com.app.cloudinary.CloudinaryPhotoUploader
 import com.app.core.domain.repository.UserRepository
 import android.net.Uri
 
+
 @HiltViewModel
 class OwnerProfileViewModel @Inject constructor(
     private val getUserByIdUseCase: GetUserByIdUseCase,
@@ -57,15 +58,12 @@ class OwnerProfileViewModel @Inject constructor(
                     photoErrorMessage = null
                 )
             }
-
             try {
                 val imageUrl = cloudinaryPhotoUploader.uploadPhoto(uri)
-
                 userRepository.updateProfileImage(
                     userId = user.id,
                     imageUrl = imageUrl
                 )
-
                 currentUser = user.copy(
                     profileImage = imageUrl
                 )

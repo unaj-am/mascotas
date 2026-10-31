@@ -49,6 +49,18 @@ fun WalkerProfileScreen(
     var selectedPhotoUri by remember {
         mutableStateOf<Uri?>(null)
     }
+    var wasUploadingPhoto by remember {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(state.isUploadingPhoto) {
+        if (state.isUploadingPhoto) {
+            wasUploadingPhoto = true
+        } else if (wasUploadingPhoto) {
+            selectedPhotoUri = null
+            wasUploadingPhoto = false
+        }
+    }
 
     when {
         state.isLoading -> {
@@ -102,12 +114,14 @@ fun WalkerProfileScreen(
                     name = state.name,
                     lastName = state.lastName,
                     roleLabel = "Paseador",
-                    photoUri = selectedPhotoUri
+                    photoUri = selectedPhotoUri,
+                    profileImageUrl = state.profileImage
                 )
 
                 ProfilePhotoPicker(
                     onPhotoSelected = { uri ->
                         selectedPhotoUri = uri
+                        viewModel.uploadProfilePhoto(uri)
                     }
                 ) { openPicker ->
                     TextButton(
@@ -117,6 +131,13 @@ fun WalkerProfileScreen(
                     }
                 }
 
+                state.photoErrorMessage?.let { message ->
+                    Text(
+                        text = message,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
 
                 WalkerPersonalInfoSection(
                     name = state.name,
