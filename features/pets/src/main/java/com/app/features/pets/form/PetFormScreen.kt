@@ -29,6 +29,12 @@ import com.app.features.pets.form.component.PetAgeField
 import com.app.features.pets.form.component.PetBehaviorSelector
 import com.app.features.pets.form.component.PetSizeSelector
 import java.util.UUID
+import android.net.Uri
+import androidx.compose.runtime.remember
+import com.app.core.ui.components.ProfilePhotoPicker
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.unit.dp
+import com.app.features.pets.detail.component.PetPhoto
 
 @Composable
 fun PetFormScreen(
@@ -36,7 +42,7 @@ fun PetFormScreen(
     pet: Pet? = null,
     isSaving: Boolean = false,
     errorMessage: String? = null,
-    onSave: (Pet) -> Unit,
+    onSave: (Pet, Uri?) -> Unit,
     onCancel: () -> Unit
 ) {
     var name by rememberSaveable(pet?.id) {
@@ -74,6 +80,9 @@ fun PetFormScreen(
     var validationError by rememberSaveable(pet?.id) {
         mutableStateOf<String?>(null)
     }
+    var selectedPhotoUri by remember(pet?.id) {
+        mutableStateOf<Uri?>(null)
+    }
 
     Column(
         modifier = Modifier
@@ -99,6 +108,30 @@ fun PetFormScreen(
                 "Actualizá la información de ${pet.name}."
             }
         )
+
+        PetPhoto(
+            photoUri = selectedPhotoUri?.toString() ?: pet?.photoUri,
+            modifier = Modifier.height(200.dp)
+        )
+
+        ProfilePhotoPicker(
+            onPhotoSelected = { uri ->
+                selectedPhotoUri = uri
+            }
+        ) { openPicker ->
+            TextButton(
+                onClick = openPicker,
+                enabled = !isSaving
+            ) {
+                Text(
+                    if (pet == null) {
+                        "Agregar foto de la mascota"
+                    } else {
+                        "Cambiar foto de la mascota"
+                    }
+                )
+            }
+        }
 
         AppCard(
             modifier = Modifier.fillMaxWidth()
@@ -268,7 +301,8 @@ fun PetFormScreen(
                             size = size,
                             behavior = behavior,
                             specialNeeds = specialNeeds.trim()
-                        )
+                        ),
+                        selectedPhotoUri
                     )
                 }
             },

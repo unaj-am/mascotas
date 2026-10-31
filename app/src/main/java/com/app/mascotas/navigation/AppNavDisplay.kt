@@ -246,7 +246,9 @@ fun AppNavDisplay(
                                 operationState as?
                                         PetOperationUiState.Error
                                 )?.message,
-                        onSave = petViewModel::savePet,
+                        onSave = { pet, photoUri ->
+                            petViewModel.savePet(pet, photoUri)
+                        },
                         onCancel = {
                             navigationState.goBack()
                         }
@@ -263,7 +265,9 @@ fun AppNavDisplay(
                                 operationState as?
                                         PetOperationUiState.Error
                                 )?.message,
-                        onSave = petViewModel::updatePet,
+                        onSave = { pet, photoUri ->
+                            petViewModel.updatePet(pet, photoUri)
+                        },
                         onCancel = {
                             navigationState.goBack()
                         }

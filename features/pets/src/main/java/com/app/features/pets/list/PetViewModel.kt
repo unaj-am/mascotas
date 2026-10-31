@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.app.cloudinary.CloudinaryPhotoUploader
+import android.net.Uri
 
 sealed interface PetOperationUiState {
     data object Idle : PetOperationUiState
@@ -28,7 +30,8 @@ class PetViewModel @Inject constructor(
     private val getPetsByOwnerUseCase: GetPetsByOwnerUseCase,
     private val savePetUseCase: SavePetUseCase,
     private val updatePetUseCase: UpdatePetUseCase,
-    private val deletePetUseCase: DeletePetUseCase
+    private val deletePetUseCase: DeletePetUseCase,
+    private val cloudinaryPhotoUploader: CloudinaryPhotoUploader
 ) : ViewModel() {
 
     private val _uiState =
@@ -44,6 +47,10 @@ class PetViewModel @Inject constructor(
 
     val operationState: StateFlow<PetOperationUiState> =
         _operationState.asStateFlow()
+
+    suspend fun uploadPetPhoto(uri: Uri): String {
+        return cloudinaryPhotoUploader.uploadPhoto(uri)
+    }
 
     fun loadPets(ownerId: String) {
         viewModelScope.launch {
@@ -62,15 +69,29 @@ class PetViewModel @Inject constructor(
         }
     }
 
-    fun savePet(pet: Pet) {
+    fun savePet(pet: Pet, photoUri: Uri? = null) {
         executeOperation(pet.ownerId) {
-            savePetUseCase(pet)
+            val petToSave = if (photoUri != null) {
+                val imageUrl = uploadPetPhoto(photoUri)
+                pet.copy(photoUri = imageUrl)
+            } else {
+                pet
+            }
+
+            savePetUseCase(petToSave)
         }
     }
 
-    fun updatePet(pet: Pet) {
+    fun updatePet(pet: Pet, photoUri: Uri? = null) {
         executeOperation(pet.ownerId) {
-            updatePetUseCase(pet)
+            val petToUpdate = if (photoUri != null) {
+                val imageUrl = uploadPetPhoto(photoUri)
+                pet.copy(photoUri = imageUrl)
+            } else {
+                pet
+            }
+
+            updatePetUseCase(petToUpdate)
         }
     }
 
