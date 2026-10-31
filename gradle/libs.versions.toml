@@ -1,3 +1,4 @@
+
 [versions]
 agp = "9.4.1"
 coreKtx = "1.19.1"
@@ -21,6 +22,9 @@ hilt = "2.60.1"
 androidxHilt = "1.4.0"
 navigation3 = "1.2.0"
 kotlinxSerialization = "1.9.0"
+
+# MapLibre
+maplibreCompose = "0.12.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -56,6 +60,9 @@ firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore
 androidx-navigation3-runtime = { group = "androidx.navigation3", name = "navigation3-runtime", version.ref = "navigation3" }
 androidx-navigation3-ui = { group = "androidx.navigation3", name = "navigation3-ui", version.ref = "navigation3" }
 kotlinx-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version.ref = "kotlinxSerialization" }
+
+# MapLibre Compose
+maplibre-compose = { group = "org.maplibre.compose", name = "maplibre-compose-android", version.ref = "maplibreCompose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
