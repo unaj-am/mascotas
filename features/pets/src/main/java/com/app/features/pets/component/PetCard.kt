@@ -16,6 +16,13 @@ import com.app.core.ui.components.AppCard
 import com.app.core.ui.components.InfoRow
 import com.app.core.ui.theme.DimensUI
 import com.app.core.ui.theme.MascotasThemeUI
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 
 /**
  * Tarjeta específica de una mascota.
@@ -44,8 +51,19 @@ fun PetCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(
                     DimensUI.SpaceMedium
-                )
+                ),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                if (!pet.photoUri.isNullOrBlank()) {
+                    AsyncImage(
+                        model = pet.photoUri,
+                        contentDescription = "Foto de ${pet.name}",
+                        modifier = Modifier
+                            .size(76.dp)
+                            .clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                }
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(
