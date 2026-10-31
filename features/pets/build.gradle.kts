@@ -34,6 +34,7 @@ dependencies {
     // Módulos del proyecto
     implementation(project(":core:domain"))
     implementation(project(":core:ui"))
+    implementation(project(":core:cloudinary"))
 
     // Android
     implementation(libs.androidx.appcompat)
@@ -60,4 +61,8 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+
+
+    implementation("io.coil-kt.coil3:coil-compose:3.3.0")
+    implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
 }
