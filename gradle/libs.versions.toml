@@ -64,6 +64,9 @@ androidx-navigation3-runtime = { group = "androidx.navigation3", name = "navigat
 androidx-navigation3-ui = { group = "androidx.navigation3", name = "navigation3-ui", version.ref = "navigation3" }
 kotlinx-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version.ref = "kotlinxSerialization" }
 
+firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
+
+
 # MapLibre Compose
 maplibre-compose = { group = "org.maplibre.compose", name = "maplibre-compose-android", version.ref = "maplibreCompose" }
 

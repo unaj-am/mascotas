@@ -3,6 +3,7 @@ package com.app.mascotas.session
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.app.core.data.notifications.FcmTokenManager
 import com.app.core.domain.model.UserRole
 import com.app.core.domain.repository.UserRepository
 import com.app.core.domain.usecase.auth.GetCurrentUserIdUseCase
@@ -27,7 +28,8 @@ class AppSessionViewModel @Inject constructor(
     private val isEmailVerifiedUseCase: IsEmailVerifiedUseCase,
     private val resendEmailVerificationUseCase: ResendEmailVerificationUseCase,
     private val signOutUseCase: SignOutUseCase,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val fcmTokenManager: FcmTokenManager
 ) : ViewModel() {
 
     private val _uiState =
@@ -38,6 +40,7 @@ class AppSessionViewModel @Inject constructor(
     private var validationJob: Job? = null
     private var resendJob: Job? = null
     private var signOutJob: Job? = null
+    private var fcmRegistrationJob: Job? = null
 
     private var operationId = 0L
 
@@ -65,6 +68,8 @@ class AppSessionViewModel @Inject constructor(
 
         signOutJob?.cancel()
         signOutJob = null
+        fcmRegistrationJob?.cancel()
+        fcmRegistrationJob = null
     }
 
     private fun startSessionValidation(userId: String) {
@@ -74,6 +79,9 @@ class AppSessionViewModel @Inject constructor(
         validationJob?.cancel()
         resendJob?.cancel()
         signOutJob?.cancel()
+
+        fcmRegistrationJob?.cancel()
+        fcmRegistrationJob = null
 
         resendJob = null
         signOutJob = null
@@ -146,6 +154,16 @@ class AppSessionViewModel @Inject constructor(
                 role = user.role
             )
 
+            fcmRegistrationJob = viewModelScope.launch {
+                try {
+                    fcmTokenManager.registerCurrentToken()
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (_: Exception) {
+                    // Un error de FCM no debe impedir usar Mascotas.
+                }
+            }
+
         } catch (error: CancellationException) {
             throw error
         } catch (_: Exception) {
@@ -166,6 +184,8 @@ class AppSessionViewModel @Inject constructor(
 
         validationJob?.cancel()
         resendJob?.cancel()
+        fcmRegistrationJob?.cancel()
+        fcmRegistrationJob = null
 
         validationJob = viewModelScope.launch {
             try {
@@ -269,6 +289,15 @@ class AppSessionViewModel @Inject constructor(
 
         signOutJob = viewModelScope.launch {
             try {
+                try {
+                    fcmTokenManager.unregisterCurrentToken()
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (_: Exception) {
+                    // Si falla la eliminación del token,
+                    // permitimos igualmente cerrar sesión.
+                }
+
                 signOutUseCase()
 
                 if (isCurrentOperation(currentOperation)) {
