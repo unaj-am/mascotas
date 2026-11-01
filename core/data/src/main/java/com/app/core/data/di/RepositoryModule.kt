@@ -1,4 +1,3 @@
-
 package com.app.core.data.di
 
 import com.app.core.data.repository.AuthRepositoryImpl
@@ -7,12 +6,14 @@ import com.app.core.data.repository.UserRepositoryImpl
 import com.app.core.data.repository.WalkerRepositoryImpl
 import com.app.core.data.repository.WalkRepositoryImpl
 import com.app.core.data.repository.WalkRequestRepositoryImpl
+import com.app.core.data.repository.WalkLocationRepositoryImpl
 import com.app.core.domain.repository.AuthRepository
 import com.app.core.domain.repository.PetRepository
 import com.app.core.domain.repository.UserRepository
 import com.app.core.domain.repository.WalkerRepository
 import com.app.core.domain.repository.WalkRepository
 import com.app.core.domain.repository.WalkRequestRepository
+import com.app.core.domain.repository.WalkLocationRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -58,4 +59,10 @@ abstract class RepositoryModule {
     abstract fun bindWalkRepository(
         implementation: WalkRepositoryImpl
     ): WalkRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindWalkLocationRepository(
+        implementation: WalkLocationRepositoryImpl
+    ): WalkLocationRepository
 }

@@ -32,6 +32,7 @@ android {
 
 dependencies {
     implementation(project(":core:domain"))
+    implementation(project(":core:location"))
     implementation(project(":core:ui"))
 
     // Compose

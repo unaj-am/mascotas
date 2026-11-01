@@ -17,10 +17,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.core.domain.model.Walk
+import com.app.core.domain.model.WalkLocation
 import com.app.core.domain.model.WalkStatus
 import com.app.core.ui.components.AppCard
 import com.app.core.ui.components.DomainErrorMessage
@@ -30,11 +32,18 @@ import com.app.core.ui.components.SectionHeader
 import com.app.core.ui.components.StatusBadge
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState
+import org.maplibre.compose.expressions.dsl.const
+import org.maplibre.compose.layers.CircleLayer
+import org.maplibre.compose.layers.LineLayer
 import org.maplibre.compose.map.GestureOptions
 import org.maplibre.compose.map.MapOptions
 import org.maplibre.compose.map.MaplibreMap
 import org.maplibre.compose.map.OrnamentOptions
+import org.maplibre.compose.sources.GeoJsonData
+import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.style.BaseStyle
+import org.maplibre.spatialk.geojson.LineString
+import org.maplibre.spatialk.geojson.Point
 import org.maplibre.spatialk.geojson.Position
 import java.time.Instant
 import java.time.LocalDateTime
@@ -79,9 +88,9 @@ fun WalkTrackingScreen(
                 message = "Consultando el paseo..."
             )
         } else {
-            if (state.errorMessage != null) {
+            state.errorMessage?.let { message ->
                 DomainErrorMessage(
-                    message = state.errorMessage.orEmpty(),
+                    message = message,
                     onRetry = viewModel::refresh
                 )
             }
@@ -91,6 +100,10 @@ fun WalkTrackingScreen(
             if (walk != null) {
                 WalkTrackingContent(
                     walk = walk,
+                    currentLocation = state.currentLocation,
+                    locationHistory = state.locationHistory,
+                    locationErrorMessage = state.locationErrorMessage,
+                    historyErrorMessage = state.historyErrorMessage,
                     onRefresh = viewModel::refresh
                 )
             } else if (state.errorMessage == null) {
@@ -107,6 +120,10 @@ fun WalkTrackingScreen(
 @Composable
 private fun WalkTrackingContent(
     walk: Walk,
+    currentLocation: WalkLocation?,
+    locationHistory: List<WalkLocation>,
+    locationErrorMessage: String?,
+    historyErrorMessage: String?,
     onRefresh: () -> Unit
 ) {
     Column(
@@ -114,12 +131,14 @@ private fun WalkTrackingContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
-        // Mapa del seguimiento
         if (walk.status == WalkStatus.IN_PROGRESS) {
-            WalkTrackingMap()
+            WalkTrackingMap(
+                walkId = walk.id,
+                currentLocation = currentLocation,
+                locationHistory = locationHistory
+            )
         }
 
-        // Información del paseo
         AppCard(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -194,10 +213,35 @@ private fun WalkTrackingContent(
                         )
 
                         Text(
-                            text = "El mapa está disponible. La ubicación del paseador y el recorrido en tiempo real se incorporarán mediante GPS y Firestore.",
+                            text = when {
+                                currentLocation != null ->
+                                    "Se está recibiendo la ubicación del paseador."
+
+                                locationErrorMessage != null ->
+                                    "Hay un problema al recibir la ubicación."
+
+                                else ->
+                                    "Esperando la primera ubicación del paseador..."
+                            },
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+
+                        locationErrorMessage?.let { message ->
+                            Text(
+                                text = message,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+
+                        historyErrorMessage?.let { message ->
+                            Text(
+                                text = message,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
 
                         TextButton(onClick = onRefresh) {
                             Text("Actualizar estado")
@@ -223,7 +267,7 @@ private fun WalkTrackingContent(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "El paseo finalizó. Podés consultar los horarios registrados.",
+                        text = "El paseo finalizó. Podés consultar el recorrido y los horarios registrados.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -245,12 +289,12 @@ private fun WalkTrackingContent(
     }
 }
 
-/**
- * Mapa base de seguimiento.
- */
 @Composable
-private fun WalkTrackingMap() {
-
+private fun WalkTrackingMap(
+    walkId: String,
+    currentLocation: WalkLocation?,
+    locationHistory: List<WalkLocation>
+) {
     val cameraState = rememberCameraState(
         firstPosition = CameraPosition(
             target = Position(
@@ -260,6 +304,18 @@ private fun WalkTrackingMap() {
             zoom = 12.0
         )
     )
+
+    LaunchedEffect(currentLocation?.recordedAt) {
+        currentLocation?.let { location ->
+            cameraState.position = cameraState.position.copy(
+                target = Position(
+                    latitude = location.latitude,
+                    longitude = location.longitude
+                ),
+                zoom = 16.0
+            )
+        }
+    }
 
     AppCard(
         modifier = Modifier.fillMaxWidth()
@@ -288,11 +344,65 @@ private fun WalkTrackingMap() {
                         gestureOptions = GestureOptions.Standard,
                         ornamentOptions = OrnamentOptions.OnlyLogo
                     )
-                )
+                ) {
+
+                    if (locationHistory.size >= 2) {
+                        val routePositions = locationHistory.map { location ->
+                            Position(
+                                latitude = location.latitude,
+                                longitude = location.longitude
+                            )
+                        }
+
+                        val routeSource = rememberGeoJsonSource(
+                            data = GeoJsonData.Features(
+                                LineString(routePositions)
+                            )
+                        )
+
+                        LineLayer(
+                            id = "walk-route-layer-$walkId",
+                            source = routeSource,
+                            color = const(Color(0xFF1565C0)),
+                            width = const(5.dp)
+                        )
+                    }
+
+                    currentLocation?.let { location ->
+                        val locationSource = rememberGeoJsonSource(
+                            data = GeoJsonData.Features(
+                                Point(
+                                    Position(
+                                        latitude = location.latitude,
+                                        longitude = location.longitude
+                                    )
+                                )
+                            )
+                        )
+
+                        CircleLayer(
+                            id = "walk-location-layer-$walkId",
+                            source = locationSource,
+                            radius = const(10.dp),
+                            color = const(Color(0xFF1976D2)),
+                            strokeColor = const(Color.White),
+                            strokeWidth = const(3.dp)
+                        )
+                    }
+                }
             }
 
             Text(
-                text = "Vista inicial de referencia. El mapa se centrará en la ubicación real del paseador cuando conectemos el GPS.",
+                text = when {
+                    currentLocation != null ->
+                        "Última ubicación: ${formatTimestamp(currentLocation.recordedAt)}"
+
+                    locationHistory.isNotEmpty() ->
+                        "Se recibieron ${locationHistory.size} posiciones."
+
+                    else ->
+                        "Esperando la primera ubicación del paseador..."
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -360,4 +470,17 @@ private fun formatDate(value: String): String {
             )
         )
     }.getOrDefault(value)
+}
+
+private fun formatTimestamp(value: Long): String {
+    return runCatching {
+        Instant.ofEpochMilli(value)
+            .atZone(ZoneId.systemDefault())
+            .format(
+                DateTimeFormatter.ofPattern(
+                    "HH:mm:ss",
+                    Locale("es", "AR")
+                )
+            )
+    }.getOrDefault("No disponible")
 }

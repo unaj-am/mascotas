@@ -9,6 +9,7 @@ plugins {
 
 android {
     namespace = "com.app.mascotas"
+
     compileSdk {
         version = release(37)
     }
@@ -30,10 +31,12 @@ android {
             }
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     buildFeatures {
         compose = true
     }
@@ -41,10 +44,15 @@ android {
 
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
+
+    // Módulos principales
     implementation(project(":core:data"))
     implementation(project(":core:database"))
     implementation(project(":core:domain"))
+    implementation(project(":core:location"))
     implementation(project(":core:ui"))
+
+    // Features
     implementation(project(":features:auth"))
     implementation(project(":features:home"))
     implementation(project(":features:notifications"))
@@ -53,6 +61,8 @@ dependencies {
     implementation(project(":features:tracking"))
     implementation(project(":features:walks"))
     implementation(project(":features:walkers"))
+
+    // Android y Jetpack Compose
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)
@@ -60,22 +70,36 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.compose.material.icons.extended)
+
+    // Room
     implementation(libs.androidx.room.runtime)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+
+    // Navigation
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+
+    // Kotlin Serialization
+    implementation(libs.kotlinx.serialization.core)
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+
+    // Debug
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.auth)
-    implementation(libs.firebase.firestore)
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
-    implementation(libs.androidx.hilt.navigation.compose)
-    implementation(libs.androidx.navigation3.runtime)
-    implementation(libs.androidx.navigation3.ui)
-    implementation(libs.kotlinx.serialization.core)
-    implementation(libs.androidx.compose.material.icons.extended)
 }
