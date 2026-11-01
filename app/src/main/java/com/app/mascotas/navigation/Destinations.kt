@@ -6,7 +6,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data object HomeDestination : NavKey
-
+@Serializable
+data object NotificationsDestination : NavKey
 @Serializable
 data object PetsDestination : NavKey
 

@@ -45,6 +45,7 @@ import com.app.features.walkers.list.WalkerViewModel
 import com.app.features.walkers.requestform.WalkRequestFormRoute
 import com.app.features.walks.owner.OwnerWalkDetailRoute
 import com.app.features.walks.owner.OwnerWalksRoute
+import com.app.features.notifications.presentation.NotificationsRoute
 @Composable
 fun AppNavDisplay(
     navigationState: NavigationState,
@@ -77,13 +78,20 @@ fun AppNavDisplay(
                 ownerId = ownerId,
                 isVisible = navigationState.currentTab == TopLevelDestination.HOME,
                 onNotificationsClick = {
-                    // Pendiente: conectar notificaciones.
+                    navigationState.navigate(
+                        NotificationsDestination
+                    )
                 },
                 onFindWalkerClick = {
                     navigationState.navigate(
                         WalkerSearchDestination
                     )
                 }
+            )
+        }
+        entry<NotificationsDestination> {
+            NotificationsRoute(
+                userId = ownerId
             )
         }
 
