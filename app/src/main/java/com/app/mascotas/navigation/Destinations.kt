@@ -48,6 +48,11 @@ data object WalkerProfileDestination : NavKey
 data object WalkerRequestsDestination : NavKey
 
 @Serializable
+data class WalkerRequestDetailDestination(
+    val requestId: String
+) : NavKey
+
+@Serializable
 data object WalkerHistoryDestination : NavKey
 
 @Serializable

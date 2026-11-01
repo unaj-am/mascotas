@@ -94,6 +94,27 @@ class WalkRequestRemoteDataSource @Inject constructor(
             "Una de las mascotas seleccionadas no pertenece al dueño"
         }
 
+        suspend fun getOwnedPetPhoto(
+            petId: String,
+            ownerId: String
+        ): String {
+            val petDocument = petsCollection
+                .document(petId)
+                .get()
+                .await()
+
+            require(petDocument.exists()) {
+                "No se encontró una de las mascotas seleccionadas"
+            }
+
+            require(petDocument.getString("ownerId") == ownerId) {
+                "Una de las mascotas seleccionadas no pertenece al dueño"
+            }
+
+            return petDocument.getString("photoUri").orEmpty()
+        }
+
+
         return petDocument.getString("name")
             ?.trim()
             ?.takeIf { it.isNotBlank() }
@@ -101,7 +122,25 @@ class WalkRequestRemoteDataSource @Inject constructor(
                 "Una de las mascotas no tiene un nombre válido"
             )
     }
+    suspend fun getOwnedPetPhoto(
+        petId: String,
+        ownerId: String
+    ): String {
+        val petDocument = petsCollection
+            .document(petId)
+            .get()
+            .await()
 
+        require(petDocument.exists()) {
+            "No se encontró una de las mascotas seleccionadas"
+        }
+
+        require(petDocument.getString("ownerId") == ownerId) {
+            "Una de las mascotas seleccionadas no pertenece al dueño"
+        }
+
+        return petDocument.getString("photoUri").orEmpty()
+    }
     suspend fun createRequest(
         request: WalkRequest,
         ownerName: String,
@@ -212,6 +251,7 @@ class WalkRequestRemoteDataSource @Inject constructor(
             "walkerId" to walkerId,
             "petIds" to petIds,
             "petNames" to petNames,
+            "petPhotos" to petPhotos,
             "scheduledAt" to scheduledAt,
             "durationMinutes" to durationMinutes,
             "status" to status.name,
@@ -228,6 +268,9 @@ class WalkRequestRemoteDataSource @Inject constructor(
                 ?: throw IllegalStateException("La solicitud no tiene paseador"),
             petIds = get("petIds") as? List<String> ?: emptyList(),
             petNames = get("petNames") as? List<String> ?: emptyList(),
+            petPhotos = (get("petPhotos") as? List<*>)
+                ?.map { it as? String ?: "" }
+                ?: emptyList(),
             scheduledAt = getString("scheduledAt").orEmpty(),
             durationMinutes = getLong("durationMinutes")?.toInt() ?: 0,
             status = getString("status")?.let {

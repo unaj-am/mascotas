@@ -18,7 +18,8 @@ fun WalkerRequestsScreen(
     state: WalkerRequestsUiState,
     onRefresh: () -> Unit,
     onAcceptRequest: (String) -> Unit,
-    onRejectRequest: (String) -> Unit
+    onRejectRequest: (String) -> Unit,
+    onRequestClick: (String) -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -65,6 +66,7 @@ fun WalkerRequestsScreen(
                 onRefresh = onRefresh,
                 onAcceptRequest = onAcceptRequest,
                 onRejectRequest = onRejectRequest,
+                onRequestClick = onRequestClick,
                 modifier = Modifier.fillMaxSize()
             )
         }

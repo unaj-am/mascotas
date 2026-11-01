@@ -104,6 +104,7 @@ class WalkRequestRepositoryImpl @Inject constructor(
             "El perfil del dueño no tiene un nombre válido"
         }
 
+
         val petNames = request.petIds.map { petId ->
             walkRequestRemoteDataSource.getOwnedPetName(
                 petId = petId,
@@ -111,11 +112,19 @@ class WalkRequestRepositoryImpl @Inject constructor(
             )
         }
 
+        val petPhotos = request.petIds.map { petId ->
+            walkRequestRemoteDataSource.getOwnedPetPhoto(
+                petId = petId,
+                ownerId = request.ownerId
+            )
+        }
+
         walkRequestRemoteDataSource.createRequest(
-            request = request,
+            request = request.copy(petPhotos = petPhotos),
             ownerName = ownerName,
             petNames = petNames
         )
+
     }
 
     override suspend fun updateRequestStatus(
