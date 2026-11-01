@@ -62,6 +62,7 @@ dependencies {
     implementation(project(":features:walks"))
     implementation(project(":features:walkers"))
 
+
     // Android y Jetpack Compose
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
