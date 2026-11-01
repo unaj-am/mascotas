@@ -1,11 +1,14 @@
 package com.app.features.tracking
 
+import android.os.SystemClock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.app.core.domain.model.MatchedRoute
 import com.app.core.domain.model.Walk
 import com.app.core.domain.model.WalkLocation
 import com.app.core.domain.model.WalkStatus
 import com.app.core.domain.usecase.GetWalkByIdUseCase
+import com.app.core.domain.usecase.MatchWalkRouteUseCase
 import com.app.core.domain.usecase.ObserveWalkLocationHistoryUseCase
 import com.app.core.domain.usecase.ObserveWalkLocationUseCase
 import com.app.core.domain.usecase.auth.GetCurrentUserIdUseCase
@@ -22,6 +25,7 @@ data class WalkTrackingUiState(
     val walk: Walk? = null,
     val currentLocation: WalkLocation? = null,
     val locationHistory: List<WalkLocation> = emptyList(),
+    val matchedRoute: MatchedRoute? = null,
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val locationErrorMessage: String? = null,
@@ -34,26 +38,34 @@ class WalkTrackingViewModel @Inject constructor(
     private val getWalkById: GetWalkByIdUseCase,
     private val getCurrentUserId: GetCurrentUserIdUseCase,
     private val observeWalkLocation: ObserveWalkLocationUseCase,
-    private val observeWalkLocationHistory: ObserveWalkLocationHistoryUseCase
+    private val observeWalkLocationHistory: ObserveWalkLocationHistoryUseCase,
+    private val matchWalkRoute: MatchWalkRouteUseCase
 ) : ViewModel() {
+
+    companion object {
+        private const val MIN_NEW_POINTS_FOR_MATCHING = 5
+        private const val MATCHING_INTERVAL_MILLIS = 20_000L
+    }
 
     private val _uiState = MutableStateFlow(WalkTrackingUiState())
     val uiState = _uiState.asStateFlow()
 
     private var currentWalkId: String = ""
+
     private var loadJob: Job? = null
     private var locationJob: Job? = null
     private var historyJob: Job? = null
+    private var matchingJob: Job? = null
+
+    private var lastMatchingPointTimestamp: Long? = null
+    private var lastMatchingRequestTime: Long? = null
 
     fun load(
         walkId: String,
         forceRefresh: Boolean = false
     ) {
         if (walkId.isBlank()) {
-            loadJob?.cancel()
-            locationJob?.cancel()
-            historyJob?.cancel()
-
+            cancelTrackingJobs()
             currentWalkId = ""
 
             _uiState.value = WalkTrackingUiState(
@@ -67,9 +79,8 @@ class WalkTrackingViewModel @Inject constructor(
         currentWalkId = walkId
 
         if (walkChanged) {
-            loadJob?.cancel()
-            locationJob?.cancel()
-            historyJob?.cancel()
+            cancelTrackingJobs()
+            resetMatchingState()
 
             _uiState.value = WalkTrackingUiState(
                 isLoading = true
@@ -115,22 +126,49 @@ class WalkTrackingViewModel @Inject constructor(
                             walk.walkerId == currentUserId
                 )
 
-                if (walk.status == WalkStatus.IN_PROGRESS) {
-                    observeLocation(walkId)
-                    observeHistory(walkId)
-                } else {
-                    locationJob?.cancel()
-                    historyJob?.cancel()
+                when (walk.status) {
+                    WalkStatus.IN_PROGRESS -> {
+                        observeLocation(walkId)
+                        observeHistory(
+                            walkId = walkId,
+                            enableMatching = true
+                        )
+                    }
 
-                    locationJob = null
-                    historyJob = null
+                    WalkStatus.COMPLETED,
+                    WalkStatus.CANCELLED -> {
+                        // El paseo terminó: ya no necesitamos observar
+                        // la ubicación actual ni solicitar nuevos ajustes OSRM.
+                        locationJob?.cancel()
+                        locationJob = null
 
-                    _uiState.value = _uiState.value.copy(
-                        currentLocation = null,
-                        locationHistory = emptyList(),
-                        locationErrorMessage = null,
-                        historyErrorMessage = null
-                    )
+                        resetMatchingState()
+
+                        _uiState.value = _uiState.value.copy(
+                            currentLocation = null,
+                            matchedRoute = null,
+                            locationErrorMessage = null
+                        )
+
+                        // Conservamos la observación del historial GPS.
+                        observeHistory(
+                            walkId = walkId,
+                            enableMatching = false
+                        )
+                    }
+
+                    WalkStatus.SCHEDULED -> {
+                        cancelTrackingJobs()
+                        resetMatchingState()
+
+                        _uiState.value = _uiState.value.copy(
+                            currentLocation = null,
+                            locationHistory = emptyList(),
+                            matchedRoute = null,
+                            locationErrorMessage = null,
+                            historyErrorMessage = null
+                        )
+                    }
                 }
 
             } catch (error: CancellationException) {
@@ -175,7 +213,10 @@ class WalkTrackingViewModel @Inject constructor(
         }
     }
 
-    private fun observeHistory(walkId: String) {
+    private fun observeHistory(
+        walkId: String,
+        enableMatching: Boolean
+    ) {
         historyJob?.cancel()
 
         historyJob = viewModelScope.launch {
@@ -189,6 +230,13 @@ class WalkTrackingViewModel @Inject constructor(
                         locationHistory = locations,
                         historyErrorMessage = null
                     )
+
+                    if (enableMatching) {
+                        requestRouteMatching(
+                            walkId = walkId,
+                            locations = locations
+                        )
+                    }
                 }
             } catch (error: CancellationException) {
                 throw error
@@ -203,6 +251,91 @@ class WalkTrackingViewModel @Inject constructor(
         }
     }
 
+    private fun requestRouteMatching(
+        walkId: String,
+        locations: List<WalkLocation>
+    ) {
+        if (matchingJob?.isActive == true) return
+
+        val orderedLocations = locations
+            .distinctBy { it.recordedAt }
+            .sortedBy { it.recordedAt }
+
+        if (orderedLocations.size < MIN_NEW_POINTS_FOR_MATCHING) {
+            return
+        }
+
+        val lastRequestedTimestamp = lastMatchingPointTimestamp
+
+        val newLocations = if (lastRequestedTimestamp == null) {
+            orderedLocations
+        } else {
+            orderedLocations.filter {
+                it.recordedAt > lastRequestedTimestamp
+            }
+        }
+
+        if (newLocations.size < MIN_NEW_POINTS_FOR_MATCHING) {
+            return
+        }
+
+        val now = SystemClock.elapsedRealtime()
+        val lastRequestTime = lastMatchingRequestTime
+
+        if (
+            lastRequestTime != null &&
+            now - lastRequestTime < MATCHING_INTERVAL_MILLIS
+        ) {
+            return
+        }
+
+        val requestLastTimestamp =
+            orderedLocations.last().recordedAt
+
+        // Registramos el intento antes de iniciar la petición.
+        // Así evitamos repetir solicitudes ante cada emisión.
+        lastMatchingPointTimestamp = requestLastTimestamp
+        lastMatchingRequestTime = now
+
+        matchingJob = viewModelScope.launch {
+            try {
+                val matchedRoute = matchWalkRoute(orderedLocations)
+
+                if (
+                    currentWalkId == walkId &&
+                    matchedRoute != null
+                ) {
+                    _uiState.value = _uiState.value.copy(
+                        matchedRoute = matchedRoute
+                    )
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                // Si OSRM falla, se conserva la geometría anterior.
+                // La pantalla podrá utilizar el historial GPS como fallback.
+            }
+        }
+    }
+
+    private fun resetMatchingState() {
+        matchingJob?.cancel()
+        matchingJob = null
+
+        lastMatchingPointTimestamp = null
+        lastMatchingRequestTime = null
+    }
+
+    private fun cancelTrackingJobs() {
+        locationJob?.cancel()
+        historyJob?.cancel()
+        matchingJob?.cancel()
+
+        locationJob = null
+        historyJob = null
+        matchingJob = null
+    }
+
     fun refresh() {
         if (currentWalkId.isBlank()) return
 
@@ -214,8 +347,7 @@ class WalkTrackingViewModel @Inject constructor(
 
     override fun onCleared() {
         loadJob?.cancel()
-        locationJob?.cancel()
-        historyJob?.cancel()
+        cancelTrackingJobs()
         super.onCleared()
     }
 }
