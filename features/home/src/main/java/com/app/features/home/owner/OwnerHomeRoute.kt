@@ -15,6 +15,7 @@ fun OwnerHomeRoute(
     onNotificationsClick: () -> Unit,
     onFindWalkerClick: () -> Unit,
     isVisible: Boolean = true,
+    notificationCount: Int = 0,
     viewModel: OwnerHomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -48,6 +49,7 @@ fun OwnerHomeRoute(
                 nextPetName = state.nextPetName,
                 nextPetBreed = state.nextPetBreed,
                 nextWalkDate = state.nextWalkDate,
+                notificationCount = notificationCount,
                 onNotificationsClick = onNotificationsClick,
                 onFindWalkerClick = onFindWalkerClick
             )

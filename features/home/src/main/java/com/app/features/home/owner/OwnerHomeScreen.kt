@@ -29,6 +29,7 @@ fun OwnerHomeScreen(
     nextWalkDate: String? = null,
     onNotificationsClick: () -> Unit,
     onFindWalkerClick: () -> Unit,
+    notificationCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -48,7 +49,8 @@ fun OwnerHomeScreen(
             ) {
                 HomeHeader(
                     userName = userName,
-                    onNotificationsClick = onNotificationsClick
+                    onNotificationsClick = onNotificationsClick,
+                    notificationCount = notificationCount
                 )
             }
         }
