@@ -33,13 +33,37 @@ import com.app.mascotas.navigation.WalkerNavigation
 import com.app.mascotas.session.AppSessionViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.compose.runtime.Composable
+
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
+import com.app.core.data.notifications.MascotasNotificationChannel
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        MascotasNotificationChannel.create(this)
         setContent {
+
+            val notificationPermissionLauncher =
+                rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.RequestPermission(),
+                    onResult = { isGranted ->
+                        // Más adelante podemos manejar si el usuario rechaza el permiso.
+                    }
+                )
+
+            LaunchedEffect(Unit) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    notificationPermissionLauncher.launch(
+                        Manifest.permission.POST_NOTIFICATIONS
+                    )
+                }
+            }
+
             val sessionViewModel: AppSessionViewModel =
                 hiltViewModel()
 
