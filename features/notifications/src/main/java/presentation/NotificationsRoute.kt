@@ -1,3 +1,4 @@
+
 package com.app.features.notifications.presentation
 
 import androidx.compose.runtime.Composable
@@ -8,9 +9,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun NotificationsRoute(
     userId: String,
+    onBack: () -> Unit = {},
     viewModel: NotificationsViewModel = hiltViewModel()
 ) {
-    val notifications = viewModel.notifications.collectAsStateWithLifecycle()
+    val notifications =
+        viewModel.notifications.collectAsStateWithLifecycle()
 
     LaunchedEffect(userId) {
         viewModel.observeNotifications(userId)
@@ -18,6 +21,7 @@ fun NotificationsRoute(
 
     NotificationsScreen(
         notifications = notifications.value,
+
         onNotificationClick = { notification ->
             if (!notification.isRead) {
                 viewModel.markAsRead(
@@ -25,6 +29,14 @@ fun NotificationsRoute(
                     notificationId = notification.id
                 )
             }
+        },
+
+        onBackClick = {
+            onBack()
+        },
+
+        onClearAllClick = {
+            viewModel.markAllAsRead(userId)
         }
     )
 }
