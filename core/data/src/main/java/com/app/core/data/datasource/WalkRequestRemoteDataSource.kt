@@ -1,11 +1,12 @@
 
 package com.app.core.data.remote.walkrequest
 
+import com.app.core.domain.model.RequestStatus
 import com.app.core.domain.model.Walk
 import com.app.core.domain.model.WalkRequest
 import com.app.core.domain.model.WalkStatus
-import com.app.core.domain.model.RequestStatus
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -69,8 +70,15 @@ class WalkRequestRemoteDataSource @Inject constructor(
             "No se encontró el perfil del dueño"
         }
 
-        val firstName = ownerDocument.getString("name").orEmpty().trim()
-        val lastName = ownerDocument.getString("lastName").orEmpty().trim()
+        val firstName = ownerDocument
+            .getString("name")
+            .orEmpty()
+            .trim()
+
+        val lastName = ownerDocument
+            .getString("lastName")
+            .orEmpty()
+            .trim()
 
         return listOf(firstName, lastName)
             .filter { it.isNotBlank() }
@@ -94,27 +102,6 @@ class WalkRequestRemoteDataSource @Inject constructor(
             "Una de las mascotas seleccionadas no pertenece al dueño"
         }
 
-        suspend fun getOwnedPetPhoto(
-            petId: String,
-            ownerId: String
-        ): String {
-            val petDocument = petsCollection
-                .document(petId)
-                .get()
-                .await()
-
-            require(petDocument.exists()) {
-                "No se encontró una de las mascotas seleccionadas"
-            }
-
-            require(petDocument.getString("ownerId") == ownerId) {
-                "Una de las mascotas seleccionadas no pertenece al dueño"
-            }
-
-            return petDocument.getString("photoUri").orEmpty()
-        }
-
-
         return petDocument.getString("name")
             ?.trim()
             ?.takeIf { it.isNotBlank() }
@@ -122,6 +109,7 @@ class WalkRequestRemoteDataSource @Inject constructor(
                 "Una de las mascotas no tiene un nombre válido"
             )
     }
+
     suspend fun getOwnedPetPhoto(
         petId: String,
         ownerId: String
@@ -141,6 +129,7 @@ class WalkRequestRemoteDataSource @Inject constructor(
 
         return petDocument.getString("photoUri").orEmpty()
     }
+
     suspend fun createRequest(
         request: WalkRequest,
         ownerName: String,
@@ -161,7 +150,7 @@ class WalkRequestRemoteDataSource @Inject constructor(
         requestId: String,
         status: RequestStatus,
         validate: (WalkRequest) -> Unit
-    ){
+    ) {
         val requestRef = requestsCollection.document(requestId)
 
         firestore.runTransaction { transaction ->
@@ -175,7 +164,25 @@ class WalkRequestRemoteDataSource @Inject constructor(
 
             validate(request)
 
-            transaction.update(requestRef, "status", status.name)
+            val updates = mutableMapOf<String, Any>(
+                "status" to status.name
+            )
+
+            when (status) {
+                RequestStatus.REJECTED -> {
+                    updates["rejectedAt"] =
+                        FieldValue.serverTimestamp()
+                }
+
+                RequestStatus.CANCELLED -> {
+                    updates["cancelledAt"] =
+                        FieldValue.serverTimestamp()
+                }
+
+                else -> Unit
+            }
+
+            transaction.update(requestRef, updates)
         }.await()
     }
 
@@ -188,7 +195,9 @@ class WalkRequestRemoteDataSource @Inject constructor(
         firestore.runTransaction { transaction ->
             val snapshot = transaction.get(requestRef)
 
-            if (!snapshot.exists()) return@runTransaction
+            if (!snapshot.exists()) {
+                return@runTransaction
+            }
 
             val request = snapshot.toWalkRequest()
 
@@ -214,6 +223,7 @@ class WalkRequestRemoteDataSource @Inject constructor(
             }
 
             val request = requestSnapshot.toWalkRequest()
+
             val existingWalk = if (walkSnapshot.exists()) {
                 walkSnapshot.toWalk()
             } else {
@@ -229,12 +239,17 @@ class WalkRequestRemoteDataSource @Inject constructor(
                     )
             }
 
-            transaction.set(walkRef, newWalk.toFirestoreMap())
+            transaction.set(
+                walkRef,
+                newWalk.toFirestoreMap()
+            )
 
             transaction.update(
                 requestRef,
-                "status",
-                RequestStatus.ACCEPTED.name
+                mapOf(
+                    "status" to RequestStatus.ACCEPTED.name,
+                    "acceptedAt" to FieldValue.serverTimestamp()
+                )
             )
 
             newWalk
@@ -255,17 +270,22 @@ class WalkRequestRemoteDataSource @Inject constructor(
             "scheduledAt" to scheduledAt,
             "durationMinutes" to durationMinutes,
             "status" to status.name,
-            "observations" to observations
+            "observations" to observations,
+            "createdAt" to FieldValue.serverTimestamp()
         )
 
     private fun DocumentSnapshot.toWalkRequest(): WalkRequest =
         WalkRequest(
             id = id,
             ownerId = getString("ownerId")
-                ?: throw IllegalStateException("La solicitud no tiene dueño"),
+                ?: throw IllegalStateException(
+                    "La solicitud no tiene dueño"
+                ),
             ownerName = getString("ownerName").orEmpty(),
             walkerId = getString("walkerId")
-                ?: throw IllegalStateException("La solicitud no tiene paseador"),
+                ?: throw IllegalStateException(
+                    "La solicitud no tiene paseador"
+                ),
             petIds = get("petIds") as? List<String> ?: emptyList(),
             petNames = get("petNames") as? List<String> ?: emptyList(),
             petPhotos = (get("petPhotos") as? List<*>)
@@ -274,7 +294,9 @@ class WalkRequestRemoteDataSource @Inject constructor(
             scheduledAt = getString("scheduledAt").orEmpty(),
             durationMinutes = getLong("durationMinutes")?.toInt() ?: 0,
             status = getString("status")?.let {
-                runCatching { RequestStatus.valueOf(it) }.getOrNull()
+                runCatching {
+                    RequestStatus.valueOf(it)
+                }.getOrNull()
             } ?: RequestStatus.PENDING,
             observations = getString("observations").orEmpty()
         )
@@ -297,18 +319,27 @@ class WalkRequestRemoteDataSource @Inject constructor(
         Walk(
             id = id,
             ownerId = getString("ownerId")
-                ?: throw IllegalStateException("El paseo no tiene dueño"),
+                ?: throw IllegalStateException(
+                    "El paseo no tiene dueño"
+                ),
             walkerId = getString("walkerId")
-                ?: throw IllegalStateException("El paseo no tiene paseador"),
+                ?: throw IllegalStateException(
+                    "El paseo no tiene paseador"
+                ),
             petIds = get("petIds") as? List<String> ?: emptyList(),
             scheduledAt = getString("scheduledAt").orEmpty(),
             durationMinutes = getLong("durationMinutes")?.toInt() ?: 0,
             status = getString("status")?.let {
-                runCatching { WalkStatus.valueOf(it) }.getOrNull()
+                runCatching {
+                    WalkStatus.valueOf(it)
+                }.getOrNull()
             } ?: WalkStatus.SCHEDULED,
-            startedAt = getString("startedAt")?.takeIf { it.isNotBlank() },
-            finishedAt = getString("finishedAt")?.takeIf { it.isNotBlank() },
-            distanceKm = getDouble("distanceKm")?.takeIf { it > 0.0 },
+            startedAt = getString("startedAt")
+                ?.takeIf { it.isNotBlank() },
+            finishedAt = getString("finishedAt")
+                ?.takeIf { it.isNotBlank() },
+            distanceKm = getDouble("distanceKm")
+                ?.takeIf { it > 0.0 },
             observations = getString("observations").orEmpty()
         )
 }
