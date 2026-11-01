@@ -15,6 +15,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -50,9 +51,18 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 private const val OPEN_FREE_MAP_STYLE =
     "https://tiles.openfreemap.org/styles/liberty"
+
+private const val MAX_ROUTE_ACCURACY_METERS = 35f
+private const val MIN_ROUTE_DISTANCE_METERS = 4.0
+private const val MAX_ROUTE_DISTANCE_METERS = 10.0
+private const val EARTH_RADIUS_METERS = 6_371_000.0
 
 @Composable
 fun WalkTrackingScreen(
@@ -130,7 +140,6 @@ private fun WalkTrackingContent(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-
         if (walk.status == WalkStatus.IN_PROGRESS) {
             WalkTrackingMap(
                 walkId = walk.id,
@@ -305,6 +314,15 @@ private fun WalkTrackingMap(
         )
     )
 
+    // Filtrar los puntos únicamente para su representación visual.
+    val filteredRoute = remember(locationHistory, currentLocation) {
+        filterRouteLocations(
+            history = locationHistory,
+            currentLocation = currentLocation
+        )
+    }
+
+    // Centrar el mapa en la ubicación actual.
     LaunchedEffect(currentLocation?.recordedAt) {
         currentLocation?.let { location ->
             cameraState.position = cameraState.position.copy(
@@ -345,9 +363,9 @@ private fun WalkTrackingMap(
                         ornamentOptions = OrnamentOptions.OnlyLogo
                     )
                 ) {
-
-                    if (locationHistory.size >= 2) {
-                        val routePositions = locationHistory.map { location ->
+                    // Recorrido filtrado.
+                    if (filteredRoute.size >= 2) {
+                        val routePositions = filteredRoute.map { location ->
                             Position(
                                 latitude = location.latitude,
                                 longitude = location.longitude
@@ -368,6 +386,7 @@ private fun WalkTrackingMap(
                         )
                     }
 
+                    // Marcador de ubicación actual.
                     currentLocation?.let { location ->
                         val locationSource = rememberGeoJsonSource(
                             data = GeoJsonData.Features(
@@ -406,8 +425,109 @@ private fun WalkTrackingMap(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
+            if (locationHistory.isNotEmpty()) {
+                Text(
+                    text = "Puntos mostrados: ${filteredRoute.size} de ${locationHistory.size}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
+}
+
+/**
+ * Prepara los puntos que se utilizarán para dibujar el recorrido.
+ *
+ * No modifica el historial original recibido desde Firestore.
+ */
+private fun filterRouteLocations(
+    history: List<WalkLocation>,
+    currentLocation: WalkLocation?
+): List<WalkLocation> {
+
+    // Combinar historial y ubicación actual.
+    // El timestamp evita dibujar dos veces el mismo punto.
+    val allLocations = (history + listOfNotNull(currentLocation))
+        .distinctBy { it.recordedAt }
+        .sortedBy { it.recordedAt }
+
+    // Descartar puntos con precisión insuficiente.
+    val validLocations = allLocations.filter { location ->
+        location.accuracy <= MAX_ROUTE_ACCURACY_METERS
+    }
+
+    if (validLocations.size <= 1) {
+        return validLocations
+    }
+
+    val filteredLocations = mutableListOf<WalkLocation>()
+
+    // El primer punto válido se conserva.
+    filteredLocations.add(validLocations.first())
+
+    for (index in 1 until validLocations.size) {
+        val candidate = validLocations[index]
+        val previous = filteredLocations.last()
+
+        val distance = calculateDistanceMeters(
+            first = previous,
+            second = candidate
+        )
+
+        // Adaptar el umbral a la precisión de los dos puntos.
+        val accuracyThreshold = maxOf(
+            previous.accuracy,
+            candidate.accuracy
+        ) * 0.35
+
+        val minimumDistance = accuracyThreshold.coerceIn(
+            MIN_ROUTE_DISTANCE_METERS,
+            MAX_ROUTE_DISTANCE_METERS
+        )
+
+        // Evitar puntos demasiado cercanos.
+        if (distance >= minimumDistance) {
+            filteredLocations.add(candidate)
+        }
+    }
+
+    return filteredLocations
+}
+
+/**
+ * Calcula la distancia geográfica entre dos coordenadas
+ * utilizando la fórmula de Haversine.
+ */
+private fun calculateDistanceMeters(
+    first: WalkLocation,
+    second: WalkLocation
+): Double {
+
+    val latitude1 = Math.toRadians(first.latitude)
+    val latitude2 = Math.toRadians(second.latitude)
+
+    val latitudeDifference =
+        Math.toRadians(second.latitude - first.latitude)
+
+    val longitudeDifference =
+        Math.toRadians(second.longitude - first.longitude)
+
+    val a =
+        sin(latitudeDifference / 2) *
+                sin(latitudeDifference / 2) +
+                cos(latitude1) *
+                cos(latitude2) *
+                sin(longitudeDifference / 2) *
+                sin(longitudeDifference / 2)
+
+    val c = 2 * atan2(
+        sqrt(a),
+        sqrt(1 - a)
+    )
+
+    return EARTH_RADIUS_METERS * c
 }
 
 @Composable
