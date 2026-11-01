@@ -15,6 +15,7 @@ fun WalkerRequestsContent(
     onRefresh: () -> Unit,
     onAcceptRequest: (String) -> Unit,
     onRejectRequest: (String) -> Unit,
+    onRequestClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     when {
@@ -58,6 +59,7 @@ fun WalkerRequestsContent(
                     state = state,
                     onAcceptRequest = onAcceptRequest,
                     onRejectRequest = onRejectRequest,
+                    onRequestClick = onRequestClick,
                     modifier = Modifier.weight(1f)
                 )
             }

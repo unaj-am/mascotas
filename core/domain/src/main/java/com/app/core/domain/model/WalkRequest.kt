@@ -13,5 +13,6 @@ data class WalkRequest(
 
     // Datos para mostrar la solicitud sin consultar documentos privados.
     val ownerName: String = "",
-    val petNames: List<String> = emptyList()
+    val petNames: List<String> = emptyList(),
+    val petPhotos: List<String> = emptyList()
 )

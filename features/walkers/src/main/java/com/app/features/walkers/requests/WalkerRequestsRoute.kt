@@ -9,6 +9,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @Composable
 fun WalkerRequestsRoute(
     walkerId: String,
+    onRequestClick: (String) -> Unit = {},
     viewModel: WalkerRequestsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -21,6 +22,7 @@ fun WalkerRequestsRoute(
         state = state,
         onRefresh = viewModel::refreshRequests,
         onAcceptRequest = viewModel::acceptRequest,
-        onRejectRequest = viewModel::rejectRequest
+        onRejectRequest = viewModel::rejectRequest,
+        onRequestClick = onRequestClick
     )
 }
