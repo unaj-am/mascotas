@@ -1,3 +1,4 @@
+
 package com.app.core.location.service
 
 import android.app.Notification
@@ -23,6 +24,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class WalkTrackingService : Service() {
@@ -35,6 +37,7 @@ class WalkTrackingService : Service() {
     )
 
     private var trackingJob: Job? = null
+    private var activeWalkId: String? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -58,15 +61,26 @@ class WalkTrackingService : Service() {
                 val walkId = intent.getStringExtra(EXTRA_WALK_ID)
 
                 if (walkId.isNullOrBlank()) {
-                    stopSelf()
+                    stopSelf(startId)
                     return START_NOT_STICKY
                 }
 
-                startTracking(walkId)
+                try {
+                    startTracking(walkId)
+                } catch (exception: Exception) {
+                    Log.e(
+                        TAG,
+                        "No se pudo iniciar el seguimiento",
+                        exception
+                    )
+
+                    stopTracking()
+                    stopSelf(startId)
+                }
             }
 
             else -> {
-                stopSelf()
+                stopSelf(startId)
                 return START_NOT_STICKY
             }
         }
@@ -75,30 +89,51 @@ class WalkTrackingService : Service() {
     }
 
     private fun startTracking(walkId: String) {
-        if (trackingJob?.isActive == true) {
+
+        // Evita iniciar dos seguimientos para el mismo paseo.
+        if (
+            trackingJob?.isActive == true &&
+            activeWalkId == walkId
+        ) {
             return
         }
 
+        // Si había otro paseo activo, lo cancelamos.
+        trackingJob?.cancel()
+        trackingJob = null
+
+        // El servicio pasa a primer plano antes de iniciar GPS.
         startForegroundServiceNotification()
+
+        activeWalkId = walkId
 
         trackingJob = serviceScope.launch {
             try {
                 trackWalkLocationUseCase(walkId)
+
             } catch (exception: CancellationException) {
                 throw exception
+
             } catch (exception: Exception) {
                 Log.e(
                     TAG,
-                    "Error durante el seguimiento del paseo",
+                    "Error durante el seguimiento del paseo $walkId",
                     exception
                 )
 
-                stopTracking()
+            } finally {
+                // La limpieza del servicio se ejecuta en el hilo principal.
+                withContext(Dispatchers.Main.immediate) {
+                    if (activeWalkId == walkId) {
+                        stopTracking()
+                    }
+                }
             }
         }
     }
 
     private fun startForegroundServiceNotification() {
+
         val notification = createNotification()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -116,6 +151,7 @@ class WalkTrackingService : Service() {
     }
 
     private fun createNotification(): Notification {
+
         val stopIntent = Intent(
             this,
             WalkTrackingService::class.java
@@ -150,7 +186,9 @@ class WalkTrackingService : Service() {
     }
 
     private fun createNotificationChannel() {
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 "Seguimiento de paseos",
@@ -167,8 +205,13 @@ class WalkTrackingService : Service() {
     }
 
     private fun stopTracking() {
-        trackingJob?.cancel()
+
+        val job = trackingJob
+
         trackingJob = null
+        activeWalkId = null
+
+        job?.cancel()
 
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
@@ -176,7 +219,11 @@ class WalkTrackingService : Service() {
 
     override fun onDestroy() {
         trackingJob?.cancel()
+        trackingJob = null
+        activeWalkId = null
+
         serviceScope.cancel()
+
         super.onDestroy()
     }
 
@@ -226,6 +273,7 @@ class WalkTrackingService : Service() {
          * Detiene el seguimiento activo.
          */
         fun stop(context: Context) {
+
             val intent = Intent(
                 context,
                 WalkTrackingService::class.java
