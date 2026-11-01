@@ -6,32 +6,30 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.app.core.domain.model.Pet
-import com.app.core.ui.components.AppCard
-import com.app.core.ui.components.InfoRow
-import com.app.core.ui.theme.DimensUI
-import com.app.core.ui.theme.MascotasThemeUI
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.app.core.domain.model.Pet
+import com.app.core.ui.components.AppAvatar
+import com.app.core.ui.components.AppCard
+import com.app.core.ui.components.InfoRow
+import com.app.core.ui.components.StatusBadge
+import com.app.core.ui.theme.DimensUI
+import com.app.core.ui.theme.MascotasThemeUI
 
-/**
- * Tarjeta específica de una mascota.
- *
- * Utiliza AppCard como contenedor visual e InfoRow
- * para mostrar sus datos principales.
- *
- * La navegación se delega al callback onClick.
- */
 @Composable
 fun PetCard(
     pet: Pet,
@@ -40,7 +38,8 @@ fun PetCard(
 ) {
     AppCard(
         modifier = modifier.fillMaxWidth(),
-        onClick = onClick
+        onClick = onClick,
+        contentPadding = DimensUI.CardPaddingLarge
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(
@@ -59,11 +58,20 @@ fun PetCard(
                         model = pet.photoUri,
                         contentDescription = "Foto de ${pet.name}",
                         modifier = Modifier
-                            .size(76.dp)
-                            .clip(RoundedCornerShape(12.dp)),
+                            .size(DimensUI.AvatarSizeXLarge)
+                            .clip(RoundedCornerShape(16.dp)),
                         contentScale = ContentScale.Crop
                     )
+                } else {
+                    AppAvatar(
+                        name = pet.name,
+                        size = DimensUI.AvatarSizeXLarge,
+                        backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        description = "Avatar de ${pet.name}"
+                    )
                 }
+
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(
@@ -83,12 +91,18 @@ fun PetCard(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+
+                    if (pet.size.isNotBlank()) {
+                        StatusBadge(
+                            text = pet.size
+                        )
+                    }
                 }
 
-                Text(
-                    text = "→",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.primary
+                Icon(
+                    imageVector = Icons.Filled.ChevronRight,
+                    contentDescription = "Ver detalle de ${pet.name}",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -100,7 +114,11 @@ fun PetCard(
             ) {
                 InfoRow(
                     label = "Edad",
-                    value = "${pet.age} años",
+                    value = if (pet.age == 1) {
+                        "1 año"
+                    } else {
+                        "${pet.age} años"
+                    },
                     modifier = Modifier.weight(1f)
                 )
 
@@ -109,6 +127,31 @@ fun PetCard(
                     value = "${pet.weight} kg",
                     modifier = Modifier.weight(1f)
                 )
+            }
+
+            if (pet.behavior.isNotBlank()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        DimensUI.SpaceSmall
+                    ),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Pets,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(
+                            DimensUI.IconSizeSmall
+                        )
+                    )
+
+                    Text(
+                        text = pet.behavior,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }
@@ -123,7 +166,9 @@ private fun PetCardPreview() {
         name = "Firulais",
         breed = "Labrador",
         age = 3,
-        weight = 25.0
+        weight = 25.0,
+        size = "Grande",
+        behavior = "Sociable"
     )
 
     MascotasThemeUI {

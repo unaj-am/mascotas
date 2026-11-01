@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Pets
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.app.core.ui.components.AppAnimatedVisibility
+import com.app.core.ui.components.SectionHeader
 import com.app.core.ui.theme.DimensUI
 import com.app.features.home.component.HomeHeader
 import com.app.features.home.component.HomeStatCard
@@ -57,6 +58,18 @@ fun OwnerHomeScreen(
                 visible = true,
                 durationMillis = 300
             ) {
+                SectionHeader(
+                    title = "Tu actividad",
+                    subtitle = "Un resumen de tus mascotas y paseos"
+                )
+            }
+        }
+
+        item {
+            AppAnimatedVisibility(
+                visible = true,
+                durationMillis = 340
+            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(
@@ -83,7 +96,7 @@ fun OwnerHomeScreen(
         item {
             AppAnimatedVisibility(
                 visible = true,
-                durationMillis = 340
+                durationMillis = 380
             ) {
                 NextWalkCard(
                     petName = nextPetName,

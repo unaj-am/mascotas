@@ -1,3 +1,4 @@
+
 package com.app.features.home.walker
 
 import androidx.compose.foundation.layout.Arrangement
@@ -19,15 +20,17 @@ import com.app.core.ui.components.EmptyContent
 import com.app.core.ui.components.LoadingContent
 import com.app.core.ui.components.SectionHeader
 import com.app.core.ui.theme.DimensUI
+import com.app.features.home.component.PendingRequestPreviewCard
 import com.app.features.home.component.WalkerAvailabilityCard
 import com.app.features.home.component.WalkerHomeHeader
 import com.app.features.home.component.WalkerHomeStatCard
-import com.app.features.home.component.PendingRequestPreviewCard
+
 @Composable
 fun WalkerHomeScreen(
     state: WalkerHomeUiState,
     onAvailabilityChange: (Boolean) -> Unit,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    onNotificationsClick: (() -> Unit)? = null
 ) {
     when {
         state.isLoading -> {
@@ -40,18 +43,17 @@ fun WalkerHomeScreen(
                 state.userName.isBlank() -> {
             DomainErrorMessage(
                 message = state.errorMessage,
-                modifier = Modifier
-                    .fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                onRetry = onRetry
             )
-            // El reintento se mantiene disponible.
-            // Se presenta mediante el contenedor de error.
         }
 
         else -> {
             WalkerHomeContent(
                 state = state,
                 onAvailabilityChange = onAvailabilityChange,
-                onRetry = onRetry
+                onRetry = onRetry,
+                onNotificationsClick = onNotificationsClick
             )
         }
     }
@@ -61,7 +63,8 @@ fun WalkerHomeScreen(
 private fun WalkerHomeContent(
     state: WalkerHomeUiState,
     onAvailabilityChange: (Boolean) -> Unit,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    onNotificationsClick: (() -> Unit)?
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -73,17 +76,21 @@ private fun WalkerHomeContent(
             DimensUI.SectionSpacing
         )
     ) {
+
+        // 1. Encabezado del paseador
         item {
             AppAnimatedVisibility(
                 visible = true,
                 durationMillis = 260
             ) {
                 WalkerHomeHeader(
-                    userName = state.userName
+                    userName = state.userName,
+                    onNotificationsClick = onNotificationsClick
                 )
             }
         }
 
+        // 2. Disponibilidad
         item {
             AppAnimatedVisibility(
                 visible = true,
@@ -97,6 +104,7 @@ private fun WalkerHomeContent(
             }
         }
 
+        // 3. Resumen de actividad
         item {
             AppAnimatedVisibility(
                 visible = true,
@@ -104,11 +112,12 @@ private fun WalkerHomeContent(
             ) {
                 SectionHeader(
                     title = "Resumen de actividad",
-                    subtitle = "Tu actividad como paseador"
+                    subtitle = "Consultá el estado de tus paseos y solicitudes"
                 )
             }
         }
 
+        // Primera fila de estadísticas
         item {
             AppAnimatedVisibility(
                 visible = true,
@@ -135,40 +144,36 @@ private fun WalkerHomeContent(
             }
         }
 
+        // Segunda fila de estadísticas
         item {
             AppAnimatedVisibility(
                 visible = true,
                 durationMillis = 340
             ) {
-                if (state.rating != null) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(
-                            DimensUI.SpaceMedium
-                        )
-                    ) {
-                        WalkerHomeStatCard(
-                            title = "Paseos en curso",
-                            value = state.activeWalks.toString(),
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        WalkerHomeStatCard(
-                            title = "Calificación promedio",
-                            value = "%.1f / 5".format(state.rating),
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        DimensUI.SpaceMedium
+                    )
+                ) {
                     WalkerHomeStatCard(
                         title = "Paseos en curso",
                         value = state.activeWalks.toString(),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    WalkerHomeStatCard(
+                        title = "Calificación promedio",
+                        value = state.rating?.let {
+                            "%.1f / 5".format(it)
+                        } ?: "Sin calificar",
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
         }
 
+        // 4. Solicitudes pendientes
         item {
             AppAnimatedVisibility(
                 visible = true,
@@ -193,7 +198,7 @@ private fun WalkerHomeContent(
                 ) {
                     EmptyContent(
                         title = "Todo al día",
-                        message = "Cuando recibas nuevas solicitudes, aparecerán en esta sección.",
+                        message = "Cuando recibas nuevas solicitudes de paseo, aparecerán acá.",
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(min = 140.dp)
@@ -216,6 +221,7 @@ private fun WalkerHomeContent(
             }
         }
 
+        // 5. Error recuperable
         if (state.errorMessage != null) {
             item {
                 AppAnimatedVisibility(
@@ -230,6 +236,7 @@ private fun WalkerHomeContent(
             }
         }
 
+        // Confirmación de actualización de disponibilidad
         state.availabilityMessage?.let { message ->
             item {
                 AppAnimatedVisibility(

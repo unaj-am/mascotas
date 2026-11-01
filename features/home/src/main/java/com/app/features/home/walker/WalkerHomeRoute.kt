@@ -1,3 +1,4 @@
+
 package com.app.features.home.walker
 
 import androidx.compose.runtime.Composable
@@ -12,6 +13,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @Composable
 fun WalkerHomeRoute(
     userId: String,
+    onNotificationsClick: (() -> Unit)? = null,
     viewModel: WalkerHomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -37,6 +39,7 @@ fun WalkerHomeRoute(
     WalkerHomeScreen(
         state = state,
         onAvailabilityChange = viewModel::onAvailabilityChange,
-        onRetry = viewModel::retryLoadHome
+        onRetry = viewModel::retryLoadHome,
+        onNotificationsClick = onNotificationsClick
     )
 }
