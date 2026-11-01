@@ -2,6 +2,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Permisos de ubicación -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- Servicio de ubicación en primer plano -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+
+    <!-- Notificaciones -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:name=".MascotasApp"
         android:allowBackup="true"
@@ -39,6 +50,12 @@
                 android:resource="@xml/file_paths" />
 
         </provider>
+
+        <!-- Servicio para mantener el seguimiento GPS -->
+        <service
+            android:name="com.app.core.location.service.WalkTrackingService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
 
     </application>
 

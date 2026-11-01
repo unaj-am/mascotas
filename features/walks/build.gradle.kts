@@ -33,6 +33,7 @@ android {
 dependencies {
     // Módulos internos
     implementation(project(":core:domain"))
+    implementation(project(":core:location"))
     implementation(project(":core:ui"))
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")

@@ -190,22 +190,39 @@ class WalkerWalksViewModel @Inject constructor(
         load(walkerId, forceRefresh = true)
     }
 
-    fun start(walkId: String) {
-        perform(walkId, "El paseo comenzó.") {
-            startWalk(walkId)
-        }
+    fun start(
+        walkId: String,
+        onStarted: () -> Unit = {}
+    ) {
+        perform(
+            id = walkId,
+            successMessage = "El paseo comenzó.",
+            operation = {
+                startWalk(walkId)
+            },
+            onSuccess = onStarted
+        )
     }
 
-    fun complete(walkId: String) {
-        perform(walkId, "El paseo se marcó como finalizado.") {
-            completeWalk(walkId)
-        }
+    fun complete(
+        walkId: String,
+        onCompleted: () -> Unit = {}
+    ) {
+        perform(
+            id = walkId,
+            successMessage = "El paseo se marcó como finalizado.",
+            operation = {
+                completeWalk(walkId)
+            },
+            onSuccess = onCompleted
+        )
     }
 
     private fun perform(
         id: String,
         successMessage: String,
-        operation: suspend () -> Unit
+        operation: suspend () -> Unit,
+        onSuccess: () -> Unit
     ) {
         if (_uiState.value.processingId != null) return
 
@@ -228,7 +245,12 @@ class WalkerWalksViewModel @Inject constructor(
                     )
                 }
 
+                // Se ejecuta únicamente después de confirmar
+                // que la operación de dominio terminó correctamente.
+                onSuccess()
+
                 load(walkerId, forceRefresh = true)
+
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
