@@ -4,10 +4,12 @@ package com.app.features.home.component
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.WatchLater
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -16,11 +18,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.unit.dp
 import com.app.core.ui.components.AppCard
+import com.app.core.ui.components.InfoRow
 import com.app.core.ui.components.PrimaryActionButton
+import com.app.core.ui.components.SectionHeader
+import com.app.core.ui.components.StatusBadge
 import com.app.core.ui.theme.DimensUI
+import androidx.compose.ui.unit.dp
 @Composable
 fun NextWalkCard(
     petName: String?,
@@ -29,14 +33,17 @@ fun NextWalkCard(
     onFindWalkerClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val hasScheduledWalk = !petName.isNullOrBlank()
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(
             DimensUI.SpaceMedium
         )
     ) {
-        HomeSectionHeader(
-            title = "Próximo paseo"
+        SectionHeader(
+            title = "Próximo paseo",
+            subtitle = "Organizá las próximas aventuras de tu mascota"
         )
 
         AppCard(
@@ -49,42 +56,47 @@ fun NextWalkCard(
                 )
             ) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(
-                        DimensUI.SpaceSmall
-                    )
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Surface(
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(12),
                         color = MaterialTheme.colorScheme.primaryContainer
                     ) {
                         androidx.compose.foundation.layout.Box(
-                            modifier = Modifier.size(44.dp),
+                            modifier = Modifier.size(48.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Filled.WatchLater,
+                                imageVector = if (hasScheduledWalk) {
+                                    Icons.Filled.WatchLater
+                                } else {
+                                    Icons.Filled.Pets
+                                },
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
                     }
 
-                    Text(
-                        text = "Paseo programado",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    if (hasScheduledWalk) {
+                        StatusBadge(
+                            text = "Programado",
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
                 }
 
-                if (!petName.isNullOrBlank()) {
+                if (hasScheduledWalk) {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(
                             DimensUI.SpaceXSmall
                         )
                     ) {
                         Text(
-                            text = petName,
+                            text = petName.orEmpty(),
                             style = MaterialTheme.typography.headlineSmall,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -96,20 +108,20 @@ fun NextWalkCard(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
+                    }
 
-                        if (!walkDate.isNullOrBlank()) {
-                            Spacer(
-                                modifier = Modifier.size(
-                                    DimensUI.SpaceXSmall
+                    if (!walkDate.isNullOrBlank()) {
+                        InfoRow(
+                            label = "Fecha y horario",
+                            value = walkDate,
+                            leadingContent = {
+                                Icon(
+                                    imageVector = Icons.Filled.CalendarMonth,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
-                            )
-
-                            Text(
-                                text = walkDate,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                            }
+                        )
                     }
                 } else {
                     Column(
@@ -124,7 +136,7 @@ fun NextWalkCard(
                         )
 
                         Text(
-                            text = "Buscá un paseador para organizar el próximo.",
+                            text = "Encontrá un paseador de confianza y organizá el próximo paseo de tu mascota.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -132,7 +144,11 @@ fun NextWalkCard(
                 }
 
                 PrimaryActionButton(
-                    text = "Buscar paseador",
+                    text = if (hasScheduledWalk) {
+                        "Buscar otro paseador"
+                    } else {
+                        "Buscar paseador"
+                    },
                     onClick = onFindWalkerClick,
                     modifier = Modifier.fillMaxWidth()
                 )

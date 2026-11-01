@@ -23,14 +23,15 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.app.features.home.walker.WalkerHomeRoute
+import com.app.features.notifications.presentation.NotificationsRoute
 import com.app.features.profile.WalkerProfileScreen
 import com.app.features.walkers.requests.WalkerRequestsRoute
+import com.app.features.walkers.requests.WalkerRequestDetailRoute
 import com.app.features.walks.walker.WalkerActiveWalkRoute
 import com.app.features.walks.walker.WalkerAgendaRoute
 import com.app.features.walks.walker.WalkerHistoryRoute
 import com.app.mascotas.ui.AppShell
 import com.app.mascotas.ui.AppTab
-import com.app.features.walkers.requests.WalkerRequestDetailRoute
 
 @Composable
 fun WalkerNavigation(
@@ -68,11 +69,28 @@ fun WalkerNavigation(
     val selectedTabRoot = tabRoots[selectedTabIndex]
 
     val destinationProvider = entryProvider<NavKey> {
+
+        // HOME DEL PASEADOR
         entry<WalkerHomeDestination> {
-            WalkerHomeRoute(userId = userId)
+            WalkerHomeRoute(
+                userId = userId,
+                onNotificationsClick = {
+                    navigateOnce(
+                        currentStack,
+                        NotificationsDestination
+                    )
+                }
+            )
         }
 
+        // NOTIFICACIONES
+        entry<NotificationsDestination> {
+            NotificationsRoute(
+                userId = userId
+            )
+        }
 
+        // SOLICITUDES
         entry<WalkerRequestsDestination> {
             WalkerRequestsRoute(
                 walkerId = userId,
@@ -85,8 +103,7 @@ fun WalkerNavigation(
             )
         }
 
-
-
+        // DETALLE DE SOLICITUD
         entry<WalkerRequestDetailDestination> { destination ->
             WalkerRequestDetailRoute(
                 requestId = destination.requestId,
@@ -101,8 +118,7 @@ fun WalkerNavigation(
             )
         }
 
-
-
+        // AGENDA
         entry<WalkerAgendaDestination> {
             WalkerAgendaRoute(
                 walkerId = userId,
@@ -121,18 +137,21 @@ fun WalkerNavigation(
             )
         }
 
+        // PASEO ACTIVO
         entry<WalkerActiveWalkDestination> {
             WalkerActiveWalkRoute(
                 walkerId = userId
             )
         }
 
+        // HISTORIAL
         entry<WalkerHistoryDestination> {
             WalkerHistoryRoute(
                 walkerId = userId
             )
         }
 
+        // PERFIL
         entry<WalkerProfileDestination> {
             WalkerProfileScreen(
                 userId = userId,
@@ -166,6 +185,7 @@ fun WalkerNavigation(
         currentTab = selectedTabRoot,
         onTabClick = { selectedKey ->
             val targetIndex = tabRoots.indexOf(selectedKey)
+
             if (targetIndex == selectedTabIndex) {
                 popToRoot(backStacks[targetIndex])
             } else {
@@ -175,6 +195,7 @@ fun WalkerNavigation(
         },
         isWalker = true
     ) { innerPadding ->
+
         NavDisplay(
             entries = visibleEntries,
             onBack = {

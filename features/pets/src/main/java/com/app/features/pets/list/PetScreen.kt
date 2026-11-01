@@ -15,20 +15,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.core.domain.model.Pet
+import com.app.core.ui.components.AppAnimatedVisibility
 import com.app.core.ui.components.EmptyContent
 import com.app.core.ui.components.ErrorContent
 import com.app.core.ui.components.LoadingContent
 import com.app.core.ui.components.SectionHeader
+import com.app.core.ui.components.SkeletonListContent
 import com.app.core.ui.theme.DimensUI
 import com.app.core.ui.theme.MascotasThemeUI
 import com.app.features.pets.component.PetCard
 
-/**
- * Route de la pantalla de mascotas.
- *
- * Conecta la interfaz con el ViewModel y solicita
- * la carga cuando cambia el identificador del dueño.
- */
 @Composable
 fun PetRoute(
     ownerId: String,
@@ -52,12 +48,6 @@ fun PetRoute(
     )
 }
 
-/**
- * Pantalla visual del listado de mascotas.
- *
- * No realiza consultas directamente: recibe el estado
- * y comunica las acciones al componente superior.
- */
 @Composable
 fun PetScreen(
     uiState: PetListUiState,
@@ -81,10 +71,10 @@ fun PetScreen(
             title = "Mis mascotas",
             subtitle = when (uiState) {
                 is PetListUiState.Success -> {
-                    if (uiState.pets.isEmpty()) {
-                        "Tus compañeros de aventuras"
-                    } else {
-                        "Tenés ${uiState.pets.size} mascotas registradas."
+                    when (uiState.pets.size) {
+                        0 -> "Tus compañeros de aventuras"
+                        1 -> "Tenés una mascota registrada."
+                        else -> "Tenés ${uiState.pets.size} mascotas registradas."
                     }
                 }
 
@@ -110,17 +100,30 @@ fun PetScreen(
         ) {
             when (uiState) {
                 PetListUiState.Loading -> {
-                    LoadingContent(
+                    Column(
                         modifier = Modifier.fillMaxSize(),
-                        message = "Cargando tus mascotas..."
-                    )
+                        verticalArrangement = Arrangement.spacedBy(
+                            DimensUI.SpaceMedium
+                        )
+                    ) {
+                        LoadingContent(
+                            modifier = Modifier.padding(
+                                vertical = DimensUI.SpaceSmall
+                            ),
+                            message = "Cargando tus mascotas..."
+                        )
+
+                        SkeletonListContent(
+                            itemCount = 3
+                        )
+                    }
                 }
 
                 is PetListUiState.Success -> {
                     if (uiState.pets.isEmpty()) {
                         EmptyContent(
                             title = "Todavía no tenés mascotas",
-                            message = "Registrá tu primera mascota para consultar sus datos desde acá.",
+                            message = "Registrá a tu compañero para guardar sus datos, características y necesidades especiales.",
                             actionText = "Agregar mi primera mascota",
                             onAction = onAddPetClick,
                             modifier = Modifier.fillMaxSize()
@@ -136,12 +139,17 @@ fun PetScreen(
                                 items = uiState.pets,
                                 key = { pet -> pet.id }
                             ) { pet ->
-                                PetCard(
-                                    pet = pet,
-                                    onClick = {
-                                        onPetClick(pet.id)
-                                    }
-                                )
+                                AppAnimatedVisibility(
+                                    visible = true,
+                                    durationMillis = 240
+                                ) {
+                                    PetCard(
+                                        pet = pet,
+                                        onClick = {
+                                            onPetClick(pet.id)
+                                        }
+                                    )
+                                }
                             }
                         }
                     }

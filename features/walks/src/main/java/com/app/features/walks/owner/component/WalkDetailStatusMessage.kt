@@ -36,8 +36,12 @@ fun WalkDetailStatusMessage(
         WalkStatus.COMPLETED -> {
             AppInlineFeedback(
                 title = "Paseo finalizado",
-                message = "Este paseo ya finalizó. Podés consultar los datos registrados.",
-                type = AppFeedbackType.SUCCESS
+                message = "Este paseo ya finalizó. Podés consultar el recorrido y los datos registrados.",
+                type = AppFeedbackType.SUCCESS,
+                actionLabel = "Consultar recorrido",
+                onAction = {
+                    onTrackWalk(walk.id)
+                }
             )
         }
 
