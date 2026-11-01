@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -15,28 +14,27 @@ import androidx.compose.ui.Modifier
 import com.app.core.domain.model.Pet
 import com.app.core.ui.components.AppCard
 import com.app.core.ui.components.InfoRow
+import com.app.core.ui.components.StatusBadge
 import com.app.core.ui.theme.DimensUI
 
-/**
- * Presenta los datos detallados de una mascota.
- *
- * Reutiliza AppCard como contenedor e InfoRow
- * para mantener consistente la presentación de datos.
- */
 @Composable
 fun PetDetailContent(
     pet: Pet,
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier
-            .verticalScroll(rememberScrollState()),
+        modifier = modifier.verticalScroll(
+            rememberScrollState()
+        ),
         verticalArrangement = Arrangement.spacedBy(
             DimensUI.SpaceLarge
         )
     ) {
+
+        // 1. Presentación de la mascota
         AppCard(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = DimensUI.CardPaddingLarge
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(
@@ -55,7 +53,7 @@ fun PetDetailContent(
                     Text(
                         text = pet.name,
                         style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Text(
@@ -66,9 +64,30 @@ fun PetDetailContent(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(
+                        DimensUI.SpaceSmall
+                    )
+                ) {
+                    if (pet.size.isNotBlank()) {
+                        StatusBadge(
+                            text = pet.size
+                        )
+                    }
+
+                    if (pet.behavior.isNotBlank()) {
+                        StatusBadge(
+                            text = pet.behavior,
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                    }
+                }
             }
         }
 
+        // 2. Características generales
         AppCard(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -78,7 +97,7 @@ fun PetDetailContent(
                 )
             ) {
                 Text(
-                    text = "Información general",
+                    text = "Características",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -91,7 +110,11 @@ fun PetDetailContent(
                 ) {
                     InfoRow(
                         label = "Edad",
-                        value = "${pet.age} años",
+                        value = if (pet.age == 1) {
+                            "1 año"
+                        } else {
+                            "${pet.age} años"
+                        },
                         modifier = Modifier.weight(1f)
                     )
 
@@ -127,6 +150,7 @@ fun PetDetailContent(
             }
         }
 
+        // 3. Información adicional
         AppCard(
             modifier = Modifier.fillMaxWidth()
         ) {

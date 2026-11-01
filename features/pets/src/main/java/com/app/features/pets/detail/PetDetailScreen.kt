@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.Composable
@@ -22,12 +23,6 @@ import com.app.core.ui.theme.DimensUI
 import com.app.core.ui.theme.MascotasThemeUI
 import com.app.features.pets.detail.component.PetDetailContent
 
-/**
- * Route del detalle de mascota.
- *
- * Conecta la interfaz con el ViewModel y solicita
- * los datos cuando cambia el identificador.
- */
 @Composable
 fun PetDetailRoute(
     petId: String,
@@ -47,11 +42,6 @@ fun PetDetailRoute(
     )
 }
 
-/**
- * Interfaz visual del detalle de una mascota.
- *
- * Recibe el estado y delega las acciones al Route.
- */
 @Composable
 fun PetDetailScreen(
     uiState: PetDetailUiState,
@@ -77,7 +67,7 @@ fun PetDetailScreen(
                     "Cargando información..."
 
                 is PetDetailUiState.Success ->
-                    "Información de ${uiState.pet.name}"
+                    "Conocé mejor a ${uiState.pet.name}"
 
                 is PetDetailUiState.Error ->
                     "No pudimos obtener los datos."
@@ -96,28 +86,10 @@ fun PetDetailScreen(
                 }
 
                 is PetDetailUiState.Success -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(
-                            DimensUI.SpaceMedium
-                        )
-                    ) {
-                        Box(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            PetDetailContent(
-                                pet = uiState.pet,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        }
-
-                        PrimaryActionButton(
-                            text = "Editar mascota",
-                            onClick = {
-                                onEditClick(uiState.pet)
-                            }
-                        )
-                    }
+                    PetDetailContent(
+                        pet = uiState.pet,
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
 
                 is PetDetailUiState.Error -> {
@@ -128,6 +100,16 @@ fun PetDetailScreen(
                     )
                 }
             }
+        }
+
+        if (uiState is PetDetailUiState.Success) {
+            PrimaryActionButton(
+                text = "Editar mascota",
+                onClick = {
+                    onEditClick(uiState.pet)
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
@@ -142,6 +124,9 @@ private fun PetDetailScreenPreview() {
         breed = "Labrador",
         age = 3,
         weight = 25.0,
+        size = "Grande",
+        behavior = "Sociable",
+        specialNeeds = "Ninguna",
         observations = "Es sociable y tranquilo"
     )
 

@@ -8,6 +8,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import com.app.core.ui.components.AppTextField
 
@@ -31,7 +33,7 @@ fun PetAgeField(
         onValueChange = { input ->
             onValueChange(input.filter(Char::isDigit))
         },
-        label = "Edad en años",
+        label = "Edad en años *",
         keyboardType = KeyboardType.Number,
         enabled = enabled,
         modifier = modifier.fillMaxWidth(),
@@ -46,6 +48,9 @@ fun PetAgeField(
                         onValueChange(
                             ((value.toIntOrNull() ?: 0) - 1).toString()
                         )
+                    },
+                    modifier = Modifier.semantics {
+                        contentDescription = "Disminuir edad"
                     }
                 ) {
                     Text("−")
@@ -57,6 +62,9 @@ fun PetAgeField(
                         onValueChange(
                             ((value.toIntOrNull() ?: 0) + 1).toString()
                         )
+                    },
+                    modifier = Modifier.semantics {
+                        contentDescription = "Aumentar edad"
                     }
                 ) {
                     Text("+")
