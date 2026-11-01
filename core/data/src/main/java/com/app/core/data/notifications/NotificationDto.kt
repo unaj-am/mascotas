@@ -1,5 +1,5 @@
 package com.app.core.data.notifications
-
+import com.google.firebase.Timestamp
 data class NotificationDto(
     val userId: String = "",
     val title: String = "",
@@ -7,7 +7,7 @@ data class NotificationDto(
     val type: String = "",
     val referenceId: String = "",
     val isRead: Boolean = false,
-    val createdAt: Long = 0L
+    val createdAt: Timestamp? = null
 )
 fun NotificationDto.toDomain(
     id: String
@@ -20,6 +20,6 @@ fun NotificationDto.toDomain(
         type = type,
         referenceId = referenceId,
         isRead = isRead,
-        createdAt = createdAt
+        createdAt = createdAt?.toDate()?.time ?: 0L
     )
 }

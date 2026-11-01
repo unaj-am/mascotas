@@ -36,10 +36,18 @@ class NotificationsViewModel @Inject constructor(
 
     fun markAsRead(userId: String, notificationId: String) {
         viewModelScope.launch {
-            notificationRepository.markAsRead(
-                userId = userId,
-                notificationId = notificationId
-            )
+            try {
+                notificationRepository.markAsRead(
+                    userId = userId,
+                    notificationId = notificationId
+                )
+            } catch (e: Exception) {
+                android.util.Log.e(
+                    "NotificationsViewModel",
+                    "Error al marcar la notificación como leída",
+                    e
+                )
+            }
         }
     }
 }

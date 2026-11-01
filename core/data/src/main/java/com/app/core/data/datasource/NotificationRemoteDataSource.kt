@@ -5,13 +5,14 @@ import com.app.core.data.notifications.NotificationDto
 import com.app.core.data.notifications.toDomain
 import com.app.core.domain.model.AppNotification
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.MetadataChanges
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.tasks.await
 
 @Singleton
 class NotificationRemoteDataSource @Inject constructor(
@@ -29,19 +30,30 @@ class NotificationRemoteDataSource @Inject constructor(
 
         val listener = notificationsCollection(userId)
             .orderBy("createdAt", Query.Direction.DESCENDING)
-            .addSnapshotListener { snapshot, error ->
+            .addSnapshotListener(
+                MetadataChanges.INCLUDE
+            ) { snapshot, error ->
 
                 if (error != null) {
+                    android.util.Log.e(
+                        "NotificationsRemoteDataSource",
+                        "Error al escuchar notificaciones",
+                        error
+                    )
                     close(error)
                     return@addSnapshotListener
                 }
 
                 val notifications = snapshot?.documents
                     ?.mapNotNull { document ->
-                        document.toObject(NotificationDto::class.java)
-                            ?.toDomain(document.id)
-                    }
-                    ?: emptyList()
+                        val dto = document.toObject(
+                            NotificationDto::class.java
+                        )?.copy(
+                            isRead = document.getBoolean("isRead") ?: false
+                        )
+
+                        dto?.toDomain(document.id)
+                    } ?: emptyList()
 
                 trySend(notifications)
             }
@@ -50,6 +62,7 @@ class NotificationRemoteDataSource @Inject constructor(
             listener.remove()
         }
     }
+
     suspend fun markAsRead(
         userId: String,
         notificationId: String
