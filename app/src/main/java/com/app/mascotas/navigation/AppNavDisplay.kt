@@ -46,6 +46,8 @@ import com.app.features.walkers.requestform.WalkRequestFormRoute
 import com.app.features.walks.owner.OwnerWalkDetailRoute
 import com.app.features.walks.owner.OwnerWalksRoute
 import com.app.features.notifications.presentation.NotificationsRoute
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.app.features.notifications.presentation.NotificationsViewModel
 @Composable
 fun AppNavDisplay(
     navigationState: NavigationState,
@@ -58,6 +60,16 @@ fun AppNavDisplay(
     onSignOut: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val notificationsViewModel: NotificationsViewModel = hiltViewModel()
+
+    val notifications by notificationsViewModel.notifications
+        .collectAsStateWithLifecycle()
+
+    LaunchedEffect(ownerId) {
+        notificationsViewModel.observeNotifications(ownerId)
+    }
+
+    val notificationCount = notifications.count { !it.isRead }
     val detailUiState by
     petDetailViewModel.uiState.collectAsStateWithLifecycle()
 
@@ -73,10 +85,12 @@ fun AppNavDisplay(
 
     val destinationProvider = entryProvider<NavKey> {
 
+
         entry<HomeDestination> {
             OwnerHomeRoute(
                 ownerId = ownerId,
                 isVisible = navigationState.currentTab == TopLevelDestination.HOME,
+                notificationCount = notificationCount,
                 onNotificationsClick = {
                     navigationState.navigate(
                         NotificationsDestination
@@ -89,6 +103,7 @@ fun AppNavDisplay(
                 }
             )
         }
+
         entry<NotificationsDestination> {
             NotificationsRoute(
                 userId = ownerId,
