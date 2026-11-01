@@ -1,5 +1,7 @@
+
 package com.app.features.notifications.presentation
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.core.domain.model.AppNotification
@@ -42,11 +44,33 @@ class NotificationsViewModel @Inject constructor(
                     notificationId = notificationId
                 )
             } catch (e: Exception) {
-                android.util.Log.e(
+                Log.e(
                     "NotificationsViewModel",
                     "Error al marcar la notificación como leída",
                     e
                 )
+            }
+        }
+    }
+
+    fun markAllAsRead(userId: String) {
+        viewModelScope.launch {
+            val pendingNotifications = _notifications.value
+                .filter { !it.isRead }
+
+            pendingNotifications.forEach { notification ->
+                try {
+                    notificationRepository.markAsRead(
+                        userId = userId,
+                        notificationId = notification.id
+                    )
+                } catch (e: Exception) {
+                    Log.e(
+                        "NotificationsViewModel",
+                        "Error al limpiar la notificación ${notification.id}",
+                        e
+                    )
+                }
             }
         }
     }

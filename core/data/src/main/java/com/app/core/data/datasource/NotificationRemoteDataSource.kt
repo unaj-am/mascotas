@@ -112,14 +112,11 @@ class NotificationRemoteDataSource @Inject constructor(
         ) { notifications, readNotificationIds ->
 
             notifications
-                .map { notification ->
-                    if (
-                        notification.id.startsWith("event_") &&
-                        notification.id in readNotificationIds
-                    ) {
-                        notification.copy(isRead = true)
+                .filter { notification ->
+                    if (notification.id.startsWith("event_")) {
+                        notification.id !in readNotificationIds
                     } else {
-                        notification
+                        !notification.isRead
                     }
                 }
                 .sortedByDescending { it.createdAt }
