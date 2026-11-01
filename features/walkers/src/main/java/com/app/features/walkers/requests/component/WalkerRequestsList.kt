@@ -17,8 +17,9 @@ fun WalkerRequestsList(
     state: WalkerRequestsUiState,
     onAcceptRequest: (String) -> Unit,
     onRejectRequest: (String) -> Unit,
+    onRequestClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
-) {
+){
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(
@@ -51,7 +52,11 @@ fun WalkerRequestsList(
                     },
                     onReject = {
                         onRejectRequest(request.id)
+                    },
+                    onRequestClick = {
+                        onRequestClick(request.id)
                     }
+
                 )
             }
         }

@@ -31,6 +31,8 @@ import com.app.features.walks.walker.WalkerHistoryRoute
 import com.app.mascotas.ui.AppShell
 import com.app.mascotas.ui.AppTab
 
+import com.app.features.walkers.requests.WalkerRequestDetailRoute
+
 @Composable
 fun WalkerNavigation(
     userId: String,
@@ -71,9 +73,26 @@ fun WalkerNavigation(
             WalkerHomeRoute(userId = userId)
         }
 
+
         entry<WalkerRequestsDestination> {
-            WalkerRequestsRoute(walkerId = userId)
+            WalkerRequestsRoute(
+                walkerId = userId,
+                onRequestClick = { requestId ->
+                    navigateOnce(
+                        currentStack,
+                        WalkerRequestDetailDestination(requestId)
+                    )
+                }
+            )
         }
+
+
+        entry<WalkerRequestDetailDestination> { destination ->
+            WalkerRequestDetailRoute(
+                requestId = destination.requestId
+            )
+        }
+
 
         entry<WalkerAgendaDestination> {
             WalkerAgendaRoute(

@@ -18,6 +18,11 @@ import com.app.core.ui.components.OutlinedActionButton
 import com.app.core.ui.components.PrimaryActionButton
 import com.app.core.ui.components.StatusBadge
 import com.app.core.ui.theme.DimensUI
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
+import androidx.compose.foundation.clickable
 
 @Composable
 fun WalkerRequestCard(
@@ -28,7 +33,8 @@ fun WalkerRequestCard(
     onReject: () -> Unit,
     modifier: Modifier = Modifier,
     ownerName: String = "Dueño",
-    petNames: List<String> = emptyList()
+    petNames: List<String> = emptyList(),
+    onRequestClick: () -> Unit = {}
 ) {
     val statusText = when (request.status) {
         RequestStatus.PENDING -> "Pendiente"
@@ -72,8 +78,11 @@ fun WalkerRequestCard(
             "${request.petIds.size} mascotas"
     }
 
+
     AppCard(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onRequestClick() },
         contentPadding = DimensUI.CardPaddingLarge
     ) {
         Column(
