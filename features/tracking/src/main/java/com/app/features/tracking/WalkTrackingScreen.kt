@@ -55,7 +55,7 @@ import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
-
+import com.app.core.domain.model.MatchedRoute
 private const val OPEN_FREE_MAP_STYLE =
     "https://tiles.openfreemap.org/styles/liberty"
 
@@ -112,6 +112,7 @@ fun WalkTrackingScreen(
                     walk = walk,
                     currentLocation = state.currentLocation,
                     locationHistory = state.locationHistory,
+                    matchedRoute = state.matchedRoute,
                     locationErrorMessage = state.locationErrorMessage,
                     historyErrorMessage = state.historyErrorMessage,
                     onRefresh = viewModel::refresh
@@ -132,6 +133,7 @@ private fun WalkTrackingContent(
     walk: Walk,
     currentLocation: WalkLocation?,
     locationHistory: List<WalkLocation>,
+    matchedRoute: MatchedRoute?,
     locationErrorMessage: String?,
     historyErrorMessage: String?,
     onRefresh: () -> Unit
@@ -140,11 +142,16 @@ private fun WalkTrackingContent(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        if (walk.status == WalkStatus.IN_PROGRESS) {
+        if (
+            walk.status == WalkStatus.IN_PROGRESS ||
+            walk.status == WalkStatus.COMPLETED ||
+            walk.status == WalkStatus.CANCELLED
+        ) {
             WalkTrackingMap(
                 walkId = walk.id,
                 currentLocation = currentLocation,
-                locationHistory = locationHistory
+                locationHistory = locationHistory,
+                matchedRoute = matchedRoute
             )
         }
 
@@ -302,7 +309,8 @@ private fun WalkTrackingContent(
 private fun WalkTrackingMap(
     walkId: String,
     currentLocation: WalkLocation?,
-    locationHistory: List<WalkLocation>
+    locationHistory: List<WalkLocation>,
+    matchedRoute: MatchedRoute?
 ) {
     val cameraState = rememberCameraState(
         firstPosition = CameraPosition(
@@ -314,18 +322,15 @@ private fun WalkTrackingMap(
         )
     )
 
-    // Filtrar los puntos únicamente para su representación visual.
-    val filteredRoute = remember(locationHistory, currentLocation) {
-        filterRouteLocations(
-            history = locationHistory,
-            currentLocation = currentLocation
-        )
-    }
+    LaunchedEffect(
+        currentLocation?.recordedAt,
+        locationHistory.lastOrNull()?.recordedAt
+    ) {
+        val targetLocation = currentLocation
+            ?: locationHistory.lastOrNull()
 
-    // Centrar el mapa en la ubicación actual.
-    LaunchedEffect(currentLocation?.recordedAt) {
-        currentLocation?.let { location ->
-            cameraState.position = cameraState.position.copy(
+        targetLocation?.let { location ->
+            cameraState.position = CameraPosition(
                 target = Position(
                     latitude = location.latitude,
                     longitude = location.longitude
@@ -334,6 +339,40 @@ private fun WalkTrackingMap(
             )
         }
     }
+    // Si OSRM devuelve geometría, utilizamos sus segmentos.
+    // Si todavía no hay resultado, mostramos el historial GPS.
+    val matchedSegments: List<List<Position>> =
+        matchedRoute?.segments
+            ?.map { segment ->
+                segment.coordinates.map { coordinate ->
+                    Position(
+                        latitude = coordinate.latitude,
+                        longitude = coordinate.longitude
+                    )
+                }
+            }
+            ?.filter { segment -> segment.size >= 2 }
+            .orEmpty()
+
+    val routeSegments: List<List<Position>> =
+        if (matchedSegments.isNotEmpty()) {
+            matchedSegments
+        } else {
+            val gpsPositions = locationHistory.map { location ->
+                Position(
+                    latitude = location.latitude,
+                    longitude = location.longitude
+                )
+            }
+
+            if (gpsPositions.size >= 2) {
+                listOf(gpsPositions)
+            } else {
+                emptyList()
+            }
+        }
+
+    val isMatchedRoute = matchedSegments.isNotEmpty()
 
     AppCard(
         modifier = Modifier.fillMaxWidth()
@@ -363,31 +402,35 @@ private fun WalkTrackingMap(
                         ornamentOptions = OrnamentOptions.OnlyLogo
                     )
                 ) {
-                    // Recorrido filtrado.
-                    if (filteredRoute.size >= 2) {
-                        val routePositions = filteredRoute.map { location ->
-                            Position(
-                                latitude = location.latitude,
-                                longitude = location.longitude
-                            )
-                        }
+                    // Dibujamos cada segmento por separado.
+                    // Esto evita conectar artificialmente tramos
+                    // que OSRM identificó como recorridos diferentes.
+                    routeSegments.forEachIndexed { index, positions ->
 
                         val routeSource = rememberGeoJsonSource(
                             data = GeoJsonData.Features(
-                                LineString(routePositions)
+                                LineString(positions)
                             )
                         )
 
                         LineLayer(
-                            id = "walk-route-layer-$walkId",
+                            id = "walk-route-layer-$walkId-$index",
                             source = routeSource,
-                            color = const(Color(0xFF1565C0)),
+                            color = const(
+                                if (isMatchedRoute) {
+                                    Color(0xFF2E7D32)
+                                } else {
+                                    Color(0xFF1565C0)
+                                }
+                            ),
                             width = const(5.dp)
                         )
                     }
 
-                    // Marcador de ubicación actual.
+                    // El marcador siempre representa la ubicación
+                    // GPS actual recibida desde Firestore.
                     currentLocation?.let { location ->
+
                         val locationSource = rememberGeoJsonSource(
                             data = GeoJsonData.Features(
                                 Point(
@@ -426,13 +469,15 @@ private fun WalkTrackingMap(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            if (locationHistory.isNotEmpty()) {
-                Text(
-                    text = "Puntos mostrados: ${filteredRoute.size} de ${locationHistory.size}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Text(
+                text = if (isMatchedRoute) {
+                    "Recorrido ajustado a las calles mediante OSRM."
+                } else {
+                    "Mostrando recorrido GPS original."
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
