@@ -109,6 +109,7 @@ class WalkRepositoryImpl @Inject constructor(
                     require(walk.walkerId == currentUserId) {
                         "Solo el paseador puede iniciar el paseo"
                     }
+
                     require(walk.status == WalkStatus.SCHEDULED) {
                         "Solo se pueden iniciar paseos programados"
                     }
@@ -118,6 +119,7 @@ class WalkRepositoryImpl @Inject constructor(
                     require(walk.walkerId == currentUserId) {
                         "Solo el paseador puede finalizar el paseo"
                     }
+
                     require(walk.status == WalkStatus.IN_PROGRESS) {
                         "Solo se pueden finalizar paseos en curso"
                     }
@@ -127,6 +129,7 @@ class WalkRepositoryImpl @Inject constructor(
                     require(walk.ownerId == currentUserId) {
                         "Solo el dueño puede cancelar este paseo"
                     }
+
                     require(walk.status == WalkStatus.SCHEDULED) {
                         "Solo se pueden cancelar paseos programados"
                     }
@@ -152,7 +155,10 @@ class WalkRepositoryImpl @Inject constructor(
                     updates["finishedAt"] = Instant.now().toString()
                 }
 
-                WalkStatus.CANCELLED,
+                WalkStatus.CANCELLED -> {
+                    updates["cancelledAt"] = Instant.now().toString()
+                }
+
                 WalkStatus.SCHEDULED -> Unit
             }
 
