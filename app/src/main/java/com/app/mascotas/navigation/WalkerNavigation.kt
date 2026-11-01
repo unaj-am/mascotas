@@ -30,7 +30,6 @@ import com.app.features.walks.walker.WalkerAgendaRoute
 import com.app.features.walks.walker.WalkerHistoryRoute
 import com.app.mascotas.ui.AppShell
 import com.app.mascotas.ui.AppTab
-
 import com.app.features.walkers.requests.WalkerRequestDetailRoute
 
 @Composable
@@ -87,11 +86,21 @@ fun WalkerNavigation(
         }
 
 
+
         entry<WalkerRequestDetailDestination> { destination ->
             WalkerRequestDetailRoute(
-                requestId = destination.requestId
+                requestId = destination.requestId,
+                onBack = {
+                    if (
+                        currentStack.size > 1 &&
+                        currentStack.last() == destination
+                    ) {
+                        currentStack.removeAt(currentStack.lastIndex)
+                    }
+                }
             )
         }
+
 
 
         entry<WalkerAgendaDestination> {
@@ -157,13 +166,11 @@ fun WalkerNavigation(
         currentTab = selectedTabRoot,
         onTabClick = { selectedKey ->
             val targetIndex = tabRoots.indexOf(selectedKey)
-
-            if (targetIndex >= 0) {
-                if (targetIndex == selectedTabIndex) {
-                    popToRoot(backStacks[targetIndex])
-                } else {
-                    selectedTabIndex = targetIndex
-                }
+            if (targetIndex == selectedTabIndex) {
+                popToRoot(backStacks[targetIndex])
+            } else {
+                popToRoot(backStacks[targetIndex])
+                selectedTabIndex = targetIndex
             }
         },
         isWalker = true

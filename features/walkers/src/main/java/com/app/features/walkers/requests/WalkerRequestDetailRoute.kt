@@ -10,8 +10,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @Composable
 fun WalkerRequestDetailRoute(
     requestId: String,
+    onBack: () -> Unit = {},
     viewModel: WalkerRequestDetailViewModel = hiltViewModel()
-) {
+)  {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(requestId) {
@@ -19,7 +20,8 @@ fun WalkerRequestDetailRoute(
     }
 
     WalkerRequestDetailScreen(
-        state = state
+        state = state,
+        onBack = onBack
     )
 
 }
