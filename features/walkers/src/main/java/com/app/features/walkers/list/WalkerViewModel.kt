@@ -30,13 +30,16 @@ class WalkerViewModel @Inject constructor(
             _uiState.value = WalkerUiState.Loading
 
             try {
+                // Firestore devuelve únicamente paseadores disponibles.
                 val walkers = getWalkersUseCase()
 
                 _uiState.value = WalkerUiState.Success(
                     walkers = walkers
                 )
+
             } catch (exception: CancellationException) {
                 throw exception
+
             } catch (exception: Exception) {
                 _uiState.value = WalkerUiState.Error(
                     message = exception.message
