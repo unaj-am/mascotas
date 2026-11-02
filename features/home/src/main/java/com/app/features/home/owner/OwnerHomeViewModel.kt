@@ -101,6 +101,7 @@ class OwnerHomeViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         userName = user.name,
+                        profileImage = user.profileImage,
                         petsCount = pets.size,
                         upcomingWalksCount =
                             scheduledWalks.size,
