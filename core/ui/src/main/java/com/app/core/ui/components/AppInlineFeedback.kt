@@ -16,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
+import com.app.core.ui.theme.PetInfo
+import com.app.core.ui.theme.PetInfoContainer
 
 enum class AppFeedbackType {
     INFO,
@@ -44,8 +46,8 @@ fun AppInlineFeedback(
         }
 
         AppFeedbackType.SUCCESS -> {
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer
-            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+            containerColor = PetInfoContainer
+            contentColor = PetInfo
         }
 
         AppFeedbackType.WARNING -> {
