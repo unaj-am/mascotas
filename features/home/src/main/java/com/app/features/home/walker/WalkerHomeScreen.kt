@@ -85,6 +85,7 @@ private fun WalkerHomeContent(
             ) {
                 WalkerHomeHeader(
                     userName = state.userName,
+                    profileImage = state.profileImage,
                     onNotificationsClick = onNotificationsClick
                 )
             }

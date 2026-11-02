@@ -1,9 +1,11 @@
+
 package com.app.features.home.walker
 
 import com.app.core.domain.model.WalkRequest
 
 data class WalkerHomeUiState(
     val userName: String = "",
+    val profileImage: String? = null,
     val available: Boolean = false,
 
     // Cantidad de solicitudes pendientes.

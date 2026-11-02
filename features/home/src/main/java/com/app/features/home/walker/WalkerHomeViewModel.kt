@@ -92,6 +92,7 @@ class WalkerHomeViewModel @Inject constructor(
                 _uiState.update { currentState ->
                     currentState.copy(
                         userName = user.name,
+                        profileImage = user.profileImage,
                         available = walker?.available ?: false,
 
                         // Contador de solicitudes pendientes.
