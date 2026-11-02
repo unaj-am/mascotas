@@ -11,6 +11,7 @@ import com.app.core.ui.components.AppAnimatedVisibility
 import com.app.core.ui.theme.DimensUI
 import com.app.features.walkers.requests.component.WalkerRequestsContent
 import com.app.features.walkers.requests.component.WalkerRequestsFeedback
+import com.app.features.walkers.requests.component.WalkerRequestsFilterBar
 import com.app.features.walkers.requests.component.WalkerRequestsHeader
 
 @Composable
@@ -19,7 +20,8 @@ fun WalkerRequestsScreen(
     onRefresh: () -> Unit,
     onAcceptRequest: (String) -> Unit,
     onRejectRequest: (String) -> Unit,
-    onRequestClick: (String) -> Unit = {}
+    onRequestClick: (String) -> Unit = {},
+    onFilterSelected: (WalkerRequestFilter) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -53,6 +55,17 @@ fun WalkerRequestsScreen(
                 operationMessage = state.operationMessage,
                 operationError = state.operationError,
                 onRetry = onRefresh
+            )
+        }
+
+        AppAnimatedVisibility(
+            visible = state.requests.isNotEmpty(),
+            durationMillis = 220
+        ) {
+            WalkerRequestsFilterBar(
+                requests = state.requests,
+                selectedFilter = state.selectedFilter,
+                onFilterSelected = onFilterSelected
             )
         }
 

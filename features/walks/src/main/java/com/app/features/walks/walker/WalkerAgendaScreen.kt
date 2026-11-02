@@ -43,9 +43,14 @@ fun WalkerAgendaScreen(
         AppAnimatedVisibility(visible = true) {
             WalkerWalksHeader(
                 title = "Agenda",
-                subtitle = "Organizá los paseos programados y consultá los que están en curso.",
-                isLoading = state.isLoading,
-                onRefresh = onRefresh
+                subtitle = "Gestioná tus paseos programados",
+                actionText = if (state.isLoading) {
+                    "Actualizando…"
+                } else {
+                    "Actualizar"
+                },
+                isActionEnabled = !state.isLoading,
+                onAction = onRefresh
             )
         }
 

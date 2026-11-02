@@ -152,7 +152,11 @@ class OwnerWalksViewModel @Inject constructor(
             )
         }
     }
-
+    fun selectFilter(filter: OwnerWalkFilter) {
+        _uiState.update {
+            it.copy(selectedFilter = filter)
+        }
+    }
     fun cancelScheduledWalk(walkId: String) {
         perform(
             id = walkId,

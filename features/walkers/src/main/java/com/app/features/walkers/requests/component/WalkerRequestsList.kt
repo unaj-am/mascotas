@@ -19,7 +19,7 @@ fun WalkerRequestsList(
     onRejectRequest: (String) -> Unit,
     onRequestClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
-){
+) {
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(
@@ -30,7 +30,7 @@ fun WalkerRequestsList(
         )
     ) {
         items(
-            items = state.requests,
+            items = state.filteredRequests,
             key = { request -> request.id }
         ) { request ->
             AppAnimatedVisibility(
@@ -56,7 +56,6 @@ fun WalkerRequestsList(
                     onRequestClick = {
                         onRequestClick(request.id)
                     }
-
                 )
             }
         }
