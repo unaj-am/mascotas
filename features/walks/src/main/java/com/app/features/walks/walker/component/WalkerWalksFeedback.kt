@@ -29,9 +29,7 @@ fun WalkerWalksFeedback(
         AppInlineFeedback(
             title = "No se pudo completar la operación",
             message = operationError.orEmpty(),
-            type = AppFeedbackType.ERROR,
-            actionLabel = "Reintentar",
-            onAction = onRetry
+            type = AppFeedbackType.ERROR
         )
     }
 

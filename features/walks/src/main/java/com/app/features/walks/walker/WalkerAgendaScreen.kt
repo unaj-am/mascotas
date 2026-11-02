@@ -44,6 +44,7 @@ fun WalkerAgendaScreen(
             WalkerWalksHeader(
                 title = "Agenda",
                 subtitle = "Organizá los paseos programados y consultá los que están en curso.",
+                isLoading = state.isLoading,
                 onRefresh = onRefresh
             )
         }

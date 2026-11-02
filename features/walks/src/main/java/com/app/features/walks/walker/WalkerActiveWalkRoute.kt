@@ -21,6 +21,7 @@ import com.app.core.location.service.WalkTrackingService
 @Composable
 fun WalkerActiveWalkRoute(
     walkerId: String,
+    onBack: () -> Unit,
     viewModel: WalkerWalksViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -121,6 +122,7 @@ fun WalkerActiveWalkRoute(
         state = state,
         onRefresh = viewModel::refresh,
         onStart = ::handleStart,
-        onComplete = ::handleComplete
+        onComplete = ::handleComplete,
+        onBack = onBack
     )
 }

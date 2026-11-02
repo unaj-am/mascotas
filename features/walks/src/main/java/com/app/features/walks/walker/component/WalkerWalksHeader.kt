@@ -14,8 +14,9 @@ import com.app.core.ui.components.TextActionButton
 fun WalkerWalksHeader(
     title: String,
     subtitle: String,
-    isLoading: Boolean = false,
-    onRefresh: () -> Unit
+    actionText: String,
+    isActionEnabled: Boolean = true,
+    onAction: () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -29,9 +30,9 @@ fun WalkerWalksHeader(
         )
 
         TextActionButton(
-            text = if (isLoading) "Actualizando…" else "Actualizar",
-            onClick = onRefresh,
-            enabled = !isLoading
+            text = actionText,
+            onClick = onAction,
+            enabled = isActionEnabled
         )
     }
 }

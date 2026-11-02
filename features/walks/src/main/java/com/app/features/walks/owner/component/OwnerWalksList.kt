@@ -1,3 +1,4 @@
+
 package com.app.features.walks.owner.component
 
 import androidx.compose.foundation.layout.Arrangement
@@ -5,12 +6,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.app.core.domain.model.WalkStatus
 import com.app.core.ui.components.SectionHeader
+import com.app.core.ui.theme.DimensUI
 import com.app.features.walks.component.WalkCard
 import com.app.features.walks.component.WalkRequestCard
 import com.app.features.walks.owner.OwnerWalksUiState
@@ -37,12 +37,12 @@ fun OwnerWalksList(
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(
-            bottom = 20.dp
+            bottom = DimensUI.SpaceXLarge
         ),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(
+            DimensUI.CardSpacing
+        )
     ) {
-
-        // Solicitudes enviadas
         if (state.requests.isNotEmpty()) {
             item(key = "requests-header") {
                 SectionHeader(
@@ -65,7 +65,6 @@ fun OwnerWalksList(
             }
         }
 
-        // Próximos paseos y paseos en curso
         if (upcoming.isNotEmpty()) {
             item(key = "upcoming-header") {
                 SectionHeader(
@@ -96,7 +95,6 @@ fun OwnerWalksList(
             }
         }
 
-        // Historial
         if (previous.isNotEmpty()) {
             item(key = "history-header") {
                 SectionHeader(
