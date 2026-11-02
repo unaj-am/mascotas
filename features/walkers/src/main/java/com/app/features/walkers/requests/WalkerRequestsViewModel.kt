@@ -89,6 +89,12 @@ class WalkerRequestsViewModel @Inject constructor(
         }
     }
 
+    fun selectFilter(filter: WalkerRequestFilter) {
+        _uiState.update {
+            it.copy(selectedFilter = filter)
+        }
+    }
+
     fun acceptRequest(requestId: String) {
         processRequest(requestId) {
             acceptWalkRequest(requestId)
@@ -175,7 +181,9 @@ class WalkerRequestsViewModel @Inject constructor(
                 name.takeIf { it.isNotBlank() }
                     ?: "Mascota no disponible"
             }.ifEmpty {
-                request.petIds.map { "Mascota no disponible" }
+                request.petIds.map {
+                    "Mascota no disponible"
+                }
             }
         }
 

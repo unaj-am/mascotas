@@ -136,13 +136,29 @@ fun WalkerNavigation(
 
         entry<WalkerActiveWalkDestination> {
             WalkerActiveWalkRoute(
-                walkerId = userId
+                walkerId = userId,
+                onBack = {
+                    if (
+                        currentStack.size > 1 &&
+                        currentStack.last() == WalkerActiveWalkDestination
+                    ) {
+                        currentStack.removeAt(currentStack.lastIndex)
+                    }
+                }
             )
         }
 
         entry<WalkerHistoryDestination> {
             WalkerHistoryRoute(
-                walkerId = userId
+                walkerId = userId,
+                onBack = {
+                    if (
+                        currentStack.size > 1 &&
+                        currentStack.last() == WalkerHistoryDestination
+                    ) {
+                        currentStack.removeAt(currentStack.lastIndex)
+                    }
+                }
             )
         }
 

@@ -1,3 +1,4 @@
+
 package com.app.features.walks.owner
 
 import androidx.compose.runtime.Composable
@@ -28,6 +29,7 @@ fun OwnerWalksRoute(
         onTrackWalk = onTrackWalk,
         onOpenWalk = onOpenWalk,
         onCancelRequest = viewModel::cancelRequest,
-        onCancelWalk = viewModel::cancelScheduledWalk
+        onCancelWalk = viewModel::cancelScheduledWalk,
+        onFilterSelected = viewModel::selectFilter
     )
 }

@@ -1,5 +1,7 @@
+
 package com.app.features.walkers.requests.component
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -44,8 +46,16 @@ fun WalkerRequestsContent(
             )
         }
 
+        state.filteredRequests.isEmpty() -> {
+            EmptyContent(
+                title = "No hay solicitudes ${state.selectedFilter.label.lowercase()}",
+                message = "Probá seleccionando otro filtro para consultar las demás solicitudes.",
+                modifier = modifier
+            )
+        }
+
         else -> {
-            androidx.compose.foundation.layout.Column(
+            Column(
                 modifier = modifier.fillMaxWidth()
             ) {
                 state.loadingError?.let { message ->
