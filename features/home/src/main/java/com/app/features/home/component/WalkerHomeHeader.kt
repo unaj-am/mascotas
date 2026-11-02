@@ -1,11 +1,13 @@
 
 package com.app.features.home.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -17,6 +19,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.app.core.ui.components.AppAvatar
 import com.app.core.ui.components.IconActionButton
@@ -27,6 +31,7 @@ fun WalkerHomeHeader(
     userName: String,
     profileImage: String? = null,
     onNotificationsClick: (() -> Unit)? = null,
+    notificationCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -37,6 +42,7 @@ fun WalkerHomeHeader(
         )
     ) {
 
+        // Foto de perfil
         Box(
             modifier = Modifier.size(DimensUI.AvatarSizeLarge),
             contentAlignment = Alignment.Center
@@ -61,6 +67,7 @@ fun WalkerHomeHeader(
             }
         }
 
+        // Saludo
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(
@@ -86,13 +93,43 @@ fun WalkerHomeHeader(
             )
         }
 
-        IconActionButton(
-            icon = Icons.Outlined.NotificationsNone,
-            contentDescription = "Notificaciones",
-            onClick = {
-                onNotificationsClick?.invoke()
-            },
-            enabled = onNotificationsClick != null
-        )
+        // Campanita con contador
+        Box {
+            IconActionButton(
+                icon = Icons.Outlined.NotificationsNone,
+                contentDescription = "Notificaciones",
+                onClick = {
+                    onNotificationsClick?.invoke()
+                },
+                enabled = onNotificationsClick != null
+            )
+
+            if (notificationCount > 0) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .background(
+                            color = MaterialTheme.colorScheme.error,
+                            shape = CircleShape
+                        )
+                        .padding(
+                            horizontal = 5.dp,
+                            vertical = 2.dp
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (notificationCount > 99) {
+                            "99+"
+                        } else {
+                            notificationCount.toString()
+                        },
+                        color = MaterialTheme.colorScheme.onError,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
     }
 }

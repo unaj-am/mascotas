@@ -13,6 +13,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @Composable
 fun WalkerHomeRoute(
     userId: String,
+    notificationCount: Int = 0,
     onNotificationsClick: (() -> Unit)? = null,
     viewModel: WalkerHomeViewModel = hiltViewModel()
 ) {
@@ -40,6 +41,7 @@ fun WalkerHomeRoute(
         state = state,
         onAvailabilityChange = viewModel::onAvailabilityChange,
         onRetry = viewModel::retryLoadHome,
-        onNotificationsClick = onNotificationsClick
+        onNotificationsClick = onNotificationsClick,
+        notificationCount = notificationCount
     )
 }
