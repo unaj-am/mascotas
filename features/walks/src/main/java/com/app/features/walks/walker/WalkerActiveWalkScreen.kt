@@ -18,6 +18,7 @@ import com.app.features.walks.walker.component.WalkerWalksHeader
 fun WalkerActiveWalkScreen(
     state: WalkerWalksUiState,
     onRefresh: () -> Unit,
+    onBack: () -> Unit,
     onStart: (String) -> Unit,
     onComplete: (String) -> Unit
 ) {
@@ -41,14 +42,17 @@ fun WalkerActiveWalkScreen(
             WalkerWalksHeader(
                 title = "Paseos activos",
                 subtitle = "Iniciá los paseos confirmados y finalizá los que estén en curso.",
-                onRefresh = onRefresh
+                actionText = "Volver",
+                onAction = onBack
             )
         }
 
         WalkerWalksFeedback(
             operationMessage = state.operationMessage,
             operationError = state.operationError,
-            loadingError = state.errorMessage,
+            loadingError = state.errorMessage.takeIf {
+                state.walks.isNotEmpty()
+            },
             onRetry = onRefresh
         )
 

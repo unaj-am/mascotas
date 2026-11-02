@@ -1,9 +1,11 @@
+
 package com.app.features.walks.walker.component
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.app.core.domain.model.Walk
 import com.app.core.ui.components.EmptyContent
+import com.app.core.ui.components.ErrorContent
 import com.app.core.ui.components.LoadingContent
 import com.app.features.walks.walker.WalkerWalksUiState
 
@@ -28,8 +30,15 @@ fun WalkerWalksContent(
             )
         }
 
-        displayedWalks.isEmpty() &&
-                state.errorMessage == null -> {
+        state.errorMessage != null && state.walks.isEmpty() -> {
+            ErrorContent(
+                message = state.errorMessage,
+                onRetry = onRefresh,
+                modifier = modifier
+            )
+        }
+
+        displayedWalks.isEmpty() -> {
             EmptyContent(
                 title = emptyTitle,
                 message = emptyMessage,

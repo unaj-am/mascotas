@@ -1,4 +1,5 @@
-package com.app.features.walks.owner.util
+
+package com.app.features.walks.util
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -41,6 +42,14 @@ fun walkStatusTextColor(status: WalkStatus) =
             MaterialTheme.colorScheme.onErrorContainer
     }
 
+fun walkStatusShortLabel(status: WalkStatus): String =
+    when (status) {
+        WalkStatus.SCHEDULED -> "Confirmado"
+        WalkStatus.IN_PROGRESS -> "En curso"
+        WalkStatus.COMPLETED -> "Finalizado"
+        WalkStatus.CANCELLED -> "Cancelado"
+    }
+
 fun walkStatusLabel(status: WalkStatus): String =
     when (status) {
         WalkStatus.SCHEDULED -> "Paseo confirmado"
@@ -49,8 +58,11 @@ fun walkStatusLabel(status: WalkStatus): String =
         WalkStatus.CANCELLED -> "Paseo cancelado"
     }
 
-fun formatWalkDate(value: String): String {
-    if (value.isBlank()) return "Sin especificar"
+fun formatWalkDate(
+    value: String,
+    emptyValue: String = "Sin especificar"
+): String {
+    if (value.isBlank()) return emptyValue
 
     return runCatching {
         val dateTime = runCatching {

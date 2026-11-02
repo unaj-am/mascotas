@@ -22,6 +22,9 @@ fun OwnerWalksScreen(
     onCancelRequest: (String) -> Unit,
     onCancelWalk: (String) -> Unit
 ) {
+    val hasData = state.walks.isNotEmpty() ||
+            state.requests.isNotEmpty()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -42,7 +45,7 @@ fun OwnerWalksScreen(
         OwnerWalksFeedback(
             operationMessage = state.operationMessage,
             operationError = state.operationError,
-            loadingError = state.errorMessage,
+            loadingError = state.errorMessage.takeIf { hasData },
             onRetry = onRefresh
         )
 

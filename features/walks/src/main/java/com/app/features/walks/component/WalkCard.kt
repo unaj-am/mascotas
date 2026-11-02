@@ -21,11 +21,10 @@ import com.app.core.ui.components.PrimaryActionButton
 import com.app.core.ui.components.StatusBadge
 import com.app.core.ui.components.TextActionButton
 import com.app.core.ui.theme.DimensUI
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
+import com.app.features.walks.util.formatWalkDate
+import com.app.features.walks.util.walkStatusBackgroundColor
+import com.app.features.walks.util.walkStatusShortLabel
+import com.app.features.walks.util.walkStatusTextColor
 
 @Composable
 fun WalkCard(
@@ -49,7 +48,9 @@ fun WalkCard(
         contentPadding = DimensUI.CardPaddingLarge
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(DimensUI.SpaceLarge)
+            verticalArrangement = Arrangement.spacedBy(
+                DimensUI.SpaceLarge
+            )
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -63,14 +64,16 @@ fun WalkCard(
                 )
 
                 StatusBadge(
-                    text = statusLabel(walk.status),
-                    containerColor = statusBackgroundColor(walk.status),
-                    contentColor = statusTextColor(walk.status)
+                    text = walkStatusShortLabel(walk.status),
+                    containerColor = walkStatusBackgroundColor(walk.status),
+                    contentColor = walkStatusTextColor(walk.status)
                 )
             }
 
             Column(
-                verticalArrangement = Arrangement.spacedBy(DimensUI.SpaceMedium)
+                verticalArrangement = Arrangement.spacedBy(
+                    DimensUI.SpaceMedium
+                )
             ) {
                 if (!ownerName.isNullOrBlank()) {
                     InfoRow(
@@ -81,7 +84,10 @@ fun WalkCard(
 
                 InfoRow(
                     label = "Fecha",
-                    value = formatScheduledAt(walk.scheduledAt)
+                    value = formatWalkDate(
+                        value = walk.scheduledAt,
+                        emptyValue = "Fecha sin especificar"
+                    )
                 )
 
                 InfoRow(
@@ -93,7 +99,8 @@ fun WalkCard(
 
                 InfoRow(
                     label = "Mascotas",
-                    value = displayedPetNames.takeIf { it.isNotEmpty() }
+                    value = displayedPetNames
+                        .takeIf { it.isNotEmpty() }
                         ?.joinToString(", ")
                         ?: walk.petIds.size.toString()
                 )
@@ -132,7 +139,9 @@ fun WalkRequestCard(
         contentPadding = DimensUI.CardPaddingLarge
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(DimensUI.SpaceLarge)
+            verticalArrangement = Arrangement.spacedBy(
+                DimensUI.SpaceLarge
+            )
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -153,7 +162,9 @@ fun WalkRequestCard(
             }
 
             Column(
-                verticalArrangement = Arrangement.spacedBy(DimensUI.SpaceMedium)
+                verticalArrangement = Arrangement.spacedBy(
+                    DimensUI.SpaceMedium
+                )
             ) {
                 if (request.ownerName.isNotBlank()) {
                     InfoRow(
@@ -164,7 +175,10 @@ fun WalkRequestCard(
 
                 InfoRow(
                     label = "Fecha",
-                    value = formatScheduledAt(request.scheduledAt)
+                    value = formatWalkDate(
+                        value = request.scheduledAt,
+                        emptyValue = "Fecha sin especificar"
+                    )
                 )
 
                 InfoRow(
@@ -174,7 +188,8 @@ fun WalkRequestCard(
 
                 InfoRow(
                     label = "Mascotas",
-                    value = request.petNames.filter(String::isNotBlank)
+                    value = request.petNames
+                        .filter(String::isNotBlank)
                         .takeIf { it.isNotEmpty() }
                         ?.joinToString(", ")
                         ?: request.petIds.size.toString()
@@ -194,7 +209,11 @@ fun WalkRequestCard(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextActionButton(
-                        text = if (isProcessing) "Procesando…" else "Cancelar solicitud",
+                        text = if (isProcessing) {
+                            "Procesando…"
+                        } else {
+                            "Cancelar solicitud"
+                        },
                         onClick = onCancel,
                         enabled = !isProcessing
                     )
@@ -219,12 +238,18 @@ private fun WalkActions(
     if (!showStart && !showComplete && !showTrack && !showCancel) return
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(DimensUI.SpaceSmall)
+        verticalArrangement = Arrangement.spacedBy(
+            DimensUI.SpaceSmall
+        )
     ) {
         when {
             showStart -> {
                 PrimaryActionButton(
-                    text = if (isProcessing) "Procesando…" else "Iniciar paseo",
+                    text = if (isProcessing) {
+                        "Procesando…"
+                    } else {
+                        "Iniciar paseo"
+                    },
                     onClick = onStart,
                     enabled = !isProcessing,
                     isLoading = isProcessing
@@ -233,7 +258,11 @@ private fun WalkActions(
 
             showComplete -> {
                 PrimaryActionButton(
-                    text = if (isProcessing) "Procesando…" else "Finalizar paseo",
+                    text = if (isProcessing) {
+                        "Procesando…"
+                    } else {
+                        "Finalizar paseo"
+                    },
                     onClick = onComplete,
                     enabled = !isProcessing,
                     isLoading = isProcessing
@@ -254,7 +283,11 @@ private fun WalkActions(
                 horizontalArrangement = Arrangement.End
             ) {
                 TextActionButton(
-                    text = if (isProcessing) "Procesando…" else "Cancelar",
+                    text = if (isProcessing) {
+                        "Procesando…"
+                    } else {
+                        "Cancelar"
+                    },
                     onClick = onCancel,
                     enabled = !isProcessing
                 )
@@ -263,70 +296,42 @@ private fun WalkActions(
     }
 }
 
-private fun statusLabel(status: WalkStatus): String = when (status) {
-    WalkStatus.SCHEDULED -> "Confirmado"
-    WalkStatus.IN_PROGRESS -> "En curso"
-    WalkStatus.COMPLETED -> "Finalizado"
-    WalkStatus.CANCELLED -> "Cancelado"
-}
-
-private fun requestStatusLabel(status: RequestStatus): String = when (status) {
-    RequestStatus.PENDING -> "Pendiente"
-    RequestStatus.ACCEPTED -> "Aceptada"
-    RequestStatus.REJECTED -> "Rechazada"
-    RequestStatus.CANCELLED -> "Cancelada"
-}
+private fun requestStatusLabel(status: RequestStatus): String =
+    when (status) {
+        RequestStatus.PENDING -> "Pendiente"
+        RequestStatus.ACCEPTED -> "Aceptada"
+        RequestStatus.REJECTED -> "Rechazada"
+        RequestStatus.CANCELLED -> "Cancelada"
+    }
 
 @Composable
-private fun statusBackgroundColor(status: WalkStatus) = when (status) {
-    WalkStatus.SCHEDULED -> MaterialTheme.colorScheme.primaryContainer
-    WalkStatus.IN_PROGRESS -> MaterialTheme.colorScheme.tertiaryContainer
-    WalkStatus.COMPLETED -> MaterialTheme.colorScheme.secondaryContainer
-    WalkStatus.CANCELLED -> MaterialTheme.colorScheme.errorContainer
-}
+private fun requestStatusBackgroundColor(status: RequestStatus) =
+    when (status) {
+        RequestStatus.PENDING ->
+            MaterialTheme.colorScheme.tertiaryContainer
+
+        RequestStatus.ACCEPTED ->
+            MaterialTheme.colorScheme.primaryContainer
+
+        RequestStatus.REJECTED ->
+            MaterialTheme.colorScheme.errorContainer
+
+        RequestStatus.CANCELLED ->
+            MaterialTheme.colorScheme.surfaceVariant
+    }
 
 @Composable
-private fun statusTextColor(status: WalkStatus) = when (status) {
-    WalkStatus.SCHEDULED -> MaterialTheme.colorScheme.onPrimaryContainer
-    WalkStatus.IN_PROGRESS -> MaterialTheme.colorScheme.onTertiaryContainer
-    WalkStatus.COMPLETED -> MaterialTheme.colorScheme.onSecondaryContainer
-    WalkStatus.CANCELLED -> MaterialTheme.colorScheme.onErrorContainer
-}
+private fun requestStatusTextColor(status: RequestStatus) =
+    when (status) {
+        RequestStatus.PENDING ->
+            MaterialTheme.colorScheme.onTertiaryContainer
 
-@Composable
-private fun requestStatusBackgroundColor(status: RequestStatus) = when (status) {
-    RequestStatus.PENDING -> MaterialTheme.colorScheme.tertiaryContainer
-    RequestStatus.ACCEPTED -> MaterialTheme.colorScheme.primaryContainer
-    RequestStatus.REJECTED -> MaterialTheme.colorScheme.errorContainer
-    RequestStatus.CANCELLED -> MaterialTheme.colorScheme.surfaceVariant
-}
+        RequestStatus.ACCEPTED ->
+            MaterialTheme.colorScheme.onPrimaryContainer
 
-@Composable
-private fun requestStatusTextColor(status: RequestStatus) = when (status) {
-    RequestStatus.PENDING -> MaterialTheme.colorScheme.onTertiaryContainer
-    RequestStatus.ACCEPTED -> MaterialTheme.colorScheme.onPrimaryContainer
-    RequestStatus.REJECTED -> MaterialTheme.colorScheme.onErrorContainer
-    RequestStatus.CANCELLED -> MaterialTheme.colorScheme.onSurfaceVariant
-}
+        RequestStatus.REJECTED ->
+            MaterialTheme.colorScheme.onErrorContainer
 
-private fun formatScheduledAt(value: String): String {
-    if (value.isBlank()) return "Fecha sin especificar"
-
-    return runCatching {
-        val dateTime = runCatching {
-            LocalDateTime.parse(value)
-        }.getOrElse {
-            LocalDateTime.ofInstant(
-                Instant.parse(value),
-                ZoneId.systemDefault()
-            )
-        }
-
-        dateTime.format(
-            DateTimeFormatter.ofPattern(
-                "dd/MM/yyyy 'a las' HH:mm",
-                Locale("es", "AR")
-            )
-        )
-    }.getOrDefault(value)
-}
+        RequestStatus.CANCELLED ->
+            MaterialTheme.colorScheme.onSurfaceVariant
+    }

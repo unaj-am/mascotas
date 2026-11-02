@@ -1,8 +1,9 @@
+
 package com.app.features.walks.owner.component
 
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.app.core.ui.components.AppFeedbackType
+import com.app.core.ui.components.AppInlineFeedback
 import com.app.core.ui.components.DomainErrorMessage
 
 @Composable
@@ -13,17 +14,18 @@ fun OwnerWalksFeedback(
     onRetry: () -> Unit
 ) {
     operationMessage?.let { message ->
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary
+        AppInlineFeedback(
+            title = "Operación completada",
+            message = message,
+            type = AppFeedbackType.SUCCESS
         )
     }
 
     operationError?.let { error ->
-        DomainErrorMessage(
+        AppInlineFeedback(
+            title = "No se pudo completar la operación",
             message = error,
-            onRetry = onRetry
+            type = AppFeedbackType.ERROR
         )
     }
 

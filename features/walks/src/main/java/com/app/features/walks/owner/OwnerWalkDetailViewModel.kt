@@ -1,3 +1,4 @@
+
 package com.app.features.walks.owner
 
 import androidx.lifecycle.ViewModel
@@ -7,6 +8,7 @@ import com.app.core.domain.usecase.GetWalkByIdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -24,12 +26,16 @@ class OwnerWalkDetailViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     private var currentWalkId: String = ""
+    private var loadJob: Job? = null
 
     fun load(
         walkId: String,
         forceRefresh: Boolean = false
     ) {
         if (walkId.isBlank()) {
+            loadJob?.cancel()
+            currentWalkId = ""
+
             _uiState.value = OwnerWalkDetailUiState(
                 isLoading = false,
                 errorMessage =
@@ -47,21 +53,33 @@ class OwnerWalkDetailViewModel @Inject constructor(
             return
         }
 
+        val walkChanged = currentWalkId != walkId
         currentWalkId = walkId
 
-        viewModelScope.launch {
+        loadJob?.cancel()
+
+        if (walkChanged) {
+            _uiState.value = OwnerWalkDetailUiState(
+                isLoading = true
+            )
+        } else {
             _uiState.update {
                 it.copy(
                     isLoading = true,
                     errorMessage = null
                 )
             }
+        }
 
+        loadJob = viewModelScope.launch {
             try {
                 val walk = getWalkById(walkId)
                     ?: throw IllegalStateException(
                         "No se encontró el paseo solicitado."
                     )
+
+                // Evita aplicar el resultado de una navegación anterior.
+                if (currentWalkId != walkId) return@launch
 
                 // Mostramos primero el paseo, sin esperar
                 // a que se cargue el perfil del paseador.
@@ -70,8 +88,6 @@ class OwnerWalkDetailViewModel @Inject constructor(
                     isLoading = false
                 )
 
-                // El nombre se obtiene del usuario asociado
-                // al walkerId almacenado en el paseo.
                 val walkerName = try {
                     val user = getUserById(walk.walkerId)
 
@@ -88,22 +104,26 @@ class OwnerWalkDetailViewModel @Inject constructor(
                     null
                 }
 
-                _uiState.update {
-                    if (it.walk?.id == walk.id) {
-                        it.copy(walkerName = walkerName)
+                if (currentWalkId != walkId) return@launch
+
+                _uiState.update { state ->
+                    if (state.walk?.id == walkId) {
+                        state.copy(walkerName = walkerName)
                     } else {
-                        it
+                        state
                     }
                 }
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = error.message
-                            ?: "No se pudo cargar el detalle del paseo."
-                    )
+                if (currentWalkId == walkId) {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = error.message
+                                ?: "No se pudo cargar el detalle del paseo."
+                        )
+                    }
                 }
             }
         }

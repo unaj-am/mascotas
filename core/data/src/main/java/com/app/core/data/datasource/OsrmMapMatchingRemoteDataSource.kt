@@ -1,6 +1,7 @@
 
 package com.app.core.data.datasource
 
+import android.util.Log
 import com.app.core.domain.model.MatchedRoute
 import com.app.core.domain.model.MatchedRouteSegment
 import com.app.core.domain.model.RouteCoordinate
@@ -10,6 +11,7 @@ import org.json.JSONObject
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLEncoder
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
@@ -19,10 +21,9 @@ import kotlinx.coroutines.withContext
 class OsrmMapMatchingRemoteDataSource @Inject constructor() {
 
     companion object {
-        private const val BASE_URL = "https://router.project-osrm.org"
+        private const val TAG = "OsrmMapMatching"
 
-        // El perfil debe existir en el servidor OSRM configurado.
-        // El servidor público de demostración utiliza driving.
+        private const val BASE_URL = "https://router.project-osrm.org"
         private const val PROFILE = "driving"
 
         private const val CONNECT_TIMEOUT = 10_000
@@ -31,10 +32,6 @@ class OsrmMapMatchingRemoteDataSource @Inject constructor() {
         private const val MIN_COORDINATES = 2
     }
 
-    /**
-     * Envía una secuencia de ubicaciones GPS a OSRM
-     * y devuelve la geometría ajustada a la red vial.
-     */
     suspend fun matchRoute(
         locations: List<WalkLocation>
     ): MatchedRoute? = withContext(Dispatchers.IO) {
@@ -47,32 +44,23 @@ class OsrmMapMatchingRemoteDataSource @Inject constructor() {
             return@withContext null
         }
 
-        val requestBody = buildRequestBody(validLocations)
+        val requestUrl = buildRequestUrl(validLocations)
 
-        val connection = (
-                URL("$BASE_URL/match/v1/$PROFILE").openConnection()
-                        as HttpURLConnection
-                )
+        val connection = URL(requestUrl).openConnection()
+                as HttpURLConnection
 
         try {
-            connection.requestMethod = "POST"
+            // OSRM Match utiliza GET, no POST con JSON.
+            connection.requestMethod = "GET"
             connection.connectTimeout = CONNECT_TIMEOUT
             connection.readTimeout = READ_TIMEOUT
-            connection.doOutput = true
-
-            connection.setRequestProperty(
-                "Content-Type",
-                "application/json; charset=utf-8"
-            )
+            connection.doInput = true
+            connection.useCaches = false
 
             connection.setRequestProperty(
                 "Accept",
                 "application/json"
             )
-
-            connection.outputStream.use { output ->
-                output.write(requestBody.toString().toByteArray(Charsets.UTF_8))
-            }
 
             val responseCode = connection.responseCode
 
@@ -82,13 +70,19 @@ class OsrmMapMatchingRemoteDataSource @Inject constructor() {
                 connection.errorStream
             }
 
-            val responseText = responseStream?.bufferedReader()?.use {
-                it.readText()
-            }.orEmpty()
+            val responseText = responseStream
+                ?.bufferedReader()
+                ?.use { it.readText() }
+                .orEmpty()
 
             if (responseCode !in 200..299) {
+                Log.e(
+                    TAG,
+                    "Error HTTP $responseCode: $responseText"
+                )
+
                 throw IOException(
-                    "OSRM respondió con HTTP $responseCode: $responseText"
+                    "OSRM respondió con HTTP $responseCode"
                 )
             }
 
@@ -100,68 +94,75 @@ class OsrmMapMatchingRemoteDataSource @Inject constructor() {
     }
 
     /**
-     * Construye el JSON requerido por el endpoint Match de OSRM.
+     * Construye la URL requerida por el endpoint Match de OSRM.
      *
-     * Las coordenadas se envían en orden:
-     * [longitud, latitud].
+     * Formato:
+     * /match/v1/driving/{longitud,latitud;longitud,latitud}
+     *
+     * Los parámetros adicionales se envían mediante query string.
      */
-    private fun buildRequestBody(
+    private fun buildRequestUrl(
         locations: List<WalkLocation>
-    ): JSONObject {
+    ): String {
 
-        val coordinates = JSONArray()
-        val timestamps = JSONArray()
-        val radiuses = JSONArray()
-
-        locations.forEach { location ->
-
-            coordinates.put(
-                JSONArray().apply {
-                    put(location.longitude)
-                    put(location.latitude)
-                }
-            )
-
-            // OSRM requiere timestamps en segundos Unix.
-            timestamps.put(location.recordedAt / 1_000L)
-
-            // Utilizamos la precisión GPS como radio de incertidumbre.
-            radiuses.put(
-                location.accuracy
-                    .toDouble()
-                    .coerceIn(5.0, 50.0)
-            )
+        val coordinates = locations.joinToString(";") { location ->
+            "${location.longitude},${location.latitude}"
         }
 
-        return JSONObject().apply {
-            put("coordinates", coordinates)
-            put("timestamps", timestamps)
-            put("radiuses", radiuses)
-
-            put("geometries", "geojson")
-            put("overview", "full")
-            put("steps", false)
-
-            put("gaps", "split")
-            put("tidy", true)
+        val timestamps = locations.joinToString(";") { location ->
+            (location.recordedAt / 1_000L).toString()
         }
+
+        val radiuses = locations.joinToString(";") { location ->
+            location.accuracy
+                .toDouble()
+                .coerceIn(5.0, 50.0)
+                .toString()
+        }
+
+        val parameters = listOf(
+            "timestamps" to timestamps,
+            "radiuses" to radiuses,
+            "geometries" to "geojson",
+            "overview" to "full",
+            "steps" to "false",
+            "gaps" to "split",
+            "tidy" to "true"
+        )
+
+        val queryString = parameters.joinToString("&") { (key, value) ->
+            "$key=${URLEncoder.encode(value, Charsets.UTF_8.name())}"
+        }
+
+        return "$BASE_URL/match/v1/$PROFILE/$coordinates?$queryString"
     }
 
     /**
-     * Convierte la respuesta JSON de OSRM en nuestro
-     * modelo de dominio MatchedRoute.
+     * Convierte la respuesta JSON de OSRM en MatchedRoute.
      */
     private fun parseResponse(
         responseText: String
     ): MatchedRoute? {
 
         if (responseText.isBlank()) {
+            Log.w(TAG, "OSRM devolvió una respuesta vacía.")
             return null
         }
 
         val response = JSONObject(responseText)
+        val responseCode = response.optString("code")
 
-        if (response.optString("code") != "Ok") {
+        if (responseCode != "Ok") {
+            val message = response.optString(
+                "message",
+                "Sin información adicional"
+            )
+
+            Log.w(
+                TAG,
+                "OSRM no pudo ajustar la ruta. Código: $responseCode. Detalle: $message"
+            )
+
             return null
         }
 
@@ -196,8 +197,8 @@ class OsrmMapMatchingRemoteDataSource @Inject constructor() {
                 val latitude = coordinate.optDouble(1, Double.NaN)
 
                 if (
-                    longitude.isNaN() ||
-                    latitude.isNaN()
+                    !longitude.isFinite() ||
+                    !latitude.isFinite()
                 ) {
                     continue
                 }
@@ -223,7 +224,7 @@ class OsrmMapMatchingRemoteDataSource @Inject constructor() {
 
             val confidence = if (matching.has("confidence")) {
                 matching.optDouble("confidence").takeIf {
-                    !it.isNaN() && it in 0.0..1.0
+                    it.isFinite() && it in 0.0..1.0
                 }
             } else {
                 null
@@ -237,7 +238,15 @@ class OsrmMapMatchingRemoteDataSource @Inject constructor() {
             )
         }
 
-        return MatchedRoute(segments)
+        val matchedRoute = MatchedRoute(segments)
             .takeIf { it.hasGeometry }
+
+        Log.d(
+            TAG,
+            "Resultado OSRM: ${matchedRoute?.segments?.size ?: 0} segmentos, " +
+                    "${matchedRoute?.coordinateCount ?: 0} coordenadas."
+        )
+
+        return matchedRoute
     }
 }

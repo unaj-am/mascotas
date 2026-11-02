@@ -13,10 +13,10 @@ import com.app.core.ui.components.AppCard
 import com.app.core.ui.components.InfoRow
 import com.app.core.ui.components.StatusBadge
 import com.app.core.ui.theme.DimensUI
-import com.app.features.walks.owner.util.formatWalkDate
-import com.app.features.walks.owner.util.walkStatusBackgroundColor
-import com.app.features.walks.owner.util.walkStatusLabel
-import com.app.features.walks.owner.util.walkStatusTextColor
+import com.app.features.walks.util.formatWalkDate
+import com.app.features.walks.util.walkStatusBackgroundColor
+import com.app.features.walks.util.walkStatusLabel
+import com.app.features.walks.util.walkStatusTextColor
 import java.util.Locale
 
 @Composable

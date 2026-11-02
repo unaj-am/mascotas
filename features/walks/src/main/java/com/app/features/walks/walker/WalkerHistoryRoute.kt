@@ -1,3 +1,4 @@
+
 package com.app.features.walks.walker
 
 import androidx.compose.runtime.Composable
@@ -9,6 +10,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @Composable
 fun WalkerHistoryRoute(
     walkerId: String,
+    onBack: () -> Unit,
     viewModel: WalkerWalksViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -22,6 +24,7 @@ fun WalkerHistoryRoute(
 
     WalkerHistoryScreen(
         state = state,
-        onRefresh = viewModel::refresh
+        onRefresh = viewModel::refresh,
+        onBack = onBack
     )
 }

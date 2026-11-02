@@ -17,7 +17,8 @@ import com.app.features.walks.walker.component.WalkerWalksHeader
 @Composable
 fun WalkerHistoryScreen(
     state: WalkerWalksUiState,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    onBack: () -> Unit
 ) {
     val history = state.walks
         .filter { walk ->
@@ -43,14 +44,17 @@ fun WalkerHistoryScreen(
             WalkerWalksHeader(
                 title = "Historial de paseos",
                 subtitle = "Consultá los paseos finalizados y cancelados.",
-                onRefresh = onRefresh
+                actionText = "Volver",
+                onAction = onBack
             )
         }
 
         WalkerWalksFeedback(
             operationMessage = state.operationMessage,
             operationError = state.operationError,
-            loadingError = state.errorMessage,
+            loadingError = state.errorMessage.takeIf {
+                state.walks.isNotEmpty()
+            },
             onRetry = onRefresh
         )
 
