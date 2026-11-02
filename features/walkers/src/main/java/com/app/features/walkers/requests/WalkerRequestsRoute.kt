@@ -1,3 +1,4 @@
+
 package com.app.features.walkers.requests
 
 import androidx.compose.runtime.Composable
@@ -23,6 +24,7 @@ fun WalkerRequestsRoute(
         onRefresh = viewModel::refreshRequests,
         onAcceptRequest = viewModel::acceptRequest,
         onRejectRequest = viewModel::rejectRequest,
-        onRequestClick = onRequestClick
+        onRequestClick = onRequestClick,
+        onFilterSelected = viewModel::selectFilter
     )
 }

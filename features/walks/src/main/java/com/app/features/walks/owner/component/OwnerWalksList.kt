@@ -8,9 +8,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.app.core.domain.model.WalkStatus
 import com.app.core.ui.components.SectionHeader
-import com.app.core.ui.theme.DimensUI
 import com.app.features.walks.component.WalkCard
 import com.app.features.walks.component.WalkRequestCard
 import com.app.features.walks.owner.OwnerWalksUiState
@@ -24,12 +24,15 @@ fun OwnerWalksList(
     onCancelWalk: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val upcoming = state.walks.filter { walk ->
+    val filteredRequests = state.filteredRequests
+    val filteredWalks = state.filteredWalks
+
+    val upcoming = filteredWalks.filter { walk ->
         walk.status == WalkStatus.SCHEDULED ||
                 walk.status == WalkStatus.IN_PROGRESS
     }
 
-    val previous = state.walks.filter { walk ->
+    val previous = filteredWalks.filter { walk ->
         walk.status == WalkStatus.COMPLETED ||
                 walk.status == WalkStatus.CANCELLED
     }
@@ -37,13 +40,13 @@ fun OwnerWalksList(
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(
-            bottom = DimensUI.SpaceXLarge
+            bottom = 20.dp
         ),
-        verticalArrangement = Arrangement.spacedBy(
-            DimensUI.CardSpacing
-        )
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        if (state.requests.isNotEmpty()) {
+
+        // Solicitudes enviadas
+        if (filteredRequests.isNotEmpty()) {
             item(key = "requests-header") {
                 SectionHeader(
                     title = "Solicitudes",
@@ -52,7 +55,7 @@ fun OwnerWalksList(
             }
 
             items(
-                items = state.requests,
+                items = filteredRequests,
                 key = { request -> "request-${request.id}" }
             ) { request ->
                 WalkRequestCard(
@@ -65,6 +68,7 @@ fun OwnerWalksList(
             }
         }
 
+        // Próximos paseos y paseos en curso
         if (upcoming.isNotEmpty()) {
             item(key = "upcoming-header") {
                 SectionHeader(
@@ -95,6 +99,7 @@ fun OwnerWalksList(
             }
         }
 
+        // Historial
         if (previous.isNotEmpty()) {
             item(key = "history-header") {
                 SectionHeader(
