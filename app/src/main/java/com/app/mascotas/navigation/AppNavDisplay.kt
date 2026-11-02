@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
@@ -46,8 +47,8 @@ import com.app.features.walkers.requestform.WalkRequestFormRoute
 import com.app.features.walks.owner.OwnerWalkDetailRoute
 import com.app.features.walks.owner.OwnerWalksRoute
 import com.app.features.notifications.presentation.NotificationsRoute
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.app.features.notifications.presentation.NotificationsViewModel
+
 @Composable
 fun AppNavDisplay(
     navigationState: NavigationState,
@@ -58,6 +59,8 @@ fun AppNavDisplay(
     onPetClick: (String) -> Unit,
     onAddPetClick: () -> Unit,
     onSignOut: () -> Unit,
+    darkTheme: Boolean,
+    onDarkThemeChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val notificationsViewModel: NotificationsViewModel = hiltViewModel()
@@ -70,6 +73,7 @@ fun AppNavDisplay(
     }
 
     val notificationCount = notifications.count { !it.isRead }
+
     val detailUiState by
     petDetailViewModel.uiState.collectAsStateWithLifecycle()
 
@@ -85,21 +89,16 @@ fun AppNavDisplay(
 
     val destinationProvider = entryProvider<NavKey> {
 
-
         entry<HomeDestination> {
             OwnerHomeRoute(
                 ownerId = ownerId,
                 isVisible = navigationState.currentTab == TopLevelDestination.HOME,
                 notificationCount = notificationCount,
                 onNotificationsClick = {
-                    navigationState.navigate(
-                        NotificationsDestination
-                    )
+                    navigationState.navigate(NotificationsDestination)
                 },
                 onFindWalkerClick = {
-                    navigationState.navigate(
-                        WalkerSearchDestination
-                    )
+                    navigationState.navigate(WalkerSearchDestination)
                 }
             )
         }
@@ -185,12 +184,10 @@ fun AppNavDisplay(
                     navigationState.goBack()
                 },
                 onSuccess = {
-                    // Limpiar el flujo de búsqueda y solicitud iniciado desde Inicio.
                     navigationState.navigateToTabRoot(
                         TopLevelDestination.HOME
                     )
 
-                    // Mostrar la sección de paseos.
                     navigationState.navigateToTabRoot(
                         TopLevelDestination.WALKS
                     )
@@ -201,7 +198,9 @@ fun AppNavDisplay(
         entry<ProfileDestination> {
             OwnerProfileRoute(
                 userId = ownerId,
-                onSignOut = onSignOut
+                onSignOut = onSignOut,
+                darkTheme = darkTheme,
+                onDarkThemeChange = onDarkThemeChange
             )
         }
 

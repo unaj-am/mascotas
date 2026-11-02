@@ -1,24 +1,33 @@
 
 package com.app.mascotas
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.core.domain.model.UserRole
+import com.app.core.data.notifications.MascotasNotificationChannel
 import com.app.core.ui.components.DomainErrorMessage
 import com.app.core.ui.components.LoadingContent
 import com.app.core.ui.components.SecondaryActionButton
@@ -32,20 +41,15 @@ import com.app.mascotas.navigation.OwnerNavigation
 import com.app.mascotas.navigation.WalkerNavigation
 import com.app.mascotas.session.AppSessionViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import androidx.compose.runtime.Composable
 
-import android.Manifest
-import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.LaunchedEffect
-import com.app.core.data.notifications.MascotasNotificationChannel
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         MascotasNotificationChannel.create(this)
+
         setContent {
 
             val notificationPermissionLauncher =
@@ -74,11 +78,35 @@ class MainActivity : ComponentActivity() {
                 mutableStateOf(false)
             }
 
+            // Preferencias de apariencia.
+            val appearancePreferences = remember {
+                getSharedPreferences(
+                    APPEARANCE_PREFERENCES,
+                    MODE_PRIVATE
+                )
+            }
+
+            // Si no existe una preferencia guardada, se respeta
+            // inicialmente la configuración del dispositivo.
+            val systemDarkTheme = isSystemInDarkTheme()
+
+            var darkTheme by remember {
+                mutableStateOf(
+                    appearancePreferences.getBoolean(
+                        KEY_DARK_THEME,
+                        systemDarkTheme
+                    )
+                )
+            }
+
             val isWalkerTheme =
                 (sessionState as? AppSessionState.Authenticated)
                     ?.role == UserRole.WALKER
 
-            MascotasThemeUI(isWalker = isWalkerTheme) {
+            MascotasThemeUI(
+                isWalker = isWalkerTheme,
+                darkTheme = darkTheme
+            ) {
                 if (showRegister) {
                     BackHandler {
                         showRegister = false
@@ -139,6 +167,13 @@ class MainActivity : ComponentActivity() {
                                         ownerId = state.userId,
                                         onSignOut = {
                                             sessionViewModel.signOut()
+                                        },
+                                        darkTheme = darkTheme,
+                                        onDarkThemeChange = { enabled ->
+                                            darkTheme = enabled
+                                            appearancePreferences.edit()
+                                                .putBoolean(KEY_DARK_THEME, enabled)
+                                                .apply()
                                         }
                                     )
                                 }
@@ -148,6 +183,13 @@ class MainActivity : ComponentActivity() {
                                         userId = state.userId,
                                         onSignOut = {
                                             sessionViewModel.signOut()
+                                        },
+                                        darkTheme = darkTheme,
+                                        onDarkThemeChange = { enabled ->
+                                            darkTheme = enabled
+                                            appearancePreferences.edit()
+                                                .putBoolean(KEY_DARK_THEME, enabled)
+                                                .apply()
                                         }
                                     )
                                 }
@@ -169,6 +211,11 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    companion object {
+        private const val APPEARANCE_PREFERENCES = "appearance_preferences"
+        private const val KEY_DARK_THEME = "dark_theme"
     }
 }
 

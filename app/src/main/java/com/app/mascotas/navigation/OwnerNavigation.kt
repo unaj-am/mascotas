@@ -23,7 +23,9 @@ import com.app.mascotas.ui.AppTab
 @Composable
 fun OwnerNavigation(
     ownerId: String,
-    onSignOut: () -> Unit
+    onSignOut: () -> Unit,
+    darkTheme: Boolean,
+    onDarkThemeChange: (Boolean) -> Unit
 ) {
     val petViewModel: PetViewModel = hiltViewModel()
     val petDetailViewModel: PetDetailViewModel = hiltViewModel()
@@ -100,6 +102,8 @@ fun OwnerNavigation(
                 )
             },
             onSignOut = onSignOut,
+            darkTheme = darkTheme,
+            onDarkThemeChange = onDarkThemeChange,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
