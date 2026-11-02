@@ -9,12 +9,15 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -24,6 +27,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.app.features.home.walker.WalkerHomeRoute
 import com.app.features.notifications.presentation.NotificationsRoute
+import com.app.features.notifications.presentation.NotificationsViewModel
 import com.app.features.profile.WalkerProfileScreen
 import com.app.features.walkers.requests.WalkerRequestsRoute
 import com.app.features.walkers.requests.WalkerRequestDetailRoute
@@ -40,6 +44,21 @@ fun WalkerNavigation(
     darkTheme: Boolean,
     onDarkThemeChange: (Boolean) -> Unit
 ) {
+
+    // Notificaciones del paseador
+    val notificationsViewModel: NotificationsViewModel = hiltViewModel()
+
+    val notifications by notificationsViewModel.notifications
+        .collectAsStateWithLifecycle()
+
+    LaunchedEffect(userId) {
+        notificationsViewModel.observeNotifications(userId)
+    }
+
+    // Cantidad de notificaciones sin leer
+    val notificationCount = notifications.count { !it.isRead }
+
+    // Raíces de las pestañas
     val tabRoots: List<NavKey> = listOf(
         WalkerHomeDestination,
         WalkerRequestsDestination,
@@ -49,10 +68,26 @@ fun WalkerNavigation(
 
     val tabs = remember {
         listOf(
-            AppTab(WalkerHomeDestination, "Inicio", Icons.Filled.Home),
-            AppTab(WalkerRequestsDestination, "Solicitudes", Icons.Filled.Inbox),
-            AppTab(WalkerAgendaDestination, "Agenda", Icons.Filled.CalendarMonth),
-            AppTab(WalkerProfileDestination, "Perfil", Icons.Filled.Person)
+            AppTab(
+                WalkerHomeDestination,
+                "Inicio",
+                Icons.Filled.Home
+            ),
+            AppTab(
+                WalkerRequestsDestination,
+                "Solicitudes",
+                Icons.Filled.Inbox
+            ),
+            AppTab(
+                WalkerAgendaDestination,
+                "Agenda",
+                Icons.Filled.CalendarMonth
+            ),
+            AppTab(
+                WalkerProfileDestination,
+                "Perfil",
+                Icons.Filled.Person
+            )
         )
     }
 
@@ -72,9 +107,11 @@ fun WalkerNavigation(
 
     val destinationProvider = entryProvider<NavKey> {
 
+        // HOME DEL PASEADOR
         entry<WalkerHomeDestination> {
             WalkerHomeRoute(
                 userId = userId,
+                notificationCount = notificationCount,
                 onNotificationsClick = {
                     navigateOnce(
                         currentStack,
@@ -84,12 +121,14 @@ fun WalkerNavigation(
             )
         }
 
+        // NOTIFICACIONES
         entry<NotificationsDestination> {
             NotificationsRoute(
                 userId = userId
             )
         }
 
+        // SOLICITUDES
         entry<WalkerRequestsDestination> {
             WalkerRequestsRoute(
                 walkerId = userId,
@@ -102,6 +141,7 @@ fun WalkerNavigation(
             )
         }
 
+        // DETALLE DE SOLICITUD
         entry<WalkerRequestDetailDestination> { destination ->
             WalkerRequestDetailRoute(
                 requestId = destination.requestId,
@@ -116,6 +156,7 @@ fun WalkerNavigation(
             )
         }
 
+        // AGENDA
         entry<WalkerAgendaDestination> {
             WalkerAgendaRoute(
                 walkerId = userId,
@@ -134,18 +175,21 @@ fun WalkerNavigation(
             )
         }
 
+        // PASEO ACTIVO
         entry<WalkerActiveWalkDestination> {
             WalkerActiveWalkRoute(
                 walkerId = userId
             )
         }
 
+        // HISTORIAL
         entry<WalkerHistoryDestination> {
             WalkerHistoryRoute(
                 walkerId = userId
             )
         }
 
+        // PERFIL
         entry<WalkerProfileDestination> {
             WalkerProfileScreen(
                 userId = userId,
@@ -156,6 +200,7 @@ fun WalkerNavigation(
         }
     }
 
+    // Entradas de navegación por pestaña
     val entriesByTab = backStacks.map { backStack ->
         rememberDecoratedNavEntries(
             backStack = backStack,
@@ -166,6 +211,7 @@ fun WalkerNavigation(
         )
     }
 
+    // Mantenemos Home junto a la pestaña seleccionada
     val visibleTabIndices = if (selectedTabIndex == 0) {
         listOf(0)
     } else {
@@ -176,17 +222,20 @@ fun WalkerNavigation(
         entriesByTab[index]
     }
 
+    // Contenedor principal con navegación inferior
     AppShell(
         tabs = tabs,
         currentTab = selectedTabRoot,
         onTabClick = { selectedKey ->
             val targetIndex = tabRoots.indexOf(selectedKey)
 
-            if (targetIndex == selectedTabIndex) {
-                popToRoot(backStacks[targetIndex])
-            } else {
-                popToRoot(backStacks[targetIndex])
-                selectedTabIndex = targetIndex
+            if (targetIndex >= 0) {
+                if (targetIndex == selectedTabIndex) {
+                    popToRoot(backStacks[targetIndex])
+                } else {
+                    popToRoot(backStacks[targetIndex])
+                    selectedTabIndex = targetIndex
+                }
             }
         },
         isWalker = true
@@ -197,7 +246,9 @@ fun WalkerNavigation(
             onBack = {
                 when {
                     currentStack.size > 1 -> {
-                        currentStack.removeAt(currentStack.lastIndex)
+                        currentStack.removeAt(
+                            currentStack.lastIndex
+                        )
                     }
 
                     selectedTabIndex != 0 -> {
@@ -212,6 +263,7 @@ fun WalkerNavigation(
     }
 }
 
+// Evita navegar dos veces al mismo destino
 private fun navigateOnce(
     backStack: NavBackStack<NavKey>,
     destination: NavKey
@@ -221,6 +273,7 @@ private fun navigateOnce(
     }
 }
 
+// Vuelve a la raíz de una pestaña
 private fun popToRoot(
     backStack: NavBackStack<NavKey>
 ) {

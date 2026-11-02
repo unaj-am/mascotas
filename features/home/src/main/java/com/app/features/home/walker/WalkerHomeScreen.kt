@@ -30,7 +30,8 @@ fun WalkerHomeScreen(
     state: WalkerHomeUiState,
     onAvailabilityChange: (Boolean) -> Unit,
     onRetry: () -> Unit,
-    onNotificationsClick: (() -> Unit)? = null
+    onNotificationsClick: (() -> Unit)? = null,
+    notificationCount: Int = 0
 ) {
     when {
         state.isLoading -> {
@@ -53,7 +54,8 @@ fun WalkerHomeScreen(
                 state = state,
                 onAvailabilityChange = onAvailabilityChange,
                 onRetry = onRetry,
-                onNotificationsClick = onNotificationsClick
+                onNotificationsClick = onNotificationsClick,
+                notificationCount = notificationCount
             )
         }
     }
@@ -64,7 +66,8 @@ private fun WalkerHomeContent(
     state: WalkerHomeUiState,
     onAvailabilityChange: (Boolean) -> Unit,
     onRetry: () -> Unit,
-    onNotificationsClick: (() -> Unit)?
+    onNotificationsClick: (() -> Unit)?,
+    notificationCount: Int
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -86,7 +89,8 @@ private fun WalkerHomeContent(
                 WalkerHomeHeader(
                     userName = state.userName,
                     profileImage = state.profileImage,
-                    onNotificationsClick = onNotificationsClick
+                    onNotificationsClick = onNotificationsClick,
+                    notificationCount = notificationCount
                 )
             }
         }
