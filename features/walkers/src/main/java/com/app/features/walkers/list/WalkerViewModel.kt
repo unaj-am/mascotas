@@ -27,7 +27,9 @@ class WalkerViewModel @Inject constructor(
 
     fun loadWalkers() {
         viewModelScope.launch {
-            _uiState.value = WalkerUiState.Loading
+            if (_uiState.value !is WalkerUiState.Success) {
+                _uiState.value = WalkerUiState.Loading
+            }
 
             try {
                 // Firestore devuelve únicamente paseadores disponibles.
