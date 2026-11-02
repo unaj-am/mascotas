@@ -36,7 +36,9 @@ import com.app.mascotas.ui.AppTab
 @Composable
 fun WalkerNavigation(
     userId: String,
-    onSignOut: () -> Unit
+    onSignOut: () -> Unit,
+    darkTheme: Boolean,
+    onDarkThemeChange: (Boolean) -> Unit
 ) {
     val tabRoots: List<NavKey> = listOf(
         WalkerHomeDestination,
@@ -70,7 +72,6 @@ fun WalkerNavigation(
 
     val destinationProvider = entryProvider<NavKey> {
 
-        // HOME DEL PASEADOR
         entry<WalkerHomeDestination> {
             WalkerHomeRoute(
                 userId = userId,
@@ -83,14 +84,12 @@ fun WalkerNavigation(
             )
         }
 
-        // NOTIFICACIONES
         entry<NotificationsDestination> {
             NotificationsRoute(
                 userId = userId
             )
         }
 
-        // SOLICITUDES
         entry<WalkerRequestsDestination> {
             WalkerRequestsRoute(
                 walkerId = userId,
@@ -103,7 +102,6 @@ fun WalkerNavigation(
             )
         }
 
-        // DETALLE DE SOLICITUD
         entry<WalkerRequestDetailDestination> { destination ->
             WalkerRequestDetailRoute(
                 requestId = destination.requestId,
@@ -118,7 +116,6 @@ fun WalkerNavigation(
             )
         }
 
-        // AGENDA
         entry<WalkerAgendaDestination> {
             WalkerAgendaRoute(
                 walkerId = userId,
@@ -137,25 +134,24 @@ fun WalkerNavigation(
             )
         }
 
-        // PASEO ACTIVO
         entry<WalkerActiveWalkDestination> {
             WalkerActiveWalkRoute(
                 walkerId = userId
             )
         }
 
-        // HISTORIAL
         entry<WalkerHistoryDestination> {
             WalkerHistoryRoute(
                 walkerId = userId
             )
         }
 
-        // PERFIL
         entry<WalkerProfileDestination> {
             WalkerProfileScreen(
                 userId = userId,
-                onSignOut = onSignOut
+                onSignOut = onSignOut,
+                darkTheme = darkTheme,
+                onDarkThemeChange = onDarkThemeChange
             )
         }
     }

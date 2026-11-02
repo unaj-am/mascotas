@@ -1,6 +1,7 @@
 
 package com.app.features.profile
 
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,29 +16,29 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.core.ui.components.DomainErrorMessage
 import com.app.core.ui.components.LoadingContent
+import com.app.core.ui.components.ProfilePhotoPicker
 import com.app.core.ui.theme.DimensUI
-
+import com.app.features.profile.component.ProfileAppearanceSection
+import com.app.features.profile.component.ProfileHeader
 import com.app.features.profile.component.WalkerPersonalInfoSection
 import com.app.features.profile.component.WalkerProfessionalInfoSection
 import com.app.features.profile.component.WalkerProfileActions
-
-import android.net.Uri
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import com.app.core.ui.components.ProfilePhotoPicker
-import com.app.features.profile.component.ProfileHeader
 
 @Composable
 fun WalkerProfileScreen(
     userId: String,
     onSignOut: () -> Unit,
+    darkTheme: Boolean,
+    onDarkThemeChange: (Boolean) -> Unit,
     viewModel: WalkerProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -49,6 +50,7 @@ fun WalkerProfileScreen(
     var selectedPhotoUri by remember {
         mutableStateOf<Uri?>(null)
     }
+
     var wasUploadingPhoto by remember {
         mutableStateOf(false)
     }
@@ -139,6 +141,15 @@ fun WalkerProfileScreen(
                     )
                 }
 
+                HorizontalDivider()
+
+                ProfileAppearanceSection(
+                    darkTheme = darkTheme,
+                    onDarkThemeChange = onDarkThemeChange
+                )
+
+                HorizontalDivider()
+
                 WalkerPersonalInfoSection(
                     name = state.name,
                     lastName = state.lastName,
@@ -170,9 +181,7 @@ fun WalkerProfileScreen(
 
                 state.rating?.let { rating ->
                     Text(
-                        text = "Calificación: ${
-                            "%.1f".format(rating)
-                        } / 5",
+                        text = "Calificación: ${"%.1f".format(rating)} / 5",
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
