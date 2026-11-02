@@ -30,6 +30,7 @@ fun OwnerHomeScreen(
     onNotificationsClick: () -> Unit,
     onFindWalkerClick: () -> Unit,
     notificationCount: Int = 0,
+    profileImage: String? = null,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -49,6 +50,7 @@ fun OwnerHomeScreen(
             ) {
                 HomeHeader(
                     userName = userName,
+                    profileImage = profileImage,
                     onNotificationsClick = onNotificationsClick,
                     notificationCount = notificationCount
                 )

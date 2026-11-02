@@ -44,6 +44,7 @@ fun OwnerHomeRoute(
         else -> {
             OwnerHomeScreen(
                 userName = state.userName,
+                profileImage = state.profileImage,
                 petsCount = state.petsCount,
                 upcomingWalksCount = state.upcomingWalksCount,
                 nextPetName = state.nextPetName,
