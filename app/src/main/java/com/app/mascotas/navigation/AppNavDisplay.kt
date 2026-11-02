@@ -161,6 +161,13 @@ fun AppNavDisplay(
         }
 
         entry<WalkerSearchDestination> {
+
+            LaunchedEffect(navigationState.currentKey) {
+                if (navigationState.currentKey is WalkerSearchDestination) {
+                    walkerViewModel.loadWalkers()
+                }
+            }
+
             WalkerRoute(
                 viewModel = walkerViewModel,
                 onWalkerClick = { walkerId ->
