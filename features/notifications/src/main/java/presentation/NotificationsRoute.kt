@@ -2,7 +2,7 @@
 package com.app.features.notifications.presentation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
 
@@ -15,12 +15,8 @@ fun NotificationsRoute(
     val notifications =
         viewModel.notifications.collectAsStateWithLifecycle()
 
-    DisposableEffect(userId, viewModel) {
+    LaunchedEffect(userId, viewModel) {
         viewModel.observeNotifications(userId)
-
-        onDispose {
-            viewModel.stopObservingNotifications()
-        }
     }
 
     NotificationsScreen(
@@ -35,9 +31,7 @@ fun NotificationsRoute(
             }
         },
 
-        onBackClick = {
-            onBack()
-        },
+        onBackClick = onBack,
 
         onClearAllClick = {
             viewModel.markAllAsRead(userId)

@@ -42,10 +42,9 @@ class NotificationRemoteDataSource @Inject constructor(
         userId: String
     ): Flow<List<AppNotification>> {
 
-        // Notificaciones que ya existían en la aplicación.
-        val existingNotifications = observeExistingNotifications(userId)
+        val existingNotifications =
+            observeExistingNotifications(userId)
 
-        // Solicitudes donde el usuario es dueño.
         val ownerRequests = observeDocuments(
             collectionName = "walkRequests",
             field = "ownerId",
@@ -56,7 +55,6 @@ class NotificationRemoteDataSource @Inject constructor(
             }
         }
 
-        // Solicitudes donde el usuario es paseador.
         val walkerRequests = observeDocuments(
             collectionName = "walkRequests",
             field = "walkerId",
@@ -67,7 +65,6 @@ class NotificationRemoteDataSource @Inject constructor(
             }
         }
 
-        // Paseos donde el usuario es dueño.
         val ownerWalks = observeDocuments(
             collectionName = "walks",
             field = "ownerId",
@@ -78,7 +75,6 @@ class NotificationRemoteDataSource @Inject constructor(
             }
         }
 
-        // Paseos donde el usuario es paseador.
         val walkerWalks = observeDocuments(
             collectionName = "walks",
             field = "walkerId",
@@ -89,7 +85,6 @@ class NotificationRemoteDataSource @Inject constructor(
             }
         }
 
-        // Identificadores leídos, persistidos en Firestore.
         val readIds = observeReadNotificationIds(userId)
 
         val allNotifications = combine(
@@ -226,9 +221,7 @@ class NotificationRemoteDataSource @Inject constructor(
         }
     }
 
-    // =========================================================
-    // NOTIFICACIONES PARA EL DUEÑO DESDE WALK REQUESTS
-    // =========================================================
+    // Notificaciones para Owner desde solicitudes
 
     private fun requestNotificationsForOwner(
         document: DocumentSnapshot
@@ -266,9 +259,7 @@ class NotificationRemoteDataSource @Inject constructor(
         }
     }
 
-    // =========================================================
-    // NOTIFICACIONES PARA EL PASEADOR DESDE WALK REQUESTS
-    // =========================================================
+    // Notificaciones para Walker desde solicitudes
 
     private fun requestNotificationsForWalker(
         document: DocumentSnapshot
@@ -276,7 +267,6 @@ class NotificationRemoteDataSource @Inject constructor(
 
         val notifications = mutableListOf<AppNotification>()
 
-        // La creación se conserva aunque luego cambie el estado.
         buildNotification(
             id = "event_request_created_${document.id}",
             userId = document.getString("walkerId").orEmpty(),
@@ -287,7 +277,6 @@ class NotificationRemoteDataSource @Inject constructor(
             createdAt = document.timestampMillis("createdAt")
         )?.let(notifications::add)
 
-        // Cancelación de una solicitud todavía pendiente.
         if (document.getString("status") == "CANCELLED") {
             buildNotification(
                 id = "event_request_cancelled_${document.id}",
@@ -303,19 +292,15 @@ class NotificationRemoteDataSource @Inject constructor(
         return notifications
     }
 
-    // =========================================================
-    // NOTIFICACIONES PARA EL DUEÑO DESDE WALKS
-    // =========================================================
+    // Notificaciones para Owner desde paseos
 
     private fun walkNotificationsForOwner(
         document: DocumentSnapshot
     ): List<AppNotification> {
 
         val notifications = mutableListOf<AppNotification>()
-
         val ownerId = document.getString("ownerId").orEmpty()
 
-        // Se conserva cuando el paseo pasa a COMPLETED.
         buildNotification(
             id = "event_walk_started_${document.id}",
             userId = ownerId,
@@ -339,9 +324,7 @@ class NotificationRemoteDataSource @Inject constructor(
         return notifications
     }
 
-    // =========================================================
-    // NOTIFICACIONES PARA EL PASEADOR DESDE WALKS
-    // =========================================================
+    // Notificaciones para Walker desde paseos
 
     private fun walkNotificationsForWalker(
         document: DocumentSnapshot
@@ -351,8 +334,6 @@ class NotificationRemoteDataSource @Inject constructor(
             return emptyList()
         }
 
-        // El modelo actual de Walk todavía no guarda cancelledAt.
-        // Por eso usamos una fecha estable del documento si existe.
         val cancelledAt = document.timestampMillis("cancelledAt")
             ?: document.instantStringMillis("cancelledAt")
 
@@ -369,9 +350,7 @@ class NotificationRemoteDataSource @Inject constructor(
         )
     }
 
-    // =========================================================
-    // CONSTRUCCIÓN DE NOTIFICACIONES
-    // =========================================================
+    // Construcción de notificaciones
 
     private fun buildNotification(
         id: String,
@@ -399,27 +378,38 @@ class NotificationRemoteDataSource @Inject constructor(
         )
     }
 
+    // Lectura segura de fechas de Firestore
+
     private fun DocumentSnapshot.timestampMillis(
         field: String
-    ): Long? =
-        getTimestamp(field)?.toDate()?.time
+    ): Long? {
+        return when (val value = get(field)) {
+
+            is com.google.firebase.Timestamp ->
+                value.toDate().time
+
+            is java.util.Date ->
+                value.time
+
+            is Number ->
+                value.toLong()
+
+            is String ->
+                runCatching {
+                    Instant.parse(value).toEpochMilli()
+                }.getOrNull()
+
+            else -> null
+        }
+    }
 
     private fun DocumentSnapshot.instantStringMillis(
         field: String
     ): Long? {
-
-        val value = getString(field)
-            ?.takeIf { it.isNotBlank() }
-            ?: return null
-
-        return runCatching {
-            Instant.parse(value).toEpochMilli()
-        }.getOrNull()
+        return timestampMillis(field)
     }
 
-    // =========================================================
-    // MARCAR COMO LEÍDA
-    // =========================================================
+    // Marcar una notificación como leída
 
     suspend fun markAsRead(
         userId: String,
@@ -428,7 +418,6 @@ class NotificationRemoteDataSource @Inject constructor(
 
         if (notificationId.startsWith("event_")) {
 
-            // Persistimos la lectura en el perfil del usuario.
             usersCollection
                 .document(userId)
                 .update(
@@ -439,8 +428,6 @@ class NotificationRemoteDataSource @Inject constructor(
 
         } else {
 
-            // Mantenemos el comportamiento de las
-            // notificaciones anteriores.
             notificationsCollection(userId)
                 .document(notificationId)
                 .update("isRead", true)

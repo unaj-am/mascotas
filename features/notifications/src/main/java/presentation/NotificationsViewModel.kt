@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.app.core.domain.model.AppNotification
 import com.app.core.domain.repository.NotificationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,25 +26,46 @@ class NotificationsViewModel @Inject constructor(
     val notifications: StateFlow<List<AppNotification>> = _notifications
 
     private var notificationsJob: Job? = null
+    private var observedUserId: String? = null
 
     fun observeNotifications(userId: String) {
+        if (userId.isBlank()) return
+
+        // Evita reiniciar un listener que ya está activo.
+        if (
+            observedUserId == userId &&
+            notificationsJob?.isActive == true
+        ) {
+            return
+        }
+
         notificationsJob?.cancel()
-        _notifications.value = emptyList()
+
+        // Evita mostrar notificaciones de otra cuenta.
+        if (observedUserId != userId) {
+            _notifications.value = emptyList()
+        }
+
+        observedUserId = userId
 
         notificationsJob = viewModelScope.launch {
             notificationRepository
                 .observeNotifications(userId)
                 .catch { error ->
+                    if (error is CancellationException) {
+                        throw error
+                    }
+
                     Log.e(
                         TAG,
-                        "Error al observar las notificaciones del usuario $userId",
+                        "Error al observar notificaciones de $userId",
                         error
                     )
 
-                    _notifications.value = emptyList()
+                    // Conserva las notificaciones ante un error.
                 }
-                .collect { notifications ->
-                    _notifications.value = notifications
+                .collect { newNotifications ->
+                    _notifications.value = newNotifications
                 }
         }
     }
@@ -51,6 +73,7 @@ class NotificationsViewModel @Inject constructor(
     fun stopObservingNotifications() {
         notificationsJob?.cancel()
         notificationsJob = null
+        observedUserId = null
         _notifications.value = emptyList()
     }
 
@@ -64,6 +87,8 @@ class NotificationsViewModel @Inject constructor(
                     userId = userId,
                     notificationId = notificationId
                 )
+            } catch (error: CancellationException) {
+                throw error
             } catch (error: Exception) {
                 Log.e(
                     TAG,
@@ -85,6 +110,8 @@ class NotificationsViewModel @Inject constructor(
                         userId = userId,
                         notificationId = notification.id
                     )
+                } catch (error: CancellationException) {
+                    throw error
                 } catch (error: Exception) {
                     Log.e(
                         TAG,

@@ -57,6 +57,12 @@ fun WalkerNavigation(
 
     // Cantidad de notificaciones sin leer
     val notificationCount = notifications.count { !it.isRead }
+    LaunchedEffect(notifications) {
+        android.util.Log.d(
+            "WALKER_NOTIFICATIONS",
+            "Cantidad recibida: ${notifications.size}"
+        )
+    }
 
     // Raíces de las pestañas
     val tabRoots: List<NavKey> = listOf(
@@ -124,7 +130,16 @@ fun WalkerNavigation(
         // NOTIFICACIONES
         entry<NotificationsDestination> {
             NotificationsRoute(
-                userId = userId
+                userId = userId,
+                viewModel = notificationsViewModel,
+                onBack = {
+                    if (
+                        currentStack.size > 1 &&
+                        currentStack.last() == NotificationsDestination
+                    ) {
+                        currentStack.removeAt(currentStack.lastIndex)
+                    }
+                }
             )
         }
 
