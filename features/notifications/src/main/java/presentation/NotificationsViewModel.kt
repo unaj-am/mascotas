@@ -10,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,27 +28,47 @@ class NotificationsViewModel @Inject constructor(
 
     fun observeNotifications(userId: String) {
         notificationsJob?.cancel()
+        _notifications.value = emptyList()
 
         notificationsJob = viewModelScope.launch {
-            notificationRepository.observeNotifications(userId)
+            notificationRepository
+                .observeNotifications(userId)
+                .catch { error ->
+                    Log.e(
+                        TAG,
+                        "Error al observar las notificaciones del usuario $userId",
+                        error
+                    )
+
+                    _notifications.value = emptyList()
+                }
                 .collect { notifications ->
                     _notifications.value = notifications
                 }
         }
     }
 
-    fun markAsRead(userId: String, notificationId: String) {
+    fun stopObservingNotifications() {
+        notificationsJob?.cancel()
+        notificationsJob = null
+        _notifications.value = emptyList()
+    }
+
+    fun markAsRead(
+        userId: String,
+        notificationId: String
+    ) {
         viewModelScope.launch {
             try {
                 notificationRepository.markAsRead(
                     userId = userId,
                     notificationId = notificationId
                 )
-            } catch (e: Exception) {
+            } catch (error: Exception) {
                 Log.e(
-                    "NotificationsViewModel",
+                    TAG,
                     "Error al marcar la notificación como leída",
-                    e
+                    error
                 )
             }
         }
@@ -64,14 +85,23 @@ class NotificationsViewModel @Inject constructor(
                         userId = userId,
                         notificationId = notification.id
                     )
-                } catch (e: Exception) {
+                } catch (error: Exception) {
                     Log.e(
-                        "NotificationsViewModel",
+                        TAG,
                         "Error al limpiar la notificación ${notification.id}",
-                        e
+                        error
                     )
                 }
             }
         }
+    }
+
+    override fun onCleared() {
+        stopObservingNotifications()
+        super.onCleared()
+    }
+
+    private companion object {
+        const val TAG = "NotificationsViewModel"
     }
 }

@@ -4,6 +4,7 @@ package com.app.core.data.datasource
 import com.app.core.domain.model.User
 import com.app.core.domain.model.UserRole
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Source
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -17,14 +18,17 @@ class UserRemoteDataSource @Inject constructor(
         get() = firestore.collection("users")
 
     suspend fun getUserById(userId: String): User? {
+
         val document = usersCollection
             .document(userId)
-            .get()
+            .get(Source.SERVER)
             .await()
 
         if (!document.exists()) return null
 
-        val roleName = document.getString("role") ?: return null
+        val roleName = document.getString("role")
+            ?: return null
+
         val role = runCatching {
             UserRole.valueOf(roleName)
         }.getOrNull() ?: return null
