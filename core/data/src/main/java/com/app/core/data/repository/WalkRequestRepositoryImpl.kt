@@ -1,7 +1,7 @@
 
 package com.app.core.data.repository
 
-import com.app.core.data.remote.walkrequest.WalkRequestRemoteDataSource
+import com.app.core.data.datasource.WalkRequestRemoteDataSource
 import com.app.core.domain.model.RequestStatus
 import com.app.core.domain.model.Walk
 import com.app.core.domain.model.WalkRequest

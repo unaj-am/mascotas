@@ -1,9 +1,10 @@
 
-package com.app.core.data.remote.walker
+package com.app.core.data.datasource
 
 import com.app.core.domain.model.Walker
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Source
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -17,8 +18,9 @@ class WalkerRemoteDataSource @Inject constructor(
         get() = firestore.collection("walkers")
 
     suspend fun getWalkers(): List<Walker> {
+
         val snapshot = walkersCollection
-            .get()
+            .get(Source.SERVER)
             .await()
 
         return snapshot.documents.map { document ->
@@ -27,9 +29,10 @@ class WalkerRemoteDataSource @Inject constructor(
     }
 
     suspend fun getWalkerById(userId: String): Walker? {
+
         val document = walkersCollection
             .document(userId)
-            .get()
+            .get(Source.SERVER)
             .await()
 
         return if (document.exists()) {
@@ -63,9 +66,10 @@ class WalkerRemoteDataSource @Inject constructor(
     }
 
     suspend fun getAvailableWalkers(): List<Walker> {
+
         val snapshot = walkersCollection
             .whereEqualTo("available", true)
-            .get()
+            .get(Source.SERVER)
             .await()
 
         return snapshot.documents.map { document ->

@@ -1,5 +1,5 @@
 
-package com.app.core.data.remote.walkrequest
+package com.app.core.data.datasource
 
 import com.app.core.domain.model.RequestStatus
 import com.app.core.domain.model.Walk

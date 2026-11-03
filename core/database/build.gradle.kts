@@ -1,6 +1,8 @@
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -24,13 +26,19 @@ android {
 }
 
 dependencies {
+
     implementation(project(":core:domain"))
-    // Room: persistencia local
+
+    // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
 
-    // Generación automática del código de Room
+    // Generación de código Room
     ksp(libs.androidx.room.compiler)
+
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 
     // Tests
     testImplementation(libs.junit)

@@ -1,6 +1,10 @@
+
 package com.app.core.data.datasource
 
+import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -59,7 +63,6 @@ class FirebaseAuthDataSource @Inject constructor(
         }
     }
 
-
     suspend fun sendEmailVerification() {
         val user = firebaseAuth.currentUser
             ?: throw IllegalStateException(
@@ -73,9 +76,26 @@ class FirebaseAuthDataSource @Inject constructor(
         val user = firebaseAuth.currentUser
             ?: return false
 
-        user.reload().await()
+        return try {
+            user.reload().await()
 
-        return firebaseAuth.currentUser?.isEmailVerified == true
+            firebaseAuth.currentUser?.isEmailVerified
+                ?: user.isEmailVerified
+
+        } catch (error: CancellationException) {
+            throw error
+
+        } catch (error: FirebaseNetworkException) {
+            // Sin conexión: usamos el último estado conocido por Firebase.
+            user.isEmailVerified
+
+        } catch (error: FirebaseAuthException) {
+            if (error.errorCode == "ERROR_NETWORK_REQUEST_FAILED") {
+                user.isEmailVerified
+            } else {
+                throw error
+            }
+        }
     }
 
     suspend fun resendEmailVerification() {
@@ -97,5 +117,4 @@ class FirebaseAuthDataSource @Inject constructor(
 
         updatedUser.sendEmailVerification().await()
     }
-
 }

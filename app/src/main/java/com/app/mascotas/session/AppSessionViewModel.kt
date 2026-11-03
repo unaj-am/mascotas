@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 @HiltViewModel
 class AppSessionViewModel @Inject constructor(
@@ -68,6 +69,7 @@ class AppSessionViewModel @Inject constructor(
 
         signOutJob?.cancel()
         signOutJob = null
+
         fcmRegistrationJob?.cancel()
         fcmRegistrationJob = null
     }
@@ -281,28 +283,35 @@ class AppSessionViewModel @Inject constructor(
 
         validationJob?.cancel()
         resendJob?.cancel()
+        fcmRegistrationJob?.cancel()
 
         validationJob = null
         resendJob = null
+        fcmRegistrationJob = null
 
         _uiState.value = AppSessionState.Loading
 
         signOutJob = viewModelScope.launch {
             try {
+                // Intentamos eliminar el token FCM remoto,
+                // pero nunca permitimos que bloquee el cierre local.
                 try {
-                    fcmTokenManager.unregisterCurrentToken()
+                    withTimeoutOrNull(2_000L) {
+                        fcmTokenManager.unregisterCurrentToken()
+                    }
                 } catch (error: CancellationException) {
                     throw error
                 } catch (_: Exception) {
-                    // Si falla la eliminación del token,
-                    // permitimos igualmente cerrar sesión.
+                    // La limpieza remota es opcional.
                 }
 
+                // FirebaseAuth.signOut() cierra la sesión local.
                 signOutUseCase()
 
                 if (isCurrentOperation(currentOperation)) {
                     _uiState.value = AppSessionState.SignedOut
                 }
+
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
