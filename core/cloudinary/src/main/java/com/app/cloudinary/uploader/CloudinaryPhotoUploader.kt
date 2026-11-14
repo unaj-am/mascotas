@@ -1,4 +1,4 @@
-package com.app.cloudinary
+package com.app.cloudinary.uploader
 
 import android.content.Context
 import android.net.Uri
@@ -8,23 +8,28 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.io.IOException
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import javax.inject.Singleton
+import com.app.core.domain.service.PhotoUploader
+import okhttp3.RequestBody
+import okio.BufferedSink
 
+@Singleton
 class CloudinaryPhotoUploader @Inject constructor(
     @ApplicationContext private val context: Context
-) {
+) : PhotoUploader {
     private val client = OkHttpClient()
 
-    suspend fun uploadPhoto(uri: Uri): String =
+    override suspend fun uploadPhoto(uri: String): String =
         withContext(Dispatchers.IO) {
+            val photoUri = Uri.parse(uri)
 
             val contentResolver = context.contentResolver
 
-            val mimeType = contentResolver.getType(uri)
+            val mimeType = contentResolver.getType(photoUri)
                 ?: throw IOException(
                     "No se pudo identificar el formato de la fotografía"
                 )
@@ -40,19 +45,48 @@ class CloudinaryPhotoUploader @Inject constructor(
                 )
             }
 
-            val imageBytes = contentResolver
-                .openInputStream(uri)
-                ?.use { it.readBytes() }
-                ?: throw IOException(
-                    "No se pudo leer la fotografía"
-                )
+            val maxSizeBytes = 5L * 1024L * 1024L
+            val assetLength = contentResolver
+                .openAssetFileDescriptor(photoUri, "r")
+                ?.use { it.length }
+                ?: -1L
 
-            val maxSizeBytes = 5 * 1024 * 1024
-
-            if (imageBytes.size > maxSizeBytes) {
+            if (assetLength > maxSizeBytes) {
                 throw IOException(
                     "La fotografía no puede superar los 5 MB"
                 )
+            }
+
+            val photoBody = object : RequestBody() {
+                override fun contentType() = mimeType.toMediaType()
+
+                override fun contentLength(): Long = assetLength
+
+                override fun writeTo(sink: BufferedSink) {
+                    val input = contentResolver.openInputStream(photoUri)
+                        ?: throw IOException(
+                            "No se pudo leer la fotografía"
+                        )
+
+                    input.use { stream ->
+                        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                        var totalBytes = 0L
+
+                        while (true) {
+                            val bytesRead = stream.read(buffer)
+                            if (bytesRead == -1) break
+
+                            totalBytes += bytesRead
+                            if (totalBytes > maxSizeBytes) {
+                                throw IOException(
+                                    "La fotografía no puede superar los 5 MB"
+                                )
+                            }
+
+                            sink.write(buffer, 0, bytesRead)
+                        }
+                    }
+                }
             }
 
             val requestBody = MultipartBody.Builder()
@@ -60,9 +94,7 @@ class CloudinaryPhotoUploader @Inject constructor(
                 .addFormDataPart(
                     "file",
                     "profile_photo",
-                    imageBytes.toRequestBody(
-                        mimeType.toMediaType()
-                    )
+                    photoBody
                 )
                 .addFormDataPart(
                     "upload_preset",

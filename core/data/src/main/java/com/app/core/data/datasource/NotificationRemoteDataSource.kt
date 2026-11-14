@@ -5,6 +5,7 @@ import android.util.Log
 import com.app.core.data.notifications.NotificationDto
 import com.app.core.data.notifications.toDomain
 import com.app.core.domain.model.AppNotification
+import com.app.core.domain.model.NotificationType
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -244,7 +245,7 @@ class NotificationRemoteDataSource @Inject constructor(
                     userId = document.getString("ownerId").orEmpty(),
                     title = "Paseo aceptado",
                     body = "Tu paseo fue aceptado.",
-                    type = "WALK_ACCEPTED",
+                    type = NotificationType.WALK_ACCEPTED,
                     referenceId = document.id,
                     createdAt = document.timestampMillis("acceptedAt")
                 )
@@ -256,7 +257,7 @@ class NotificationRemoteDataSource @Inject constructor(
                     userId = document.getString("ownerId").orEmpty(),
                     title = "Solicitud rechazada",
                     body = "Tu solicitud de paseo fue rechazada.",
-                    type = "WALK_REJECTED",
+                    type = NotificationType.WALK_REJECTED,
                     referenceId = document.id,
                     createdAt = document.timestampMillis("rejectedAt")
                 )
@@ -282,7 +283,7 @@ class NotificationRemoteDataSource @Inject constructor(
             userId = document.getString("walkerId").orEmpty(),
             title = "Nueva solicitud",
             body = "Tenés una nueva solicitud de paseo.",
-            type = "WALK_REQUEST_CREATED",
+            type = NotificationType.WALK_REQUEST_CREATED,
             referenceId = document.id,
             createdAt = document.timestampMillis("createdAt")
         )?.let(notifications::add)
@@ -294,7 +295,7 @@ class NotificationRemoteDataSource @Inject constructor(
                 userId = document.getString("walkerId").orEmpty(),
                 title = "Solicitud cancelada",
                 body = "El dueño canceló el paseo.",
-                type = "WALK_CANCELLED",
+                type = NotificationType.WALK_REQUEST_CANCELLED,
                 referenceId = document.id,
                 createdAt = document.timestampMillis("cancelledAt")
             )?.let(notifications::add)
@@ -321,7 +322,7 @@ class NotificationRemoteDataSource @Inject constructor(
             userId = ownerId,
             title = "Paseo iniciado",
             body = "Tu mascota ya está de paseo.",
-            type = "WALK_STARTED",
+            type = NotificationType.WALK_STARTED,
             referenceId = document.id,
             createdAt = document.instantStringMillis("startedAt")
         )?.let(notifications::add)
@@ -331,7 +332,7 @@ class NotificationRemoteDataSource @Inject constructor(
             userId = ownerId,
             title = "Paseo finalizado",
             body = "Tu mascota terminó su paseo.",
-            type = "WALK_COMPLETED",
+            type = NotificationType.WALK_COMPLETED,
             referenceId = document.id,
             createdAt = document.instantStringMillis("finishedAt")
         )?.let(notifications::add)
@@ -362,7 +363,7 @@ class NotificationRemoteDataSource @Inject constructor(
                 userId = document.getString("walkerId").orEmpty(),
                 title = "Paseo cancelado",
                 body = "El dueño canceló el paseo.",
-                type = "WALK_CANCELLED",
+                type = NotificationType.WALK_CANCELLED,
                 referenceId = document.id,
                 createdAt = cancelledAt
             )

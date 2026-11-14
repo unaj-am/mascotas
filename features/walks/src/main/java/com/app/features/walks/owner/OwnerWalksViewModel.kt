@@ -176,26 +176,25 @@ class OwnerWalksViewModel @Inject constructor(
         val currentOwnerId = ownerId
         if (currentOwnerId.isBlank()) return
 
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    processingId = id,
-                    operationMessage = null,
-                    operationError = null
-                )
-            }
+        _uiState.update {
+            it.copy(
+                processingId = id,
+                operationMessage = null,
+                operationError = null
+            )
+        }
 
+        viewModelScope.launch {
             try {
                 operation()
 
-                _uiState.update {
-                    it.copy(
-                        processingId = null,
-                        operationMessage = successMessage
-                    )
-                }
-
                 if (ownerId == currentOwnerId) {
+                    _uiState.update {
+                        it.copy(
+                            processingId = null,
+                            operationMessage = successMessage
+                        )
+                    }
                     load(
                         ownerId = currentOwnerId,
                         forceRefresh = true
@@ -204,12 +203,14 @@ class OwnerWalksViewModel @Inject constructor(
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
-                _uiState.update {
-                    it.copy(
-                        processingId = null,
-                        operationError = error.message
-                            ?: "No se pudo completar la operación."
-                    )
+                if (ownerId == currentOwnerId) {
+                    _uiState.update {
+                        it.copy(
+                            processingId = null,
+                            operationError = error.message
+                                ?: "No se pudo completar la operación."
+                        )
+                    }
                 }
             }
         }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.app.core.ui.components.AdaptiveContent
 import com.app.core.ui.components.AppAnimatedVisibility
 import com.app.core.ui.theme.DimensUI
 import com.app.features.walkers.requests.component.WalkerRequestsContent
@@ -23,7 +24,8 @@ fun WalkerRequestsScreen(
     onRequestClick: (String) -> Unit = {},
     onFilterSelected: (WalkerRequestFilter) -> Unit
 ) {
-    Column(
+    AdaptiveContent(maxWidth = DimensUI.ContentMaxWidth) {
+        Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(
@@ -82,6 +84,7 @@ fun WalkerRequestsScreen(
                 onRequestClick = onRequestClick,
                 modifier = Modifier.fillMaxSize()
             )
+        }
         }
     }
 }

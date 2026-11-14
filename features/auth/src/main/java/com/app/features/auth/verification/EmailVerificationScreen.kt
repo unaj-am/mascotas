@@ -1,4 +1,3 @@
-
 package com.app.features.auth.verification
 
 import androidx.compose.foundation.layout.Arrangement
@@ -7,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -14,11 +14,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.app.core.ui.components.AppCard
 import com.app.core.ui.components.DomainErrorMessage
 import com.app.core.ui.components.PrimaryActionButton
 import com.app.core.ui.components.SectionHeader
+import com.app.core.ui.theme.MascotasThemeUI
 
 @Composable
 fun EmailVerificationScreen(
@@ -26,10 +28,11 @@ fun EmailVerificationScreen(
     message: String?,
     onCheckVerification: () -> Unit,
     onResendEmail: () -> Unit,
-    onSignOut: () -> Unit
+    onSignOut: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .safeDrawingPadding()
             .padding(24.dp),
@@ -37,7 +40,9 @@ fun EmailVerificationScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AppCard(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .widthIn(max = 560.dp)
+                .fillMaxWidth()
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -86,4 +91,29 @@ fun EmailVerificationScreen(
             }
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun EmailVerificationPreview() {
+    MascotasThemeUI {
+        EmailVerificationScreen(
+            isLoading = false,
+            message = null,
+            onCheckVerification = {},
+            onResendEmail = {},
+            onSignOut = {}
+        )
+    }
+}
+
+@Preview(
+    name = "Verificación en ventana amplia",
+    showBackground = true,
+    widthDp = 840,
+    heightDp = 1200
+)
+@Composable
+private fun EmailVerificationWidePreview() {
+    EmailVerificationPreview()
 }

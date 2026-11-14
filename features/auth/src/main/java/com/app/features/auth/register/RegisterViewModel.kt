@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.core.domain.model.User
 import com.app.core.domain.model.UserRole
-import com.app.core.domain.repository.UserRepository
+import com.app.core.domain.usecase.SaveUserUseCase
 import com.app.core.domain.usecase.auth.SendEmailVerificationUseCase
 import com.app.core.domain.usecase.auth.SignOutUseCase
 import com.app.core.domain.usecase.auth.SignUpUseCase
@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 class RegisterViewModel @Inject constructor(
     private val signUpUseCase: SignUpUseCase,
     private val sendEmailVerificationUseCase: SendEmailVerificationUseCase,
-    private val userRepository: UserRepository,
+    private val saveUserUseCase: SaveUserUseCase,
     private val signOutUseCase: SignOutUseCase
 ) : ViewModel() {
 
@@ -142,15 +142,15 @@ class RegisterViewModel @Inject constructor(
             }
         }
 
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    isLoading = true,
-                    errorMessage = null,
-                    successMessage = null
-                )
-            }
+        _uiState.update {
+            it.copy(
+                isLoading = true,
+                errorMessage = null,
+                successMessage = null
+            )
+        }
 
+        viewModelScope.launch {
             try {
                 signUpUseCase(
                     email = email,
@@ -211,7 +211,7 @@ class RegisterViewModel @Inject constructor(
                 active = true
             )
 
-            userRepository.saveUser(user)
+            saveUserUseCase(user)
 
             val verificationResult = sendEmailVerificationUseCase()
 

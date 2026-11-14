@@ -28,6 +28,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.app.core.domain.model.NotificationType
 import com.app.core.domain.model.Pet
 import com.app.core.ui.components.ErrorContent
 import com.app.core.ui.components.LoadingContent
@@ -65,8 +66,7 @@ fun AppNavDisplay(
 ) {
     val notificationsViewModel: NotificationsViewModel = hiltViewModel()
 
-    val notifications by notificationsViewModel.notifications
-        .collectAsStateWithLifecycle()
+    val notifications by notificationsViewModel.notifications.collectAsStateWithLifecycle()
 
     LaunchedEffect(ownerId) {
         notificationsViewModel.observeNotifications(ownerId)
@@ -74,18 +74,11 @@ fun AppNavDisplay(
 
     val notificationCount = notifications.count { !it.isRead }
 
-    val detailUiState by
-    petDetailViewModel.uiState.collectAsStateWithLifecycle()
+    val detailUiState by petDetailViewModel.uiState.collectAsStateWithLifecycle()
 
-    val operationState by
-    petViewModel.operationState.collectAsStateWithLifecycle()
+    val operationState by petViewModel.operationState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(ownerId) {
-        petViewModel.loadPets(ownerId)
-    }
-
-    val currentForm =
-        navigationState.currentKey as? PetFormDestination
+    val currentForm = navigationState.currentKey as? PetFormDestination
 
     val destinationProvider = entryProvider<NavKey> {
 
@@ -108,6 +101,27 @@ fun AppNavDisplay(
                 userId = ownerId,
                 onBack = {
                     navigationState.goBack()
+                },
+                onNotificationSelected = { notification ->
+                    when (notification.type) {
+                        NotificationType.WALK_ACCEPTED,
+                        NotificationType.WALK_REJECTED -> {
+                            navigationState.navigateToTabRoot(
+                                TopLevelDestination.WALKS
+                            )
+                        }
+
+                        NotificationType.WALK_STARTED,
+                        NotificationType.WALK_COMPLETED -> {
+                            notification.referenceId
+                                .takeIf(String::isNotBlank)
+                                ?.let { walkId ->
+                                    navigationState.navigate(
+                                        WalkTrackingDestination(walkId)
+                                    )
+                                }
+                        }
+                    }
                 }
             )
         }

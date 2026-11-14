@@ -7,6 +7,7 @@ import com.app.core.domain.model.User
 import com.app.core.domain.model.UserRole
 import com.app.core.domain.usecase.GetUserByIdUseCase
 import com.app.core.domain.usecase.UpdateUserUseCase
+import com.app.core.domain.usecase.UpdateUserProfileImageUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -15,8 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.app.cloudinary.CloudinaryPhotoUploader
-import com.app.core.domain.repository.UserRepository
+import com.app.core.domain.service.PhotoUploader
 import android.net.Uri
 
 
@@ -24,8 +24,8 @@ import android.net.Uri
 class OwnerProfileViewModel @Inject constructor(
     private val getUserByIdUseCase: GetUserByIdUseCase,
     private val updateUserUseCase: UpdateUserUseCase,
-    private val cloudinaryPhotoUploader: CloudinaryPhotoUploader,
-    private val userRepository: UserRepository
+    private val photoUploader: PhotoUploader,
+    private val updateUserProfileImageUseCase: UpdateUserProfileImageUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(OwnerProfileUiState())
@@ -59,11 +59,8 @@ class OwnerProfileViewModel @Inject constructor(
                 )
             }
             try {
-                val imageUrl = cloudinaryPhotoUploader.uploadPhoto(uri)
-                userRepository.updateProfileImage(
-                    userId = user.id,
-                    imageUrl = imageUrl
-                )
+                val imageUrl = photoUploader.uploadPhoto(uri.toString())
+                updateUserProfileImageUseCase(user.id, imageUrl)
                 currentUser = user.copy(
                     profileImage = imageUrl
                 )

@@ -34,7 +34,6 @@ dependencies {
     // Módulos del proyecto
     implementation(project(":core:domain"))
     implementation(project(":core:ui"))
-    implementation(project(":core:cloudinary"))
 
     // Android
     implementation(libs.androidx.appcompat)

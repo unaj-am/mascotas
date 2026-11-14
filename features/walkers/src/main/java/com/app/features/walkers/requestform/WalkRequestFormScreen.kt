@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.app.core.ui.components.AdaptiveContent
 import com.app.core.ui.components.AppAnimatedVisibility
 import com.app.core.ui.components.LoadingContent
 import com.app.core.ui.components.SectionHeader
@@ -40,8 +41,12 @@ fun WalkRequestFormScreen(
         )
     }
 
-    Column(
-        modifier = modifier
+    AdaptiveContent(
+        modifier = modifier,
+        maxWidth = DimensUI.ContentMaxWidthForm
+    ) {
+        Column(
+        modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(
@@ -114,6 +119,7 @@ fun WalkRequestFormScreen(
                     onSubmit = onSubmit
                 )
             }
+        }
         }
     }
 }

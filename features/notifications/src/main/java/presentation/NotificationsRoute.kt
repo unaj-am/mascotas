@@ -5,11 +5,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.app.core.domain.model.AppNotification
 
 @Composable
 fun NotificationsRoute(
     userId: String,
     onBack: () -> Unit = {},
+    onNotificationSelected: (AppNotification) -> Unit = {},
     viewModel: NotificationsViewModel = hiltViewModel()
 ) {
     val notifications =
@@ -33,6 +35,7 @@ fun NotificationsRoute(
                     notificationId = notification.id
                 )
             }
+            onNotificationSelected(notification)
         },
 
         onBackClick = {

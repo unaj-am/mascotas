@@ -21,8 +21,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.app.core.domain.model.Pet
+import com.app.core.ui.components.AdaptiveContent
 import com.app.core.ui.components.AppCard
 import com.app.core.ui.components.AppTextField
 import com.app.core.ui.components.DomainErrorMessage
@@ -30,11 +32,11 @@ import com.app.core.ui.components.PrimaryActionButton
 import com.app.core.ui.components.ProfilePhotoPicker
 import com.app.core.ui.components.SectionHeader
 import com.app.core.ui.theme.DimensUI
+import com.app.core.ui.theme.MascotasThemeUI
 import com.app.features.pets.detail.component.PetPhoto
 import com.app.features.pets.form.component.PetAgeField
 import com.app.features.pets.form.component.PetBehaviorSelector
 import com.app.features.pets.form.component.PetSizeSelector
-import java.util.UUID
 
 @Composable
 fun PetFormScreen(
@@ -87,7 +89,8 @@ fun PetFormScreen(
 
     val isEditing = pet != null
 
-    Column(
+    AdaptiveContent(maxWidth = DimensUI.ContentMaxWidthForm) {
+        Column(
         modifier = Modifier
             .fillMaxSize()
             .imePadding()
@@ -329,46 +332,21 @@ fun PetFormScreen(
                     "Registrar mascota"
                 },
                 onClick = {
-                    val parsedAge = age.toIntOrNull()
+                    val formData = PetFormData(
+                        name = name,
+                        breed = breed,
+                        age = age,
+                        weight = weight,
+                        size = size,
+                        behavior = behavior,
+                        specialNeeds = specialNeeds,
+                        observations = observations
+                    )
+                    val petResult = formData.toPet(ownerId, pet)
+                    validationError = petResult.exceptionOrNull()?.message
 
-                    val parsedWeight = weight
-                        .trim()
-                        .replace(',', '.')
-                        .toDoubleOrNull()
-
-                    validationError = when {
-                        name.isBlank() ->
-                            "Ingresá el nombre de la mascota."
-
-                        parsedAge == null || parsedAge < 0 ->
-                            "Ingresá una edad válida."
-
-                        parsedWeight == null ||
-                                !parsedWeight.isFinite() ||
-                                parsedWeight <= 0.0 ->
-                            "Ingresá un peso válido mayor que cero."
-
-                        else -> null
-                    }
-
-                    if (validationError == null) {
-                        onSave(
-                            Pet(
-                                id = pet?.id
-                                    ?: UUID.randomUUID().toString(),
-                                ownerId = ownerId,
-                                name = name.trim(),
-                                breed = breed.trim(),
-                                age = parsedAge!!,
-                                weight = parsedWeight!!,
-                                observations = observations.trim(),
-                                photoUri = pet?.photoUri,
-                                size = size,
-                                behavior = behavior,
-                                specialNeeds = specialNeeds.trim()
-                            ),
-                            selectedPhotoUri
-                        )
+                    petResult.getOrNull()?.let { validPet ->
+                        onSave(validPet, selectedPhotoUri)
                     }
                 },
                 enabled = !isSaving,
@@ -383,5 +361,54 @@ fun PetFormScreen(
                 Text("Cancelar")
             }
         }
+        }
+    }
+}
+
+@Preview(
+    name = "Alta de mascota",
+    showBackground = true,
+    widthDp = 411,
+    heightDp = 891
+)
+@Composable
+private fun PetFormCreatePreview() {
+    MascotasThemeUI {
+        PetFormScreen(
+            ownerId = "USR001",
+            onSave = { _, _ -> },
+            onCancel = {}
+        )
+    }
+}
+
+@Preview(
+    name = "Editar mascota",
+    showBackground = true,
+    widthDp = 411,
+    heightDp = 891
+)
+@Composable
+private fun PetFormEditPreview() {
+    val pet = Pet(
+        id = "PET001",
+        ownerId = "USR001",
+        name = "Firulais",
+        breed = "Labrador",
+        age = 3,
+        weight = 25.0,
+        size = "Grande",
+        behavior = "Sociable",
+        specialNeeds = "Ninguna",
+        observations = "Es sociable y tranquilo."
+    )
+
+    MascotasThemeUI {
+        PetFormScreen(
+            ownerId = pet.ownerId,
+            pet = pet,
+            onSave = { _, _ -> },
+            onCancel = {}
+        )
     }
 }

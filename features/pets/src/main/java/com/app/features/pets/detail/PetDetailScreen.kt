@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.core.domain.model.Pet
+import com.app.core.ui.components.AdaptiveContent
 import com.app.core.ui.components.ErrorContent
 import com.app.core.ui.components.LoadingContent
 import com.app.core.ui.components.PrimaryActionButton
@@ -48,7 +49,8 @@ fun PetDetailScreen(
     onRetry: () -> Unit = {},
     onEditClick: (Pet) -> Unit = {}
 ) {
-    Column(
+    AdaptiveContent(maxWidth = DimensUI.ContentMaxWidthDetail) {
+        Column(
         modifier = Modifier
             .fillMaxSize()
             .safeDrawingPadding()
@@ -110,6 +112,7 @@ fun PetDetailScreen(
                 },
                 modifier = Modifier.fillMaxWidth()
             )
+        }
         }
     }
 }

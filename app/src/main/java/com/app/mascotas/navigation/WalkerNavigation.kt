@@ -25,6 +25,7 @@ import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.app.core.domain.model.NotificationType
 import com.app.features.home.walker.WalkerHomeRoute
 import com.app.features.notifications.presentation.NotificationsRoute
 import com.app.features.notifications.presentation.NotificationsViewModel
@@ -124,7 +125,37 @@ fun WalkerNavigation(
         // NOTIFICACIONES
         entry<NotificationsDestination> {
             NotificationsRoute(
-                userId = userId
+                userId = userId,
+                onBack = {
+                    if (
+                        currentStack.size > 1 &&
+                        currentStack.last() == NotificationsDestination
+                    ) {
+                        currentStack.removeAt(currentStack.lastIndex)
+                    }
+                },
+                onNotificationSelected = { notification ->
+                    when (notification.type) {
+                        NotificationType.WALK_REQUEST_CREATED,
+                        NotificationType.WALK_REQUEST_CANCELLED -> {
+                            notification.referenceId
+                                .takeIf(String::isNotBlank)
+                                ?.let { requestId ->
+                                    navigateOnce(
+                                        currentStack,
+                                        WalkerRequestDetailDestination(requestId)
+                                    )
+                                }
+                        }
+
+                        NotificationType.WALK_CANCELLED -> {
+                            navigateOnce(
+                                currentStack,
+                                WalkerHistoryDestination
+                            )
+                        }
+                    }
+                }
             )
         }
 
@@ -254,7 +285,6 @@ fun WalkerNavigation(
                 }
             }
         },
-        isWalker = true
     ) { innerPadding ->
 
         NavDisplay(

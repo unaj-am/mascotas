@@ -10,6 +10,9 @@ import com.app.core.domain.usecase.GetWalksByOwnerUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,19 +37,19 @@ class OwnerHomeViewModel @Inject constructor(
         _uiState.asStateFlow()
 
     private var currentOwnerId: String? = null
+    private var homeLoadJob: Job? = null
 
     fun loadHome(
         ownerId: String,
         forceRefresh: Boolean = false
     ) {
         if (ownerId.isBlank()) {
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    errorMessage =
-                        "No se pudo identificar al dueño."
-                )
-            }
+            homeLoadJob?.cancel()
+            currentOwnerId = null
+            _uiState.value = OwnerHomeUiState(
+                isLoading = false,
+                errorMessage = "No se pudo identificar al dueño."
+            )
             return
         }
 
@@ -59,9 +62,14 @@ class OwnerHomeViewModel @Inject constructor(
             return
         }
 
+        if (currentOwnerId != ownerId) {
+            homeLoadJob?.cancel()
+            _uiState.value = OwnerHomeUiState()
+        }
         currentOwnerId = ownerId
+        homeLoadJob?.cancel()
 
-        viewModelScope.launch {
+        homeLoadJob = viewModelScope.launch {
             _uiState.update {
                 it.copy(
                     isLoading = true,
@@ -79,8 +87,19 @@ class OwnerHomeViewModel @Inject constructor(
                     "La cuenta no corresponde a un dueño."
                 }
 
-                val pets = getPetsByOwnerUseCase(ownerId)
-                val walks = getWalksByOwnerUseCase(ownerId)
+                if (currentOwnerId != ownerId) return@launch
+
+                val (pets, walks) = coroutineScope {
+                    val petsDeferred = async {
+                        getPetsByOwnerUseCase(ownerId)
+                    }
+                    val walksDeferred = async {
+                        getWalksByOwnerUseCase(ownerId)
+                    }
+                    petsDeferred.await() to walksDeferred.await()
+                }
+
+                if (currentOwnerId != ownerId) return@launch
 
                 val scheduledWalks = walks
                     .filter {
@@ -116,12 +135,14 @@ class OwnerHomeViewModel @Inject constructor(
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = error.message
-                            ?: "No se pudo cargar la información de inicio."
-                    )
+                if (currentOwnerId == ownerId) {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = error.message
+                                ?: "No se pudo cargar la información de inicio."
+                        )
+                    }
                 }
             }
         }

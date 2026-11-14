@@ -1,20 +1,24 @@
-
 package com.app.features.home.owner
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.app.core.ui.components.AppAnimatedVisibility
 import com.app.core.ui.components.SectionHeader
 import com.app.core.ui.theme.DimensUI
+import com.app.core.ui.theme.MascotasThemeUI
 import com.app.features.home.component.HomeHeader
 import com.app.features.home.component.HomeStatCard
 import com.app.features.home.component.NextWalkCard
@@ -33,82 +37,101 @@ fun OwnerHomeScreen(
     profileImage: String? = null,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(
+    Box(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            horizontal = DimensUI.ScreenHorizontalPadding,
-            vertical = DimensUI.ScreenVerticalPadding
-        ),
-        verticalArrangement = Arrangement.spacedBy(
-            DimensUI.SectionSpacing
-        )
+        contentAlignment = Alignment.TopCenter
     ) {
-        item {
-            AppAnimatedVisibility(
-                visible = true,
-                durationMillis = 260
-            ) {
-                HomeHeader(
-                    userName = userName,
-                    profileImage = profileImage,
-                    onNotificationsClick = onNotificationsClick,
-                    notificationCount = notificationCount
-                )
-            }
-        }
-
-        item {
-            AppAnimatedVisibility(
-                visible = true,
-                durationMillis = 300
-            ) {
-                SectionHeader(
-                    title = "Tu actividad",
-                    subtitle = "Un resumen de tus mascotas y paseos"
-                )
-            }
-        }
-
-        item {
-            AppAnimatedVisibility(
-                visible = true,
-                durationMillis = 340
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(
-                        DimensUI.SpaceMedium
+        LazyColumn(
+            modifier = Modifier
+                .widthIn(max = 1120.dp)
+                .fillMaxSize(),
+            contentPadding = PaddingValues(
+                horizontal = DimensUI.ScreenHorizontalPadding,
+                vertical = DimensUI.ScreenVerticalPadding
+            ),
+            verticalArrangement = Arrangement.spacedBy(DimensUI.SectionSpacing)
+        ) {
+            item {
+                AppAnimatedVisibility(visible = true, durationMillis = 260) {
+                    HomeHeader(
+                        userName = userName,
+                        profileImage = profileImage,
+                        onNotificationsClick = onNotificationsClick,
+                        notificationCount = notificationCount
                     )
-                ) {
-                    HomeStatCard(
-                        modifier = Modifier.weight(1f),
-                        title = "Próximos paseos",
-                        value = upcomingWalksCount,
-                        icon = Icons.Filled.CalendarMonth
-                    )
+                }
+            }
 
-                    HomeStatCard(
-                        modifier = Modifier.weight(1f),
-                        title = "Mis mascotas",
-                        value = petsCount,
-                        icon = Icons.Filled.Pets
+            item {
+                AppAnimatedVisibility(visible = true, durationMillis = 300) {
+                    SectionHeader(
+                        title = "Tu actividad",
+                        subtitle = "Un resumen de tus mascotas y paseos"
+                    )
+                }
+            }
+
+            item {
+                AppAnimatedVisibility(visible = true, durationMillis = 340) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(
+                            DimensUI.SpaceMedium
+                        )
+                    ) {
+                        HomeStatCard(
+                            modifier = Modifier.weight(1f),
+                            title = "Próximos paseos",
+                            value = upcomingWalksCount,
+                            icon = Icons.Filled.CalendarMonth
+                        )
+                        HomeStatCard(
+                            modifier = Modifier.weight(1f),
+                            title = "Mis mascotas",
+                            value = petsCount,
+                            icon = Icons.Filled.Pets
+                        )
+                    }
+                }
+            }
+
+            item {
+                AppAnimatedVisibility(visible = true, durationMillis = 380) {
+                    NextWalkCard(
+                        petName = nextPetName,
+                        petBreed = nextPetBreed,
+                        walkDate = nextWalkDate,
+                        onFindWalkerClick = onFindWalkerClick
                     )
                 }
             }
         }
-
-        item {
-            AppAnimatedVisibility(
-                visible = true,
-                durationMillis = 380
-            ) {
-                NextWalkCard(
-                    petName = nextPetName,
-                    petBreed = nextPetBreed,
-                    walkDate = nextWalkDate,
-                    onFindWalkerClick = onFindWalkerClick
-                )
-            }
-        }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun OwnerHomeScreenPreview() {
+    MascotasThemeUI {
+        OwnerHomeScreen(
+            userName = "Sofía",
+            petsCount = 2,
+            upcomingWalksCount = 1,
+            nextPetName = "Luna",
+            nextPetBreed = "Golden retriever",
+            nextWalkDate = "Mañana, 10:30",
+            onNotificationsClick = {},
+            onFindWalkerClick = {}
+        )
+    }
+}
+
+@Preview(
+    name = "Inicio dueño en ventana amplia",
+    showBackground = true,
+    widthDp = 840,
+    heightDp = 1200
+)
+@Composable
+private fun OwnerHomeScreenWidePreview() {
+    OwnerHomeScreenPreview()
 }

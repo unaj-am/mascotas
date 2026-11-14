@@ -137,8 +137,8 @@ class WalkTrackingViewModel @Inject constructor(
 
                     WalkStatus.COMPLETED,
                     WalkStatus.CANCELLED -> {
-                        // El paseo terminó: ya no necesitamos observar
-                        // la ubicación actual ni solicitar nuevos ajustes OSRM.
+                        // El paseo terminó: dejamos de observar la ubicación actual,
+                        // pero ajustamos una vez el historial para mostrar su recorrido.
                         locationJob?.cancel()
                         locationJob = null
 
@@ -150,10 +150,9 @@ class WalkTrackingViewModel @Inject constructor(
                             locationErrorMessage = null
                         )
 
-                        // Conservamos la observación del historial GPS.
                         observeHistory(
                             walkId = walkId,
-                            enableMatching = false
+                            enableMatching = true
                         )
                     }
 

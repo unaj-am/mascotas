@@ -81,7 +81,6 @@ fun OwnerNavigation(
                 .firstOrNull { it.startKey == selectedKey }
                 ?.let(navigationState::selectTab)
         },
-        isWalker = false
     ) { innerPadding ->
         AppNavDisplay(
             navigationState = navigationState,

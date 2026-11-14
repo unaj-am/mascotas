@@ -4,7 +4,6 @@ package com.app.features.pets.list
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.core.domain.model.Pet
-import com.app.core.domain.usecase.DeletePetUseCase
 import com.app.core.domain.usecase.GetPetsByOwnerUseCase
 import com.app.core.domain.usecase.SavePetUseCase
 import com.app.core.domain.usecase.UpdatePetUseCase
@@ -15,42 +14,24 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.app.cloudinary.CloudinaryPhotoUploader
+import com.app.core.domain.service.PhotoUploader
 import android.net.Uri
-
-sealed interface PetOperationUiState {
-    data object Idle : PetOperationUiState
-    data object Loading : PetOperationUiState
-    data object Success : PetOperationUiState
-    data class Error(val message: String) : PetOperationUiState
-}
 
 @HiltViewModel
 class PetViewModel @Inject constructor(
     private val getPetsByOwnerUseCase: GetPetsByOwnerUseCase,
     private val savePetUseCase: SavePetUseCase,
     private val updatePetUseCase: UpdatePetUseCase,
-    private val deletePetUseCase: DeletePetUseCase,
-    private val cloudinaryPhotoUploader: CloudinaryPhotoUploader
+    private val photoUploader: PhotoUploader
 ) : ViewModel() {
 
-    private val _uiState =
-        MutableStateFlow<PetListUiState>(PetListUiState.Loading)
+    private val _uiState = MutableStateFlow<PetListUiState>(PetListUiState.Loading)
 
-    val uiState: StateFlow<PetListUiState> =
-        _uiState.asStateFlow()
+    val uiState: StateFlow<PetListUiState> = _uiState.asStateFlow()
 
-    private val _operationState =
-        MutableStateFlow<PetOperationUiState>(
-            PetOperationUiState.Idle
-        )
+    private val _operationState = MutableStateFlow<PetOperationUiState>(PetOperationUiState.Idle)
 
-    val operationState: StateFlow<PetOperationUiState> =
-        _operationState.asStateFlow()
-
-    suspend fun uploadPetPhoto(uri: Uri): String {
-        return cloudinaryPhotoUploader.uploadPhoto(uri)
-    }
+    val operationState: StateFlow<PetOperationUiState> = _operationState.asStateFlow()
 
     fun loadPets(ownerId: String) {
         viewModelScope.launch {
@@ -69,8 +50,13 @@ class PetViewModel @Inject constructor(
         }
     }
 
+    private suspend fun uploadPetPhoto(uri: Uri): String {
+        return photoUploader.uploadPhoto(uri.toString())
+    }
+
     fun savePet(pet: Pet, photoUri: Uri? = null) {
         executeOperation(pet.ownerId) {
+
             val petToSave = if (photoUri != null) {
                 val imageUrl = uploadPetPhoto(photoUri)
                 pet.copy(photoUri = imageUrl)
@@ -92,12 +78,6 @@ class PetViewModel @Inject constructor(
             }
 
             updatePetUseCase(petToUpdate)
-        }
-    }
-
-    fun deletePet(petId: String, ownerId: String) {
-        executeOperation(ownerId) {
-            deletePetUseCase(petId)
         }
     }
 
