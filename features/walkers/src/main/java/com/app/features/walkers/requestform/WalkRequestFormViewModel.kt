@@ -7,7 +7,6 @@ import com.app.core.domain.model.RequestStatus
 import com.app.core.domain.model.WalkRequest
 import com.app.core.domain.usecase.CreateWalkRequestUseCase
 import com.app.core.domain.usecase.GetPetsByOwnerUseCase
-import com.app.core.domain.usecase.GetWalkerByIdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,8 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 class WalkRequestFormViewModel @Inject constructor(
     private val getPetsByOwnerUseCase: GetPetsByOwnerUseCase,
-    private val createWalkRequestUseCase: CreateWalkRequestUseCase,
-    private val getWalkerByIdUseCase: GetWalkerByIdUseCase
+    private val createWalkRequestUseCase: CreateWalkRequestUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -125,25 +123,14 @@ class WalkRequestFormViewModel @Inject constructor(
             }
         }
 
+        _uiState.value = _uiState.value.copy(
+            isSubmitting = true,
+            isSuccess = false,
+            errorMessage = null
+        )
+
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                isSubmitting = true,
-                isSuccess = false,
-                errorMessage = null
-            )
-
             try {
-                // Verificar la disponibilidad actual del paseador
-                // antes de enviar la solicitud.
-                val walker = getWalkerByIdUseCase(walkerId)
-
-                if (walker?.available != true) {
-                    throw IllegalStateException(
-                        "Este paseador ya no está disponible para recibir solicitudes."
-                    )
-                }
-
-                // Crear la solicitud solamente si está disponible.
                 val request = WalkRequest(
                     id = UUID.randomUUID().toString(),
                     ownerId = ownerId,

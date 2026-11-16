@@ -5,13 +5,16 @@ import androidx.lifecycle.viewModelScope
 import com.app.core.domain.model.RequestStatus
 import com.app.core.domain.model.UserRole
 import com.app.core.domain.model.WalkStatus
-import com.app.core.domain.repository.UserRepository
+import com.app.core.domain.usecase.GetUserByIdUseCase
 import com.app.core.domain.usecase.GetWalkRequestsByWalkerUseCase
 import com.app.core.domain.usecase.GetWalkerByIdUseCase
 import com.app.core.domain.usecase.GetWalksByWalkerUseCase
 import com.app.core.domain.usecase.UpdateWalkerAvailabilityUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +24,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WalkerHomeViewModel @Inject constructor(
-    private val userRepository: UserRepository,
+    private val getUserByIdUseCase: GetUserByIdUseCase,
     private val getWalkerByIdUseCase: GetWalkerByIdUseCase,
     private val getWalkRequestsByWalkerUseCase: GetWalkRequestsByWalkerUseCase,
     private val getWalksByWalkerUseCase: GetWalksByWalkerUseCase,
@@ -32,18 +35,19 @@ class WalkerHomeViewModel @Inject constructor(
     val uiState: StateFlow<WalkerHomeUiState> = _uiState.asStateFlow()
 
     private var currentUserId: String? = null
+    private var homeLoadJob: Job? = null
 
     fun loadHome(
         userId: String,
         forceRefresh: Boolean = false
     ) {
         if (userId.isBlank()) {
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    errorMessage = "No se pudo identificar al paseador."
-                )
-            }
+            homeLoadJob?.cancel()
+            currentUserId = null
+            _uiState.value = WalkerHomeUiState(
+                isLoading = false,
+                errorMessage = "No se pudo identificar al paseador."
+            )
             return
         }
 
@@ -56,9 +60,14 @@ class WalkerHomeViewModel @Inject constructor(
             return
         }
 
+        if (currentUserId != userId) {
+            homeLoadJob?.cancel()
+            _uiState.value = WalkerHomeUiState()
+        }
         currentUserId = userId
+        homeLoadJob?.cancel()
 
-        viewModelScope.launch {
+        homeLoadJob = viewModelScope.launch {
             _uiState.update {
                 it.copy(
                     isLoading = true,
@@ -68,7 +77,7 @@ class WalkerHomeViewModel @Inject constructor(
             }
 
             try {
-                val user = userRepository.getUserById(userId)
+                val user = getUserByIdUseCase(userId)
                     ?: throw IllegalStateException(
                         "No se encontró el usuario."
                     )
@@ -77,38 +86,45 @@ class WalkerHomeViewModel @Inject constructor(
                     "La cuenta no corresponde a un paseador."
                 }
 
-                val walker = getWalkerByIdUseCase(userId)
+                if (currentUserId != userId) return@launch
 
-                val requests =
-                    getWalkRequestsByWalkerUseCase(userId)
+                val (walker, requests, walks) = coroutineScope {
+                    val walkerDeferred = async {
+                        getWalkerByIdUseCase(userId)
+                    }
+                    val requestsDeferred = async {
+                        getWalkRequestsByWalkerUseCase(userId)
+                    }
+                    val walksDeferred = async {
+                        getWalksByWalkerUseCase(userId)
+                    }
+                    Triple(
+                        walkerDeferred.await(),
+                        requestsDeferred.await(),
+                        walksDeferred.await()
+                    )
+                }
+
+                if (currentUserId != userId) return@launch
 
                 // Conservamos únicamente las solicitudes pendientes.
                 val pendingRequests = requests.filter { request ->
                     request.status == RequestStatus.PENDING
                 }
 
-                val walks = getWalksByWalkerUseCase(userId)
-
                 _uiState.update { currentState ->
                     currentState.copy(
                         userName = user.name,
                         profileImage = user.profileImage,
                         available = walker?.available ?: false,
-
-                        // Contador de solicitudes pendientes.
                         pendingRequests = pendingRequests.size,
-
-                        // Lista completa para mostrar las solicitudes.
                         pendingRequestItems = pendingRequests,
-
                         scheduledWalks = walks.count { walk ->
                             walk.status == WalkStatus.SCHEDULED
                         },
-
                         activeWalks = walks.count { walk ->
                             walk.status == WalkStatus.IN_PROGRESS
                         },
-
                         rating = walker?.rating,
                         isLoading = false,
                         errorMessage = null
@@ -117,12 +133,14 @@ class WalkerHomeViewModel @Inject constructor(
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = error.message
-                            ?: "No se pudo cargar la información de inicio."
-                    )
+                if (currentUserId == userId) {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = error.message
+                                ?: "No se pudo cargar la información de inicio."
+                        )
+                    }
                 }
             }
         }
@@ -149,42 +167,46 @@ class WalkerHomeViewModel @Inject constructor(
             return
         }
 
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    isUpdatingAvailability = true,
-                    errorMessage = null,
-                    availabilityMessage = null
-                )
-            }
+        _uiState.update {
+            it.copy(
+                isUpdatingAvailability = true,
+                errorMessage = null,
+                availabilityMessage = null
+            )
+        }
 
+        viewModelScope.launch {
             try {
                 updateWalkerAvailabilityUseCase(
                     userId = userId,
                     available = newAvailable
                 )
 
-                _uiState.update {
-                    it.copy(
-                        available = newAvailable,
-                        isUpdatingAvailability = false,
-                        availabilityMessage = if (newAvailable) {
-                            "Ahora estás disponible para recibir solicitudes."
-                        } else {
-                            "Ya no estás disponible para nuevas solicitudes."
-                        },
-                        errorMessage = null
-                    )
+                if (currentUserId == userId) {
+                    _uiState.update {
+                        it.copy(
+                            available = newAvailable,
+                            isUpdatingAvailability = false,
+                            availabilityMessage = if (newAvailable) {
+                                "Ahora estás disponible para recibir solicitudes."
+                            } else {
+                                "Ya no estás disponible para nuevas solicitudes."
+                            },
+                            errorMessage = null
+                        )
+                    }
                 }
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isUpdatingAvailability = false,
-                        errorMessage = error.message
-                            ?: "No se pudo actualizar la disponibilidad."
-                    )
+                if (currentUserId == userId) {
+                    _uiState.update {
+                        it.copy(
+                            isUpdatingAvailability = false,
+                            errorMessage = error.message
+                                ?: "No se pudo actualizar la disponibilidad."
+                        )
+                    }
                 }
             }
         }

@@ -50,6 +50,7 @@ dependencies {
     implementation(project(":core:database"))
     implementation(project(":core:domain"))
     implementation(project(":core:location"))
+    implementation(project(":core:cloudinary"))
     implementation(project(":core:ui"))
 
     // Features
@@ -66,6 +67,7 @@ dependencies {
     // Android y Jetpack Compose
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.adaptiveNavigationSuite)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)

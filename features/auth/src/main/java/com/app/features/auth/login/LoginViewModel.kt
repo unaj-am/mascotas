@@ -57,14 +57,14 @@ class LoginViewModel @Inject constructor(
             return
         }
 
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    isLoading = true,
-                    errorMessage = null
-                )
-            }
+        _uiState.update {
+            it.copy(
+                isLoading = true,
+                errorMessage = null
+            )
+        }
 
+        viewModelScope.launch {
             try {
                 signInUseCase(
                     email = email,

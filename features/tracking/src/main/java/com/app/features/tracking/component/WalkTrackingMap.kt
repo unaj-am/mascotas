@@ -1,7 +1,7 @@
 
 package com.app.features.tracking.component
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,11 +11,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.app.core.domain.model.MatchedRoute
+import com.app.core.domain.model.RouteCoordinate
 import com.app.core.domain.model.WalkLocation
 import com.app.core.ui.components.AppCard
 import org.maplibre.compose.camera.CameraPosition
@@ -46,7 +49,8 @@ fun WalkTrackingMap(
     walkId: String,
     currentLocation: WalkLocation?,
     locationHistory: List<WalkLocation>,
-    matchedRoute: MatchedRoute?
+    matchedRoute: MatchedRoute?,
+    fitRoute: Boolean
 ) {
     val cameraState = rememberCameraState(
         firstPosition = CameraPosition(
@@ -58,29 +62,11 @@ fun WalkTrackingMap(
         )
     )
 
-    LaunchedEffect(
-        currentLocation?.recordedAt,
-        locationHistory.lastOrNull()?.recordedAt
-    ) {
-        val targetLocation = currentLocation
-            ?: locationHistory.lastOrNull()
-
-        targetLocation?.let { location ->
-            cameraState.position = CameraPosition(
-                target = Position(
-                    latitude = location.latitude,
-                    longitude = location.longitude
-                ),
-                zoom = 16.0
-            )
-        }
-    }
-
     // Si OSRM devuelve geometría, utilizamos sus segmentos.
     // Si todavía no hay resultado, mostramos el historial GPS.
 
     // Segmentos devueltos por OSRM.
-    val matchedSegments: List<List<Position>> =
+    val matchedSegments: List<List<Position>> = remember(matchedRoute) {
         matchedRoute?.segments
             ?.map { segment ->
                 segment.coordinates.map { coordinate ->
@@ -92,22 +78,27 @@ fun WalkTrackingMap(
             }
             ?.filter { segment -> segment.size >= 2 }
             .orEmpty()
+    }
 
     // Procesamos el historial GPS para utilizarlo como alternativa
     // cuando todavía no existe una geometría ajustada por OSRM.
-    val filteredGpsLocations = WalkRouteProcessor.filterLocations(
-        history = locationHistory,
-        currentLocation = currentLocation
-    )
-
-    val gpsPositions = filteredGpsLocations.map { location ->
-        Position(
-            latitude = location.latitude,
-            longitude = location.longitude
+    val filteredGpsLocations = remember(locationHistory, currentLocation) {
+        WalkRouteProcessor.filterLocations(
+            history = locationHistory,
+            currentLocation = currentLocation
         )
     }
 
-    val routeSegments: List<List<Position>> =
+    val gpsPositions = remember(filteredGpsLocations) {
+        filteredGpsLocations.map { location ->
+            Position(
+                latitude = location.latitude,
+                longitude = location.longitude
+            )
+        }
+    }
+
+    val routeSegments: List<List<Position>> = remember(matchedSegments, gpsPositions) {
         if (matchedSegments.isNotEmpty()) {
             matchedSegments
         } else if (gpsPositions.size >= 2) {
@@ -115,6 +106,7 @@ fun WalkTrackingMap(
         } else {
             emptyList()
         }
+    }
 
     val isMatchedRoute = matchedSegments.isNotEmpty()
 
@@ -129,12 +121,71 @@ fun WalkTrackingMap(
                 style = MaterialTheme.typography.titleMedium
             )
 
-            Box(
+            BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(280.dp)
                     .clip(RoundedCornerShape(12.dp))
             ) {
+                val viewportMinDimensionPixels = with(LocalDensity.current) {
+                    minOf(maxWidth, 280.dp).toPx().toDouble()
+                }
+                val routeCoordinates = remember(matchedRoute, filteredGpsLocations) {
+                    if (matchedSegments.isNotEmpty()) {
+                        matchedRoute?.segments
+                            ?.flatMap { it.coordinates }
+                            .orEmpty()
+                    } else {
+                        filteredGpsLocations.map { location ->
+                            RouteCoordinate(
+                                latitude = location.latitude,
+                                longitude = location.longitude
+                            )
+                        }
+                    }
+                }
+
+                LaunchedEffect(
+                    walkId,
+                    fitRoute,
+                    currentLocation?.recordedAt,
+                    locationHistory.lastOrNull()?.recordedAt,
+                    matchedRoute,
+                    viewportMinDimensionPixels
+                ) {
+                    val fittedViewport = if (fitRoute) {
+                        RouteCameraViewportCalculator.calculate(
+                            coordinates = routeCoordinates,
+                            viewportMinDimensionPixels = viewportMinDimensionPixels
+                        )
+                    } else {
+                        null
+                    }
+
+                    if (fittedViewport != null) {
+                        cameraState.position = CameraPosition(
+                            target = Position(
+                                latitude = fittedViewport.latitude,
+                                longitude = fittedViewport.longitude
+                            ),
+                            zoom = fittedViewport.zoom
+                        )
+                    } else {
+                        val targetLocation = currentLocation
+                            ?: locationHistory.lastOrNull()
+
+                        targetLocation?.let { location ->
+                            cameraState.position = CameraPosition(
+                                target = Position(
+                                    latitude = location.latitude,
+                                    longitude = location.longitude
+                                ),
+                                zoom = 16.0
+                            )
+                        }
+                    }
+                }
+
                 MaplibreMap(
                     modifier = Modifier.fillMaxSize(),
                     baseStyle = BaseStyle.Uri(

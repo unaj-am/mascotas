@@ -17,8 +17,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.app.core.ui.components.AdaptiveContent
 import com.app.core.ui.components.AppCard
 import com.app.core.ui.components.InfoRow
+import com.app.core.ui.components.DomainErrorMessage
 import com.app.core.ui.components.LoadingContent
 import com.app.core.ui.components.SectionHeader
 import com.app.core.ui.components.StatusBadge
@@ -33,7 +35,8 @@ fun WalkerRequestDetailScreen(
     state: WalkerRequestDetailUiState,
     onBack: () -> Unit = {}
 ) {
-    Column(
+    AdaptiveContent(maxWidth = DimensUI.ContentMaxWidthDetail) {
+        Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
@@ -76,11 +79,7 @@ fun WalkerRequestDetailScreen(
             }
 
             state.errorMessage != null -> {
-                Text(
-                    text = state.errorMessage,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error
-                )
+                DomainErrorMessage(message = state.errorMessage)
             }
 
             else -> {
@@ -183,6 +182,7 @@ fun WalkerRequestDetailScreen(
                     }
                 }
             }
+        }
         }
     }
 }

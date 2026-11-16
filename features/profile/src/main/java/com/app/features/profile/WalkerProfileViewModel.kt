@@ -4,11 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.core.domain.model.UserRole
 import com.app.core.domain.model.Walker
-import com.app.core.domain.repository.UserRepository
+import com.app.core.domain.usecase.GetUserByIdUseCase
 import com.app.core.domain.usecase.GetWalkerByIdUseCase
 import com.app.core.domain.usecase.SaveWalkerUseCase
 import com.app.core.domain.usecase.UpdateUserUseCase
 import com.app.core.domain.usecase.UpdateWalkerUseCase
+import com.app.core.domain.usecase.UpdateUserProfileImageUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -17,17 +18,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.app.cloudinary.CloudinaryPhotoUploader
+import com.app.core.domain.service.PhotoUploader
 import android.net.Uri
 
 @HiltViewModel
 class WalkerProfileViewModel @Inject constructor(
-    private val userRepository: UserRepository,
+    private val getUserByIdUseCase: GetUserByIdUseCase,
     private val getWalkerByIdUseCase: GetWalkerByIdUseCase,
     private val saveWalkerUseCase: SaveWalkerUseCase,
     private val updateWalkerUseCase: UpdateWalkerUseCase,
     private val updateUserUseCase: UpdateUserUseCase,
-    private val cloudinaryPhotoUploader: CloudinaryPhotoUploader
+    private val photoUploader: PhotoUploader,
+    private val updateUserProfileImageUseCase: UpdateUserProfileImageUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WalkerProfileUiState())
@@ -62,7 +64,7 @@ class WalkerProfileViewModel @Inject constructor(
             }
 
             try {
-                val user = userRepository.getUserById(userId)
+                val user = getUserByIdUseCase(userId)
                     ?: throw IllegalStateException(
                         "No se encontró el usuario."
                     )
@@ -277,7 +279,7 @@ class WalkerProfileViewModel @Inject constructor(
 
             try {
                 // Recupera el usuario actual para conservar sus otros datos.
-                val user = userRepository.getUserById(userId)
+                val user = getUserByIdUseCase(userId)
                     ?: throw IllegalStateException(
                         "No se encontró el usuario."
                     )
@@ -370,12 +372,9 @@ class WalkerProfileViewModel @Inject constructor(
             }
 
             try {
-                val imageUrl = cloudinaryPhotoUploader.uploadPhoto(uri)
+                val imageUrl = photoUploader.uploadPhoto(uri.toString())
 
-                userRepository.updateProfileImage(
-                    userId = userId,
-                    imageUrl = imageUrl
-                )
+                updateUserProfileImageUseCase(userId, imageUrl)
 
                 _uiState.update {
                     it.copy(

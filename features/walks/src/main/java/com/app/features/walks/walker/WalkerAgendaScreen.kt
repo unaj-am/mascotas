@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.app.core.domain.model.WalkStatus
 import com.app.core.ui.components.AppAnimatedVisibility
 import com.app.core.ui.theme.DimensUI
@@ -31,6 +33,7 @@ fun WalkerAgendaScreen(
 
     Column(
         modifier = Modifier
+            .widthIn(max = 1120.dp)
             .fillMaxSize()
             .padding(
                 horizontal = DimensUI.ScreenHorizontalPadding,

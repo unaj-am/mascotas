@@ -35,6 +35,10 @@ object DimensUI {
     // =================================================
 
     val ScreenHorizontalPadding: Dp = 20.dp
+
+    val ContentMaxWidth: Dp = 1120.dp
+    val ContentMaxWidthForm: Dp = 720.dp
+    val ContentMaxWidthDetail: Dp = 880.dp
     val ScreenVerticalPadding: Dp = 24.dp
 
     val ScreenTopPadding: Dp = 16.dp

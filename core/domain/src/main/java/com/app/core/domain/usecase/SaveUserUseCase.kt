@@ -2,8 +2,9 @@ package com.app.core.domain.usecase
 
 import com.app.core.domain.model.User
 import com.app.core.domain.repository.UserRepository
+import javax.inject.Inject
 
-class SaveUserUseCase(
+class SaveUserUseCase @Inject constructor(
     private val userRepository: UserRepository
 ) {
     suspend operator fun invoke(user: User) {

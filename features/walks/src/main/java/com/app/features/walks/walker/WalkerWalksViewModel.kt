@@ -111,6 +111,10 @@ class WalkerWalksViewModel @Inject constructor(
                     loadedWalks to loadedDetails
                 }
 
+                if (this@WalkerWalksViewModel.walkerId != walkerId) {
+                    return@launch
+                }
+
                 _uiState.update {
                     it.copy(
                         walks = walks,
@@ -122,12 +126,14 @@ class WalkerWalksViewModel @Inject constructor(
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = error.message
-                            ?: "No se pudieron cargar los paseos."
-                    )
+                if (this@WalkerWalksViewModel.walkerId == walkerId) {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = error.message
+                                ?: "No se pudieron cargar los paseos."
+                        )
+                    }
                 }
             }
         }
@@ -226,40 +232,47 @@ class WalkerWalksViewModel @Inject constructor(
     ) {
         if (_uiState.value.processingId != null) return
 
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    processingId = id,
-                    operationMessage = null,
-                    operationError = null
-                )
-            }
+        val currentWalkerId = walkerId
+        _uiState.update {
+            it.copy(
+                processingId = id,
+                operationMessage = null,
+                operationError = null
+            )
+        }
 
+        viewModelScope.launch {
             try {
                 operation()
 
-                _uiState.update {
-                    it.copy(
-                        processingId = null,
-                        operationMessage = successMessage
-                    )
+                if (walkerId == currentWalkerId) {
+                    _uiState.update {
+                        it.copy(
+                            processingId = null,
+                            operationMessage = successMessage
+                        )
+                    }
                 }
 
                 // Se ejecuta únicamente después de confirmar
                 // que la operación de dominio terminó correctamente.
                 onSuccess()
 
-                load(walkerId, forceRefresh = true)
+                if (walkerId == currentWalkerId) {
+                    load(currentWalkerId, forceRefresh = true)
+                }
 
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
-                _uiState.update {
-                    it.copy(
-                        processingId = null,
-                        operationError = error.message
-                            ?: "No se pudo actualizar el paseo."
-                    )
+                if (walkerId == currentWalkerId) {
+                    _uiState.update {
+                        it.copy(
+                            processingId = null,
+                            operationError = error.message
+                                ?: "No se pudo actualizar el paseo."
+                        )
+                    }
                 }
             }
         }

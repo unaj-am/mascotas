@@ -2,6 +2,7 @@
 package com.app.mascotas
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -15,6 +16,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,20 +56,23 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
+            val notificationPreferences = remember {
+                getSharedPreferences(
+                    NOTIFICATION_PREFERENCES,
+                    MODE_PRIVATE
+                )
+            }
             val notificationPermissionLauncher =
                 rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestPermission(),
                     onResult = { isGranted ->
-                        // Más adelante podemos manejar si el usuario rechaza el permiso.
+                        notificationPreferences.edit()
+                            .putBoolean(KEY_NOTIFICATIONS_GRANTED, isGranted)
+                            .apply()
                     }
                 )
-
-            LaunchedEffect(Unit) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    notificationPermissionLauncher.launch(
-                        Manifest.permission.POST_NOTIFICATIONS
-                    )
-                }
+            var showNotificationPermissionPrompt by rememberSaveable {
+                mutableStateOf(false)
             }
 
             val sessionViewModel: AppSessionViewModel =
@@ -73,6 +80,35 @@ class MainActivity : ComponentActivity() {
 
             val sessionState by sessionViewModel.uiState
                 .collectAsStateWithLifecycle()
+
+            LaunchedEffect(sessionState) {
+                if (sessionState !is AppSessionState.Authenticated) {
+                    return@LaunchedEffect
+                }
+
+                val hasAlreadyBeenPrompted = notificationPreferences.getBoolean(
+                    KEY_NOTIFICATION_PROMPT_SHOWN,
+                    false
+                )
+                val wasPreviouslyGranted = notificationPreferences.getBoolean(
+                    KEY_NOTIFICATIONS_GRANTED,
+                    false
+                )
+
+                if (
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                    this@MainActivity.checkSelfPermission(
+                        Manifest.permission.POST_NOTIFICATIONS
+                    ) != PackageManager.PERMISSION_GRANTED &&
+                    (!hasAlreadyBeenPrompted || wasPreviouslyGranted)
+                ) {
+                    notificationPreferences.edit()
+                        .putBoolean(KEY_NOTIFICATION_PROMPT_SHOWN, true)
+                        .putBoolean(KEY_NOTIFICATIONS_GRANTED, false)
+                        .apply()
+                    showNotificationPermissionPrompt = true
+                }
+            }
 
             var showRegister by rememberSaveable {
                 mutableStateOf(false)
@@ -209,6 +245,44 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+
+                if (showNotificationPermissionPrompt) {
+                    AlertDialog(
+                        onDismissRequest = {
+                            showNotificationPermissionPrompt = false
+                        },
+                        title = {
+                            Text("Recibí avisos de tus paseos")
+                        },
+                        text = {
+                            Text(
+                                "Permití las notificaciones para enterarte de solicitudes " +
+                                    "y actualizaciones de tus paseos."
+                            )
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    showNotificationPermissionPrompt = false
+                                    notificationPermissionLauncher.launch(
+                                        Manifest.permission.POST_NOTIFICATIONS
+                                    )
+                                }
+                            ) {
+                                Text("Continuar")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(
+                                onClick = {
+                                    showNotificationPermissionPrompt = false
+                                }
+                            ) {
+                                Text("Ahora no")
+                            }
+                        }
+                    )
+                }
             }
         }
     }
@@ -216,6 +290,11 @@ class MainActivity : ComponentActivity() {
     companion object {
         private const val APPEARANCE_PREFERENCES = "appearance_preferences"
         private const val KEY_DARK_THEME = "dark_theme"
+        private const val NOTIFICATION_PREFERENCES = "notification_preferences"
+        private const val KEY_NOTIFICATION_PROMPT_SHOWN =
+            "notification_permission_prompt_shown"
+        private const val KEY_NOTIFICATIONS_GRANTED =
+            "notification_permission_granted"
     }
 }
 

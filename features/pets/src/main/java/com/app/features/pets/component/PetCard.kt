@@ -39,11 +39,11 @@ fun PetCard(
     AppCard(
         modifier = modifier.fillMaxWidth(),
         onClick = onClick,
-        contentPadding = DimensUI.CardPaddingLarge
+        contentPadding = DimensUI.CardPadding
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(
-                DimensUI.SpaceLarge
+                DimensUI.SpaceMedium
             )
         ) {
             Row(
@@ -58,14 +58,14 @@ fun PetCard(
                         model = pet.photoUri,
                         contentDescription = "Foto de ${pet.name}",
                         modifier = Modifier
-                            .size(DimensUI.AvatarSizeXLarge)
+                            .size(DimensUI.AvatarSizeLarge)
                             .clip(RoundedCornerShape(16.dp)),
                         contentScale = ContentScale.Crop
                     )
                 } else {
                     AppAvatar(
                         name = pet.name,
-                        size = DimensUI.AvatarSizeXLarge,
+                        size = DimensUI.AvatarSizeLarge,
                         backgroundColor = MaterialTheme.colorScheme.primaryContainer,
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         description = "Avatar de ${pet.name}"
@@ -109,7 +109,7 @@ fun PetCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(
-                    DimensUI.SpaceLarge
+                    DimensUI.SpaceMedium
                 )
             ) {
                 InfoRow(

@@ -1,49 +1,56 @@
-
 package com.app.mascotas.ui
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
-import com.app.core.ui.components.AppBottomNavigation
-import com.app.core.ui.components.AppBottomNavigationItem
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 
-@Suppress("UNUSED_PARAMETER")
 @Composable
 fun AppShell(
     tabs: List<AppTab>,
     currentTab: NavKey,
     onTabClick: (NavKey) -> Unit,
-    isWalker: Boolean = false,
     content: @Composable (PaddingValues) -> Unit
 ) {
-    Scaffold(
+    val contentInsets = WindowInsets.safeDrawing
+        .only(
+            WindowInsetsSides.Top +
+                WindowInsetsSides.Start +
+                WindowInsetsSides.End
+        )
+        .asPaddingValues()
+
+    NavigationSuiteScaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = {
-            AppBottomNavigation(
-                items = tabs.map { tab ->
-                    AppBottomNavigationItem(
-                        label = tab.label,
-                        selected = currentTab == tab.key,
-                        icon = {
-                            Icon(
-                                imageVector = tab.icon,
-                                contentDescription = tab.label
-                            )
-                        },
-                        onClick = {
-                            onTabClick(tab.key)
-                        }
-                    )
-                }
-            )
+        contentColor = MaterialTheme.colorScheme.onBackground,
+        navigationSuiteItems = {
+            tabs.forEach { tab ->
+                item(
+                    selected = currentTab == tab.key,
+                    onClick = { onTabClick(tab.key) },
+                    icon = {
+                        Icon(
+                            imageVector = tab.icon,
+                            contentDescription = tab.label
+                        )
+                    },
+                    label = { Text(text = tab.label) },
+                    alwaysShowLabel = true
+                )
+            }
         }
-    ) { innerPadding ->
-        content(innerPadding)
+    ) {
+        content(contentInsets)
     }
 }
