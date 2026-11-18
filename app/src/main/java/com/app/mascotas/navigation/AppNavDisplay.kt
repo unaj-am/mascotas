@@ -37,7 +37,8 @@ import com.app.features.pets.detail.PetDetailRoute
 import com.app.features.pets.detail.PetDetailUiState
 import com.app.features.pets.detail.PetDetailViewModel
 import com.app.features.pets.form.PetFormScreen
-import com.app.features.pets.list.PetOperationUiState
+import com.app.features.pets.form.PetFormUiState
+import com.app.features.pets.form.PetFormViewModel
 import com.app.features.pets.list.PetRoute
 import com.app.features.pets.list.PetViewModel
 import com.app.features.profile.OwnerProfileRoute
@@ -56,6 +57,7 @@ fun AppNavDisplay(
     ownerId: String,
     petViewModel: PetViewModel,
     petDetailViewModel: PetDetailViewModel,
+    petFormViewModel: PetFormViewModel,
     walkerViewModel: WalkerViewModel,
     onPetClick: (String) -> Unit,
     onAddPetClick: () -> Unit,
@@ -76,7 +78,7 @@ fun AppNavDisplay(
 
     val detailUiState by petDetailViewModel.uiState.collectAsStateWithLifecycle()
 
-    val operationState by petViewModel.operationState.collectAsStateWithLifecycle()
+    val formUiState by petFormViewModel.uiState.collectAsStateWithLifecycle()
 
     val currentForm = navigationState.currentKey as? PetFormDestination
 
@@ -248,7 +250,7 @@ fun AppNavDisplay(
                     petId = destination.petId,
                     viewModel = petDetailViewModel,
                     onEditClick = { pet ->
-                        petViewModel.resetOperationState()
+                        petFormViewModel.resetState()
 
                         navigationState.navigate(
                             PetFormDestination(
@@ -284,14 +286,12 @@ fun AppNavDisplay(
                     PetFormScreen(
                         ownerId = destination.ownerId,
                         pet = null,
-                        isSaving = operationState is
-                                PetOperationUiState.Loading,
+                        isSaving = formUiState is PetFormUiState.Loading,
                         errorMessage = (
-                                operationState as?
-                                        PetOperationUiState.Error
+                                formUiState as? PetFormUiState.Error
                                 )?.message,
                         onSave = { pet, photoUri ->
-                            petViewModel.savePet(pet, photoUri)
+                            petFormViewModel.savePet(pet, photoUri)
                         },
                         onCancel = {
                             navigationState.goBack()
@@ -303,14 +303,12 @@ fun AppNavDisplay(
                     PetFormScreen(
                         ownerId = destination.ownerId,
                         pet = editingPet,
-                        isSaving = operationState is
-                                PetOperationUiState.Loading,
+                        isSaving = formUiState is PetFormUiState.Loading,
                         errorMessage = (
-                                operationState as?
-                                        PetOperationUiState.Error
+                                formUiState as? PetFormUiState.Error
                                 )?.message,
                         onSave = { pet, photoUri ->
-                            petViewModel.updatePet(pet, photoUri)
+                            petFormViewModel.updatePet(pet, photoUri)
                         },
                         onCancel = {
                             navigationState.goBack()
@@ -359,7 +357,7 @@ fun AppNavDisplay(
         onBack = {
             val isSavingPet =
                 currentForm != null &&
-                        operationState is PetOperationUiState.Loading
+                        formUiState is PetFormUiState.Loading
 
             if (!isSavingPet) {
                 navigationState.goBack()

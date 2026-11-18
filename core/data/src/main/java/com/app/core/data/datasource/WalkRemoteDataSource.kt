@@ -1,9 +1,9 @@
 
 package com.app.core.data.datasource
 
+import com.app.core.data.mapper.toFirestoreMapWithDefaults
+import com.app.core.data.mapper.toWalk
 import com.app.core.domain.model.Walk
-import com.app.core.domain.model.WalkStatus
-import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -58,7 +58,7 @@ class WalkRemoteDataSource @Inject constructor(
                 "Ya existe un paseo con ese identificador"
             }
 
-            transaction.set(walkRef, walk.toFirestoreMap())
+            transaction.set(walkRef, walk.toFirestoreMapWithDefaults())
         }.await()
     }
 
@@ -82,36 +82,4 @@ class WalkRemoteDataSource @Inject constructor(
         }.await()
     }
 
-    private fun Walk.toFirestoreMap(): Map<String, Any> =
-        mapOf(
-            "ownerId" to ownerId,
-            "walkerId" to walkerId,
-            "petIds" to petIds,
-            "scheduledAt" to scheduledAt,
-            "durationMinutes" to durationMinutes,
-            "status" to status.name,
-            "startedAt" to (startedAt ?: ""),
-            "finishedAt" to (finishedAt ?: ""),
-            "distanceKm" to (distanceKm ?: 0.0),
-            "observations" to observations
-        )
-
-    private fun DocumentSnapshot.toWalk(): Walk =
-        Walk(
-            id = id,
-            ownerId = getString("ownerId")
-                ?: throw IllegalStateException("El paseo no tiene dueño"),
-            walkerId = getString("walkerId")
-                ?: throw IllegalStateException("El paseo no tiene paseador"),
-            petIds = get("petIds") as? List<String> ?: emptyList(),
-            scheduledAt = getString("scheduledAt").orEmpty(),
-            durationMinutes = getLong("durationMinutes")?.toInt() ?: 0,
-            status = getString("status")?.let {
-                runCatching { WalkStatus.valueOf(it) }.getOrNull()
-            } ?: WalkStatus.SCHEDULED,
-            startedAt = getString("startedAt")?.takeIf { it.isNotBlank() },
-            finishedAt = getString("finishedAt")?.takeIf { it.isNotBlank() },
-            distanceKm = getDouble("distanceKm")?.takeIf { it > 0.0 },
-            observations = getString("observations").orEmpty()
-        )
 }

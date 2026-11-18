@@ -25,6 +25,7 @@ data class PetDetailDestination(
     val petId: String
 ) : NavKey
 
+
 @Serializable
 data class PetFormDestination(
     val ownerId: String,

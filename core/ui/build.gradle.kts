@@ -28,16 +28,13 @@ android {
 }
 
 dependencies {
-    // Capa de dominio
-    implementation(project(":core:domain"))
-
     // Jetpack Compose
     implementation(platform(libs.androidx.compose.bom))
 
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.material3)
-    implementation("androidx.activity:activity-compose:1.12.4")
+    implementation(libs.androidx.activity.compose)
 
     // Herramientas de desarrollo
     implementation(libs.androidx.compose.ui.tooling.preview)

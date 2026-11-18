@@ -1,8 +1,9 @@
 
 package com.app.core.data.datasource
 
+import com.app.core.data.mapper.toFirestoreMap
+import com.app.core.data.mapper.toUser
 import com.app.core.domain.model.User
-import com.app.core.domain.model.UserRole
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
 import kotlinx.coroutines.tasks.await
@@ -26,23 +27,7 @@ class UserRemoteDataSource @Inject constructor(
 
         if (!document.exists()) return null
 
-        val roleName = document.getString("role")
-            ?: return null
-
-        val role = runCatching {
-            UserRole.valueOf(roleName)
-        }.getOrNull() ?: return null
-
-        return User(
-            id = document.id,
-            name = document.getString("name") ?: "",
-            lastName = document.getString("lastName") ?: "",
-            email = document.getString("email") ?: "",
-            phone = document.getString("phone") ?: "",
-            profileImage = document.getString("profileImage"),
-            role = role,
-            active = document.getBoolean("active") ?: true
-        )
+        return document.toUser()
     }
 
     suspend fun saveUser(user: User) {
@@ -69,15 +54,4 @@ class UserRemoteDataSource @Inject constructor(
             .await()
     }
 
-    private fun User.toFirestoreMap(): Map<String, Any?> {
-        return mapOf(
-            "name" to name,
-            "lastName" to lastName,
-            "email" to email,
-            "phone" to phone,
-            "profileImage" to profileImage,
-            "role" to role.name,
-            "active" to active
-        )
-    }
 }

@@ -1,5 +1,9 @@
 package com.app.core.data.notifications
+
+import com.app.core.domain.model.AppNotification
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.DocumentSnapshot
+
 data class NotificationDto(
     val userId: String = "",
     val title: String = "",
@@ -9,10 +13,9 @@ data class NotificationDto(
     val isRead: Boolean = false,
     val createdAt: Timestamp? = null
 )
-fun NotificationDto.toDomain(
-    id: String
-): com.app.core.domain.model.AppNotification {
-    return com.app.core.domain.model.AppNotification(
+
+fun NotificationDto.toDomain(id: String): AppNotification =
+    AppNotification(
         id = id,
         userId = userId,
         title = title,
@@ -22,4 +25,11 @@ fun NotificationDto.toDomain(
         isRead = isRead,
         createdAt = createdAt?.toDate()?.time ?: 0L
     )
+
+fun DocumentSnapshot.toAppNotificationOrNull(): AppNotification? {
+    val dto = toObject(NotificationDto::class.java)
+        ?.copy(isRead = getBoolean("isRead") ?: false)
+        ?: return null
+
+    return dto.toDomain(id)
 }
