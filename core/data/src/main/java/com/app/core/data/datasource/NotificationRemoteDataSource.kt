@@ -2,10 +2,12 @@
 package com.app.core.data.datasource
 
 import android.util.Log
-import com.app.core.data.notifications.NotificationDto
-import com.app.core.data.notifications.toDomain
+import com.app.core.data.notifications.toAppNotificationOrNull
 import com.app.core.domain.model.AppNotification
-import com.app.core.domain.model.NotificationType
+import com.app.core.data.mapper.requestNotificationsForOwner
+import com.app.core.data.mapper.requestNotificationsForWalker
+import com.app.core.data.mapper.walkNotificationsForOwner
+import com.app.core.data.mapper.walkNotificationsForWalker
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -16,7 +18,6 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
-import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -53,7 +54,7 @@ class NotificationRemoteDataSource @Inject constructor(
             userId = userId
         ).map { documents ->
             documents.flatMap { document ->
-                requestNotificationsForOwner(document)
+                document.requestNotificationsForOwner()
             }
         }
 
@@ -64,7 +65,7 @@ class NotificationRemoteDataSource @Inject constructor(
             userId = userId
         ).map { documents ->
             documents.flatMap { document ->
-                requestNotificationsForWalker(document)
+                document.requestNotificationsForWalker()
             }
         }
 
@@ -75,7 +76,7 @@ class NotificationRemoteDataSource @Inject constructor(
             userId = userId
         ).map { documents ->
             documents.flatMap { document ->
-                walkNotificationsForOwner(document)
+                document.walkNotificationsForOwner()
             }
         }
 
@@ -86,7 +87,7 @@ class NotificationRemoteDataSource @Inject constructor(
             userId = userId
         ).map { documents ->
             documents.flatMap { document ->
-                walkNotificationsForWalker(document)
+                document.walkNotificationsForWalker()
             }
         }
 
@@ -149,13 +150,7 @@ class NotificationRemoteDataSource @Inject constructor(
                     ?.documents
                     ?.mapNotNull { document ->
 
-                        val dto = document.toObject(
-                            NotificationDto::class.java
-                        )?.copy(
-                            isRead = document.getBoolean("isRead") ?: false
-                        )
-
-                        dto?.toDomain(document.id)
+                        document.toAppNotificationOrNull()
                     }
                     ?: emptyList()
 
@@ -225,197 +220,6 @@ class NotificationRemoteDataSource @Inject constructor(
         awaitClose {
             listener.remove()
         }
-    }
-
-    // =========================================================
-    // NOTIFICACIONES PARA EL DUEÑO DESDE WALK REQUESTS
-    // =========================================================
-
-    private fun requestNotificationsForOwner(
-        document: DocumentSnapshot
-    ): List<AppNotification> {
-
-        val status = document.getString("status").orEmpty()
-
-        return when (status) {
-
-            "ACCEPTED" -> listOfNotNull(
-                buildNotification(
-                    id = "event_request_accepted_${document.id}",
-                    userId = document.getString("ownerId").orEmpty(),
-                    title = "Paseo aceptado",
-                    body = "Tu paseo fue aceptado.",
-                    type = NotificationType.WALK_ACCEPTED,
-                    referenceId = document.id,
-                    createdAt = document.timestampMillis("acceptedAt")
-                )
-            )
-
-            "REJECTED" -> listOfNotNull(
-                buildNotification(
-                    id = "event_request_rejected_${document.id}",
-                    userId = document.getString("ownerId").orEmpty(),
-                    title = "Solicitud rechazada",
-                    body = "Tu solicitud de paseo fue rechazada.",
-                    type = NotificationType.WALK_REJECTED,
-                    referenceId = document.id,
-                    createdAt = document.timestampMillis("rejectedAt")
-                )
-            )
-
-            else -> emptyList()
-        }
-    }
-
-    // =========================================================
-    // NOTIFICACIONES PARA EL PASEADOR DESDE WALK REQUESTS
-    // =========================================================
-
-    private fun requestNotificationsForWalker(
-        document: DocumentSnapshot
-    ): List<AppNotification> {
-
-        val notifications = mutableListOf<AppNotification>()
-
-        // La creación se conserva aunque luego cambie el estado.
-        buildNotification(
-            id = "event_request_created_${document.id}",
-            userId = document.getString("walkerId").orEmpty(),
-            title = "Nueva solicitud",
-            body = "Tenés una nueva solicitud de paseo.",
-            type = NotificationType.WALK_REQUEST_CREATED,
-            referenceId = document.id,
-            createdAt = document.timestampMillis("createdAt")
-        )?.let(notifications::add)
-
-        // Cancelación de una solicitud todavía pendiente.
-        if (document.getString("status") == "CANCELLED") {
-            buildNotification(
-                id = "event_request_cancelled_${document.id}",
-                userId = document.getString("walkerId").orEmpty(),
-                title = "Solicitud cancelada",
-                body = "El dueño canceló el paseo.",
-                type = NotificationType.WALK_REQUEST_CANCELLED,
-                referenceId = document.id,
-                createdAt = document.timestampMillis("cancelledAt")
-            )?.let(notifications::add)
-        }
-
-        return notifications
-    }
-
-    // =========================================================
-    // NOTIFICACIONES PARA EL DUEÑO DESDE WALKS
-    // =========================================================
-
-    private fun walkNotificationsForOwner(
-        document: DocumentSnapshot
-    ): List<AppNotification> {
-
-        val notifications = mutableListOf<AppNotification>()
-
-        val ownerId = document.getString("ownerId").orEmpty()
-
-        // Se conserva cuando el paseo pasa a COMPLETED.
-        buildNotification(
-            id = "event_walk_started_${document.id}",
-            userId = ownerId,
-            title = "Paseo iniciado",
-            body = "Tu mascota ya está de paseo.",
-            type = NotificationType.WALK_STARTED,
-            referenceId = document.id,
-            createdAt = document.instantStringMillis("startedAt")
-        )?.let(notifications::add)
-
-        buildNotification(
-            id = "event_walk_completed_${document.id}",
-            userId = ownerId,
-            title = "Paseo finalizado",
-            body = "Tu mascota terminó su paseo.",
-            type = NotificationType.WALK_COMPLETED,
-            referenceId = document.id,
-            createdAt = document.instantStringMillis("finishedAt")
-        )?.let(notifications::add)
-
-        return notifications
-    }
-
-    // =========================================================
-    // NOTIFICACIONES PARA EL PASEADOR DESDE WALKS
-    // =========================================================
-
-    private fun walkNotificationsForWalker(
-        document: DocumentSnapshot
-    ): List<AppNotification> {
-
-        if (document.getString("status") != "CANCELLED") {
-            return emptyList()
-        }
-
-        // El modelo actual de Walk todavía no guarda cancelledAt.
-        // Por eso usamos una fecha estable del documento si existe.
-        val cancelledAt = document.timestampMillis("cancelledAt")
-            ?: document.instantStringMillis("cancelledAt")
-
-        return listOfNotNull(
-            buildNotification(
-                id = "event_walk_cancelled_${document.id}",
-                userId = document.getString("walkerId").orEmpty(),
-                title = "Paseo cancelado",
-                body = "El dueño canceló el paseo.",
-                type = NotificationType.WALK_CANCELLED,
-                referenceId = document.id,
-                createdAt = cancelledAt
-            )
-        )
-    }
-
-    // =========================================================
-    // CONSTRUCCIÓN DE NOTIFICACIONES
-    // =========================================================
-
-    private fun buildNotification(
-        id: String,
-        userId: String,
-        title: String,
-        body: String,
-        type: String,
-        referenceId: String,
-        createdAt: Long?
-    ): AppNotification? {
-
-        if (userId.isBlank() || createdAt == null) {
-            return null
-        }
-
-        return AppNotification(
-            id = id,
-            userId = userId,
-            title = title,
-            body = body,
-            type = type,
-            referenceId = referenceId,
-            isRead = false,
-            createdAt = createdAt
-        )
-    }
-
-    private fun DocumentSnapshot.timestampMillis(
-        field: String
-    ): Long? =
-        getTimestamp(field)?.toDate()?.time
-
-    private fun DocumentSnapshot.instantStringMillis(
-        field: String
-    ): Long? {
-
-        val value = getString(field)
-            ?.takeIf { it.isNotBlank() }
-            ?: return null
-
-        return runCatching {
-            Instant.parse(value).toEpochMilli()
-        }.getOrNull()
     }
 
     // =========================================================

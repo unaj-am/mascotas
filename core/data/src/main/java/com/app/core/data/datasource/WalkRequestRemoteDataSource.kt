@@ -1,11 +1,12 @@
 
 package com.app.core.data.datasource
 
+import com.app.core.data.mapper.toFirestoreMap
+import com.app.core.data.mapper.toWalk
+import com.app.core.data.mapper.toWalkRequest
 import com.app.core.domain.model.RequestStatus
 import com.app.core.domain.model.Walk
 import com.app.core.domain.model.WalkRequest
-import com.app.core.domain.model.WalkStatus
-import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -256,90 +257,4 @@ class WalkRequestRemoteDataSource @Inject constructor(
         }.await()
     }
 
-    private fun WalkRequest.toFirestoreMap(
-        ownerName: String,
-        petNames: List<String>
-    ): Map<String, Any> =
-        mapOf(
-            "ownerId" to ownerId,
-            "ownerName" to ownerName,
-            "walkerId" to walkerId,
-            "petIds" to petIds,
-            "petNames" to petNames,
-            "petPhotos" to petPhotos,
-            "scheduledAt" to scheduledAt,
-            "durationMinutes" to durationMinutes,
-            "status" to status.name,
-            "observations" to observations,
-            "createdAt" to FieldValue.serverTimestamp()
-        )
-
-    private fun DocumentSnapshot.toWalkRequest(): WalkRequest =
-        WalkRequest(
-            id = id,
-            ownerId = getString("ownerId")
-                ?: throw IllegalStateException(
-                    "La solicitud no tiene dueño"
-                ),
-            ownerName = getString("ownerName").orEmpty(),
-            walkerId = getString("walkerId")
-                ?: throw IllegalStateException(
-                    "La solicitud no tiene paseador"
-                ),
-            petIds = get("petIds") as? List<String> ?: emptyList(),
-            petNames = get("petNames") as? List<String> ?: emptyList(),
-            petPhotos = (get("petPhotos") as? List<*>)
-                ?.map { it as? String ?: "" }
-                ?: emptyList(),
-            scheduledAt = getString("scheduledAt").orEmpty(),
-            durationMinutes = getLong("durationMinutes")?.toInt() ?: 0,
-            status = getString("status")?.let {
-                runCatching {
-                    RequestStatus.valueOf(it)
-                }.getOrNull()
-            } ?: RequestStatus.PENDING,
-            observations = getString("observations").orEmpty()
-        )
-
-    private fun Walk.toFirestoreMap(): Map<String, Any?> =
-        mapOf(
-            "ownerId" to ownerId,
-            "walkerId" to walkerId,
-            "petIds" to petIds,
-            "scheduledAt" to scheduledAt,
-            "durationMinutes" to durationMinutes,
-            "status" to status.name,
-            "startedAt" to startedAt,
-            "finishedAt" to finishedAt,
-            "distanceKm" to distanceKm,
-            "observations" to observations
-        )
-
-    private fun DocumentSnapshot.toWalk(): Walk =
-        Walk(
-            id = id,
-            ownerId = getString("ownerId")
-                ?: throw IllegalStateException(
-                    "El paseo no tiene dueño"
-                ),
-            walkerId = getString("walkerId")
-                ?: throw IllegalStateException(
-                    "El paseo no tiene paseador"
-                ),
-            petIds = get("petIds") as? List<String> ?: emptyList(),
-            scheduledAt = getString("scheduledAt").orEmpty(),
-            durationMinutes = getLong("durationMinutes")?.toInt() ?: 0,
-            status = getString("status")?.let {
-                runCatching {
-                    WalkStatus.valueOf(it)
-                }.getOrNull()
-            } ?: WalkStatus.SCHEDULED,
-            startedAt = getString("startedAt")
-                ?.takeIf { it.isNotBlank() },
-            finishedAt = getString("finishedAt")
-                ?.takeIf { it.isNotBlank() },
-            distanceKm = getDouble("distanceKm")
-                ?.takeIf { it > 0.0 },
-            observations = getString("observations").orEmpty()
-        )
 }

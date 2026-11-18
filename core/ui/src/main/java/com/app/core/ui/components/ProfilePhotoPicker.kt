@@ -30,13 +30,9 @@ fun ProfilePhotoPicker(
 ) {
     val context = LocalContext.current
 
-    var showOptions by remember {
-        mutableStateOf(false)
-    }
+    var showOptions by remember { mutableStateOf(false)}
 
-    var cameraPhotoUri by rememberSaveable {
-        mutableStateOf<Uri?>(null)
-    }
+    var cameraPhotoUri by rememberSaveable {mutableStateOf<Uri?>(null) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -54,9 +50,7 @@ fun ProfilePhotoPicker(
         }
     }
 
-    content {
-        showOptions = true
-    }
+    content { showOptions = true}
 
     if (showOptions) {
         AlertDialog(

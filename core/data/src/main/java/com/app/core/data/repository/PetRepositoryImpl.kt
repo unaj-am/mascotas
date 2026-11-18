@@ -1,13 +1,14 @@
 
 package com.app.core.data.repository
 
+import com.app.core.data.mapper.toFirestoreMap
+import com.app.core.data.mapper.toPet
 import com.app.core.database.dao.PetDao
 import com.app.core.database.mapper.toDomain
 import com.app.core.database.mapper.toEntity
 import com.app.core.domain.model.Pet
 import com.app.core.domain.repository.PetRepository
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Source
@@ -146,18 +147,7 @@ class PetRepositoryImpl @Inject constructor(
             "No podés guardar mascotas de otro usuario"
         }
 
-        val petData = mapOf(
-            "ownerId" to pet.ownerId,
-            "name" to pet.name,
-            "breed" to pet.breed,
-            "age" to pet.age,
-            "weight" to pet.weight,
-            "observations" to pet.observations,
-            "photoUri" to pet.photoUri,
-            "size" to pet.size,
-            "behavior" to pet.behavior,
-            "specialNeeds" to pet.specialNeeds
-        )
+        val petData = pet.toFirestoreMap()
 
         // 1. Guardar en Firestore.
         petsCollection
@@ -222,23 +212,4 @@ class PetRepositoryImpl @Inject constructor(
                 code == FirebaseFirestoreException.Code.DEADLINE_EXCEEDED
     }
 
-    private fun DocumentSnapshot.toPet(): Pet {
-
-        return Pet(
-            id = id,
-            ownerId = getString("ownerId")
-                ?: throw IllegalStateException(
-                    "La mascota no tiene dueño"
-                ),
-            name = getString("name").orEmpty(),
-            breed = getString("breed").orEmpty(),
-            age = getLong("age")?.toInt() ?: 0,
-            weight = getDouble("weight") ?: 0.0,
-            observations = getString("observations").orEmpty(),
-            photoUri = getString("photoUri"),
-            size = getString("size").orEmpty(),
-            behavior = getString("behavior").orEmpty(),
-            specialNeeds = getString("specialNeeds").orEmpty()
-        )
-    }
 }

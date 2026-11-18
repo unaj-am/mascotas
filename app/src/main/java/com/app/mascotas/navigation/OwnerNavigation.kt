@@ -14,7 +14,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.core.ui.components.SuccessDialog
 import com.app.features.pets.detail.PetDetailViewModel
-import com.app.features.pets.list.PetOperationUiState
+import com.app.features.pets.form.PetFormUiState
+import com.app.features.pets.form.PetFormViewModel
 import com.app.features.pets.list.PetViewModel
 import com.app.features.walkers.list.WalkerViewModel
 import com.app.mascotas.ui.AppShell
@@ -29,6 +30,7 @@ fun OwnerNavigation(
 ) {
     val petViewModel: PetViewModel = hiltViewModel()
     val petDetailViewModel: PetDetailViewModel = hiltViewModel()
+    val petFormViewModel: PetFormViewModel = hiltViewModel()
     val walkerViewModel: WalkerViewModel = hiltViewModel()
 
     val navigationState = rememberNavigationState()
@@ -37,11 +39,10 @@ fun OwnerNavigation(
         mutableStateOf(false)
     }
 
-    val operationState by
-    petViewModel.operationState.collectAsStateWithLifecycle()
+    val formState by petFormViewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(
-        operationState,
+        formState,
         navigationState.currentKey
     ) {
         val currentForm =
@@ -49,7 +50,7 @@ fun OwnerNavigation(
 
         if (
             currentForm != null &&
-            operationState is PetOperationUiState.Success
+            formState is PetFormUiState.Success
         ) {
             val isCreatingPet = currentForm.petId == null
 
@@ -57,7 +58,8 @@ fun OwnerNavigation(
                 TopLevelDestination.PETS
             )
 
-            petViewModel.resetOperationState()
+            petViewModel.loadPets(ownerId)
+            petFormViewModel.resetState()
 
             if (isCreatingPet) {
                 showPetSuccessDialog = true
@@ -87,15 +89,16 @@ fun OwnerNavigation(
             ownerId = ownerId,
             petViewModel = petViewModel,
             petDetailViewModel = petDetailViewModel,
+            petFormViewModel = petFormViewModel,
             walkerViewModel = walkerViewModel,
             onPetClick = { petId ->
-                petViewModel.resetOperationState()
+                petFormViewModel.resetState()
                 navigationState.navigate(
                     PetDetailDestination(petId)
                 )
             },
             onAddPetClick = {
-                petViewModel.resetOperationState()
+                petFormViewModel.resetState()
                 navigationState.navigate(
                     PetFormDestination(ownerId = ownerId)
                 )

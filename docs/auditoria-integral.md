@@ -68,3 +68,20 @@ Se corrigieron tres problemas de prioridad alta sin cambiar reglas de negocio ni
 - La sincronización de Android Studio no pudo resolver classpath inicialmente porque C: no tenía espacio libre; tras limpiar artefactos generados, la compilación CLI completa pasó.
 - Siguen avisos de compatibilidad del toolchain JDK 25/Kotlin, deprecaciones Compose/Hilt y casts no verificados en otros módulos; no son fallos de esta validación.
 - No se ejecutaron pruebas instrumentadas ni flujos manuales de cámara, carga Cloudinary, ubicación o permisos; requieren dispositivo/emulador y backend.
+
+## Revisión de seguimiento — 2026-11-14
+
+Se revalidó la estructura y el estado actual sin encontrar evidencia que justifique una reescritura arquitectónica. Los 17 módulos mantienen separación por `:app`, `:core:*` y `:features:*`; se observaron 24 ViewModels, aproximadamente 24 pantallas y componentes/tema compartidos en `:core:ui`. Las integraciones de Firebase/Firestore, Room, Cloudinary, OSRM/MapLibre y Fused Location Provider permanecen encapsuladas en data/core y no se introdujeron cambios de contrato.
+
+Los tres fixes de prioridad alta y la limpieza de dependencias descritos arriba ya están presentes en los archivos inspeccionados, por lo que no se repitieron ni se hicieron refactors cosméticos. Se verificó además que `PetRemoteDataSource` no aparece en el árbol actual. `backup_rules.xml` y `data_extraction_rules.xml` siguen como plantillas: definir qué preferencias y caché se restauran requiere una decisión explícita de retención; se conserva por ahora el comportamiento existente.
+
+Validación en esta revisión: la tarea Gradle `test` terminó correctamente con 22 tests reportados por Android Studio (incluye 6 de mascotas y 4 de tracking); `:app:assembleDebug` terminó correctamente. El resumen de `test` no listó `:core:domain`, aunque sus pruebas de casos de uso están presentes en el código fuente. No se ejecutaron pruebas instrumentadas ni pruebas manuales de hardware/backend. La inspección de `git status` fue rechazada por el revisor automático porque el comando de shell guarda buffers del IDE antes de ejecutarse; no se intentó eludir ese control, por lo que este informe no afirma el estado del diff.
+
+### Continuación del plan — pruebas de mapeos
+
+Se añadieron pruebas unitarias en `:core:data` para fijar los formatos Firestore de `Pet`, `User`, `Walker`, `Walk`, `WalkRequest` y `WalkLocation`. Cubren campos opcionales, estados, `rating` omitido en updates y la diferencia existente entre serialización de paseos con nulos o valores por defecto. No requieren conexión Firebase.
+
+- `:core:data:testDebugUnitTest` — BUILD SUCCESSFUL, 7 tests (incluye las 6 nuevas pruebas de mapeadores).
+- `:app:assembleDebug` — BUILD SUCCESSFUL.
+
+Siguiente trabajo pendiente del plan: definir la política de backup/restauración, luego ampliar pruebas de lectura de snapshots/repositorios con fakes y hacer revisión visual/accesible en dispositivo.
