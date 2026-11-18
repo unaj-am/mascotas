@@ -21,7 +21,7 @@ fun WalkerRequestsRoute(
 
     WalkerRequestsScreen(
         state = state,
-        onRefresh = viewModel::refreshRequests,
+        onRetry = viewModel::retryLoadRequests,
         onAcceptRequest = viewModel::acceptRequest,
         onRejectRequest = viewModel::rejectRequest,
         onRequestClick = onRequestClick,

@@ -133,7 +133,7 @@ class OwnerWalkDetailViewModel @Inject constructor(
         }
     }
 
-    fun refresh() {
+    fun retryLoad() {
         if (currentWalkId.isNotBlank()) {
             load(
                 walkId = currentWalkId,

@@ -12,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -30,6 +31,7 @@ class OwnerWalksViewModel @Inject constructor(
 
     private var ownerId: String = ""
     private var loadJob: Job? = null
+    private var successMessageJob: Job? = null
 
     fun load(
         ownerId: String,
@@ -37,6 +39,7 @@ class OwnerWalksViewModel @Inject constructor(
     ) {
         if (ownerId.isBlank()) {
             loadJob?.cancel()
+            successMessageJob?.cancel()
             this.ownerId = ""
 
             _uiState.update {
@@ -44,7 +47,8 @@ class OwnerWalksViewModel @Inject constructor(
                     walks = emptyList(),
                     requests = emptyList(),
                     isLoading = false,
-                    errorMessage = "No se pudo identificar al dueño."
+                    errorMessage = "No se pudo identificar al dueño.",
+                    operationMessage = null
                 )
             }
             return
@@ -55,6 +59,7 @@ class OwnerWalksViewModel @Inject constructor(
 
         if (ownerChanged) {
             loadJob?.cancel()
+            successMessageJob?.cancel()
 
             _uiState.update {
                 it.copy(
@@ -132,7 +137,7 @@ class OwnerWalksViewModel @Inject constructor(
         }
     }
 
-    fun refresh() {
+    fun retryLoad() {
         if (ownerId.isBlank()) return
         load(ownerId, forceRefresh = true)
     }
@@ -172,6 +177,7 @@ class OwnerWalksViewModel @Inject constructor(
         val currentOwnerId = ownerId
         if (currentOwnerId.isBlank()) return
 
+        successMessageJob?.cancel()
         _uiState.update {
             it.copy(
                 processingId = id,
@@ -190,6 +196,18 @@ class OwnerWalksViewModel @Inject constructor(
                             processingId = null,
                             operationMessage = successMessage
                         )
+                    }
+                    successMessageJob = viewModelScope.launch {
+                        delay(4_000L)
+                        if (ownerId == currentOwnerId) {
+                            _uiState.update { state ->
+                                if (state.operationMessage == successMessage) {
+                                    state.copy(operationMessage = null)
+                                } else {
+                                    state
+                                }
+                            }
+                        }
                     }
                     // La observación recibe el nuevo estado sin reiniciar la pantalla.
                 }

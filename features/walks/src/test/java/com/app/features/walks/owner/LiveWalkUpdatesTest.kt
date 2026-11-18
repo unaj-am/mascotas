@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -110,6 +111,44 @@ class LiveWalkUpdatesTest {
         assertTrue(viewModel.uiState.value.requests.isEmpty())
         assertEquals(0, observations.walks("owner").subscriptionCount.value)
         assertEquals(1, observations.walks("other").subscriptionCount.value)
+    }
+
+    @Test
+    fun cancellationSuccessDisappearsAndAnOlderTimerDoesNotClearANewMessage() = runTest(dispatcher) {
+        val pending = request()
+        observations.requests("owner").value = listOf(pending)
+        val repository = object : WalkRequestRepository by UnusedRequestRepository() {
+            override suspend fun getRequestById(requestId: String) = pending.copy(id = requestId)
+            override suspend fun updateRequestStatus(requestId: String, status: RequestStatus) {
+                assertEquals(RequestStatus.CANCELLED, status)
+            }
+        }
+        val viewModel = OwnerWalksViewModel(
+            observations,
+            CancelWalkUseCase(UnusedWalkRepository()),
+            UpdateWalkRequestStatusUseCase(repository)
+        )
+        track("list", viewModel)
+        viewModel.load("owner")
+        runCurrent()
+
+        viewModel.cancelRequest("first")
+        runCurrent()
+        assertEquals("La solicitud fue cancelada.", viewModel.uiState.value.operationMessage)
+
+        advanceTimeBy(3_000)
+        viewModel.cancelRequest("second")
+        runCurrent()
+        advanceTimeBy(1_000)
+        runCurrent()
+        assertEquals("La solicitud fue cancelada.", viewModel.uiState.value.operationMessage)
+
+        advanceTimeBy(3_000)
+        runCurrent()
+        assertNull(viewModel.uiState.value.operationMessage)
+        assertEquals(listOf(pending), viewModel.uiState.value.requests)
+        assertFalse(viewModel.uiState.value.isLoading)
+        assertEquals(1, observations.requests("owner").subscriptionCount.value)
     }
 
     private fun ownerViewModel(): OwnerWalksViewModel =

@@ -25,7 +25,7 @@ fun OwnerWalksRoute(
 
     OwnerWalksScreen(
         state = state,
-        onRefresh = viewModel::refresh,
+        onRetry = viewModel::retryLoad,
         onTrackWalk = onTrackWalk,
         onOpenWalk = onOpenWalk,
         onCancelRequest = viewModel::cancelRequest,

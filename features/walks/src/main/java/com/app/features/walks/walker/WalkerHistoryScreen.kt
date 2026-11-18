@@ -19,7 +19,7 @@ import com.app.features.walks.walker.component.WalkerWalksHeader
 @Composable
 fun WalkerHistoryScreen(
     state: WalkerWalksUiState,
-    onRefresh: () -> Unit,
+    onRetry: () -> Unit,
     onBack: () -> Unit
 ) {
     val history = state.walks
@@ -58,7 +58,7 @@ fun WalkerHistoryScreen(
             loadingError = state.errorMessage.takeIf {
                 state.walks.isNotEmpty()
             },
-            onRetry = onRefresh
+            onRetry = onRetry
         )
 
         AppAnimatedVisibility(
@@ -71,7 +71,7 @@ fun WalkerHistoryScreen(
                 loadingMessage = "Cargando historial...",
                 emptyTitle = "Sin paseos en el historial",
                 emptyMessage = "Los paseos completados o cancelados aparecerán acá.",
-                onRefresh = onRefresh,
+                onRetry = onRetry,
                 onStart = {},
                 onComplete = {},
                 showActions = false,

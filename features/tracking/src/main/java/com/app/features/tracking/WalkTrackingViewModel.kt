@@ -343,7 +343,7 @@ class WalkTrackingViewModel @Inject constructor(
         matchingJob = null
     }
 
-    fun refresh() {
+    fun retryLoad() {
         if (currentWalkId.isBlank()) return
 
         load(

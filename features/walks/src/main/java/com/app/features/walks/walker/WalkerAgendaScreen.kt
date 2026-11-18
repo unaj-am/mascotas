@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
+import com.app.core.ui.theme.MascotasThemeUI
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.app.core.domain.model.WalkStatus
@@ -20,7 +22,7 @@ import com.app.features.walks.walker.component.WalkerWalksHeader
 @Composable
 fun WalkerAgendaScreen(
     state: WalkerWalksUiState,
-    onRefresh: () -> Unit,
+    onRetry: () -> Unit,
     onActiveWalkClick: () -> Unit,
     onHistoryClick: () -> Unit,
     onStart: (String) -> Unit,
@@ -46,14 +48,7 @@ fun WalkerAgendaScreen(
         AppAnimatedVisibility(visible = true) {
             WalkerWalksHeader(
                 title = "Agenda",
-                subtitle = "Gestioná tus paseos programados",
-                actionText = if (state.isLoading) {
-                    "Actualizando…"
-                } else {
-                    "Actualizar"
-                },
-                isActionEnabled = !state.isLoading,
-                onAction = onRefresh
+                subtitle = "Gestioná tus paseos programados"
             )
         }
 
@@ -68,7 +63,7 @@ fun WalkerAgendaScreen(
             operationMessage = state.operationMessage,
             operationError = state.operationError,
             loadingError = state.errorMessage,
-            onRetry = onRefresh
+            onRetry = onRetry
         )
 
         AppAnimatedVisibility(
@@ -81,12 +76,27 @@ fun WalkerAgendaScreen(
                 loadingMessage = "Cargando agenda...",
                 emptyTitle = "Agenda vacía",
                 emptyMessage = "No tenés paseos programados ni paseos en curso.",
-                onRefresh = onRefresh,
+                onRetry = onRetry,
                 onStart = onStart,
                 onComplete = onComplete,
                 showActions = true,
                 modifier = Modifier.fillMaxSize()
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun WalkerAgendaScreenPreview() {
+    MascotasThemeUI {
+        WalkerAgendaScreen(
+            state = WalkerWalksUiState(isLoading = false),
+            onRetry = {},
+            onActiveWalkClick = {},
+            onHistoryClick = {},
+            onStart = {},
+            onComplete = {}
+        )
     }
 }

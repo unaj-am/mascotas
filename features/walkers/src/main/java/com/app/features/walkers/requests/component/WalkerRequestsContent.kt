@@ -14,7 +14,7 @@ import com.app.features.walkers.requests.WalkerRequestsUiState
 @Composable
 fun WalkerRequestsContent(
     state: WalkerRequestsUiState,
-    onRefresh: () -> Unit,
+    onRetry: () -> Unit,
     onAcceptRequest: (String) -> Unit,
     onRejectRequest: (String) -> Unit,
     onRequestClick: (String) -> Unit = {},
@@ -32,7 +32,7 @@ fun WalkerRequestsContent(
             ErrorContent(
                 message = state.loadingError,
                 modifier = modifier,
-                onRetry = onRefresh
+                onRetry = onRetry
             )
         }
 
@@ -40,9 +40,7 @@ fun WalkerRequestsContent(
             EmptyContent(
                 title = "No tenés solicitudes todavía",
                 message = "Cuando un dueño solicite un paseo, vas a poder revisarlo desde esta pantalla.",
-                modifier = modifier,
-                actionText = "Actualizar",
-                onAction = onRefresh
+                modifier = modifier
             )
         }
 
@@ -61,7 +59,7 @@ fun WalkerRequestsContent(
                 state.loadingError?.let { message ->
                     DomainErrorMessage(
                         message = message,
-                        onRetry = onRefresh
+                        onRetry = onRetry
                     )
                 }
 

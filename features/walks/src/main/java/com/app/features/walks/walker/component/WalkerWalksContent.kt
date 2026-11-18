@@ -16,7 +16,7 @@ fun WalkerWalksContent(
     loadingMessage: String,
     emptyTitle: String,
     emptyMessage: String,
-    onRefresh: () -> Unit,
+    onRetry: () -> Unit,
     onStart: (String) -> Unit,
     onComplete: (String) -> Unit,
     showActions: Boolean,
@@ -33,7 +33,7 @@ fun WalkerWalksContent(
         state.errorMessage != null && state.walks.isEmpty() -> {
             ErrorContent(
                 message = state.errorMessage,
-                onRetry = onRefresh,
+                onRetry = onRetry,
                 modifier = modifier
             )
         }
@@ -42,9 +42,7 @@ fun WalkerWalksContent(
             EmptyContent(
                 title = emptyTitle,
                 message = emptyMessage,
-                modifier = modifier,
-                actionText = "Actualizar",
-                onAction = onRefresh
+                modifier = modifier
             )
         }
 

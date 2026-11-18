@@ -194,7 +194,7 @@ class WalkerWalksViewModel @Inject constructor(
         )
     }
 
-    fun refresh() {
+    fun retryLoad() {
         if (walkerId.isBlank()) return
         load(walkerId, forceRefresh = true)
     }

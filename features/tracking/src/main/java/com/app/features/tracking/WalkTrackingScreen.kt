@@ -68,7 +68,7 @@ fun WalkTrackingScreen(
             state.errorMessage?.let { message ->
                 DomainErrorMessage(
                     message = message,
-                    onRetry = viewModel::refresh
+                    onRetry = viewModel::retryLoad
                 )
             }
 
@@ -82,7 +82,7 @@ fun WalkTrackingScreen(
                     matchedRoute = state.matchedRoute,
                     locationErrorMessage = state.locationErrorMessage,
                     historyErrorMessage = state.historyErrorMessage,
-                    onRefresh = viewModel::refresh
+                    onRetry = viewModel::retryLoad
                 )
             } else if (state.errorMessage == null) {
                 Text(
@@ -103,7 +103,7 @@ private fun WalkTrackingContent(
     matchedRoute: MatchedRoute?,
     locationErrorMessage: String?,
     historyErrorMessage: String?,
-    onRefresh: () -> Unit
+    onRetry: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -132,7 +132,7 @@ private fun WalkTrackingContent(
             currentLocation = currentLocation,
             locationErrorMessage = locationErrorMessage,
             historyErrorMessage = historyErrorMessage,
-            onRefresh = onRefresh
+            onRetry = onRetry
         )
     }
 }

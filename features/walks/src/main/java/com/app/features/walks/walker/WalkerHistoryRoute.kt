@@ -24,7 +24,7 @@ fun WalkerHistoryRoute(
 
     WalkerHistoryScreen(
         state = state,
-        onRefresh = viewModel::refresh,
+        onRetry = viewModel::retryLoad,
         onBack = onBack
     )
 }

@@ -14,9 +14,9 @@ import com.app.core.ui.components.TextActionButton
 fun WalkerWalksHeader(
     title: String,
     subtitle: String,
-    actionText: String,
+    actionText: String? = null,
     isActionEnabled: Boolean = true,
-    onAction: () -> Unit
+    onAction: (() -> Unit)? = null
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -29,10 +29,12 @@ fun WalkerWalksHeader(
             modifier = Modifier.weight(1f)
         )
 
-        TextActionButton(
-            text = actionText,
-            onClick = onAction,
-            enabled = isActionEnabled
-        )
+        if (actionText != null && onAction != null) {
+            TextActionButton(
+                text = actionText,
+                onClick = onAction,
+                enabled = isActionEnabled
+            )
+        }
     }
 }

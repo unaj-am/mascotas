@@ -87,7 +87,7 @@ class WalkerRequestsViewModel @Inject constructor(
         }
     }
 
-    fun refreshRequests() {
+    fun retryLoadRequests() {
         val walkerId = _uiState.value.walkerId
 
         if (walkerId.isNotBlank()) {

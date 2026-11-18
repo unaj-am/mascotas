@@ -8,6 +8,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
+import com.app.core.ui.theme.MascotasThemeUI
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.app.core.domain.model.WalkLocation
@@ -20,7 +22,7 @@ fun WalkTrackingStatusCard(
     currentLocation: WalkLocation?,
     locationErrorMessage: String?,
     historyErrorMessage: String?,
-    onRefresh: () -> Unit
+    onRetry: () -> Unit
 ) {
     AppCard(
         modifier = Modifier.fillMaxWidth()
@@ -66,10 +68,10 @@ fun WalkTrackingStatusCard(
                         )
                     }
 
-                    TextButton(
-                        onClick = onRefresh
-                    ) {
-                        Text("Actualizar estado")
+                    if (locationErrorMessage != null || historyErrorMessage != null) {
+                        TextButton(onClick = onRetry) {
+                            Text("Reintentar")
+                        }
                     }
                 }
 
@@ -98,5 +100,19 @@ fun WalkTrackingStatusCard(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun WalkTrackingStatusCardPreview() {
+    MascotasThemeUI {
+        WalkTrackingStatusCard(
+            status = WalkStatus.IN_PROGRESS,
+            currentLocation = null,
+            locationErrorMessage = null,
+            historyErrorMessage = null,
+            onRetry = {}
+        )
     }
 }

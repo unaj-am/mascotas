@@ -25,7 +25,7 @@ fun OwnerWalkDetailRoute(
     OwnerWalkDetailScreen(
         state = state,
         onBack = onBack,
-        onRefresh = viewModel::refresh,
+        onRetry = viewModel::retryLoad,
         onTrackWalk = onTrackWalk
     )
 }

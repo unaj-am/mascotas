@@ -17,7 +17,7 @@ import com.app.features.walks.owner.component.OwnerWalkDetailHeader
 fun OwnerWalkDetailScreen(
     state: OwnerWalkDetailUiState,
     onBack: () -> Unit,
-    onRefresh: () -> Unit,
+    onRetry: () -> Unit,
     onTrackWalk: (String) -> Unit
 ) {
     Column(
@@ -42,7 +42,7 @@ fun OwnerWalkDetailScreen(
             state.errorMessage != null && state.walk == null -> {
                 DomainErrorMessage(
                     message = state.errorMessage.orEmpty(),
-                    onRetry = onRefresh
+                    onRetry = onRetry
                 )
             }
 

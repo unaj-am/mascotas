@@ -120,7 +120,7 @@ fun WalkerActiveWalkRoute(
 
     WalkerActiveWalkScreen(
         state = state,
-        onRefresh = viewModel::refresh,
+        onRetry = viewModel::retryLoad,
         onStart = ::handleStart,
         onComplete = ::handleComplete,
         onBack = onBack

@@ -19,7 +19,7 @@ import com.app.features.walks.owner.component.OwnerWalksHeader
 @Composable
 fun OwnerWalksScreen(
     state: OwnerWalksUiState,
-    onRefresh: () -> Unit,
+    onRetry: () -> Unit,
     onTrackWalk: (String) -> Unit,
     onOpenWalk: (String) -> Unit,
     onCancelRequest: (String) -> Unit,
@@ -39,16 +39,14 @@ fun OwnerWalksScreen(
         )
     ) {
         AppAnimatedVisibility(visible = true) {
-            OwnerWalksHeader(
-                onRefresh = onRefresh
-            )
+            OwnerWalksHeader()
         }
 
         OwnerWalksFeedback(
             operationMessage = state.operationMessage,
             operationError = state.operationError,
             loadingError = state.errorMessage,
-            onRetry = onRefresh
+            onRetry = onRetry
         )
 
         AppAnimatedVisibility(
@@ -69,7 +67,6 @@ fun OwnerWalksScreen(
         ) {
             OwnerWalksContent(
                 state = state,
-                onRefresh = onRefresh,
                 onTrackWalk = onTrackWalk,
                 onOpenWalk = onOpenWalk,
                 onCancelRequest = onCancelRequest,

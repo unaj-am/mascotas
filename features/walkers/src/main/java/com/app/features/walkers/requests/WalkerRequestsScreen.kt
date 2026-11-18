@@ -18,7 +18,7 @@ import com.app.features.walkers.requests.component.WalkerRequestsHeader
 @Composable
 fun WalkerRequestsScreen(
     state: WalkerRequestsUiState,
-    onRefresh: () -> Unit,
+    onRetry: () -> Unit,
     onAcceptRequest: (String) -> Unit,
     onRejectRequest: (String) -> Unit,
     onRequestClick: (String) -> Unit = {},
@@ -42,9 +42,7 @@ fun WalkerRequestsScreen(
         ) {
             WalkerRequestsHeader(
                 requestCount = state.requests.size,
-                isLoading = state.isLoading,
-                isProcessing = state.processingRequestId != null,
-                onRefresh = onRefresh
+                isLoading = state.isLoading
             )
         }
 
@@ -56,7 +54,7 @@ fun WalkerRequestsScreen(
             WalkerRequestsFeedback(
                 operationMessage = state.operationMessage,
                 operationError = state.operationError,
-                onRetry = onRefresh
+                onRetry = onRetry
             )
         }
 
@@ -78,7 +76,7 @@ fun WalkerRequestsScreen(
         ) {
             WalkerRequestsContent(
                 state = state,
-                onRefresh = onRefresh,
+                onRetry = onRetry,
                 onAcceptRequest = onAcceptRequest,
                 onRejectRequest = onRejectRequest,
                 onRequestClick = onRequestClick,

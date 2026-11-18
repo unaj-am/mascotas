@@ -19,7 +19,7 @@ import com.app.features.walks.walker.component.WalkerWalksHeader
 @Composable
 fun WalkerActiveWalkScreen(
     state: WalkerWalksUiState,
-    onRefresh: () -> Unit,
+    onRetry: () -> Unit,
     onBack: () -> Unit,
     onStart: (String) -> Unit,
     onComplete: (String) -> Unit
@@ -56,7 +56,7 @@ fun WalkerActiveWalkScreen(
             loadingError = state.errorMessage.takeIf {
                 state.walks.isNotEmpty()
             },
-            onRetry = onRefresh
+            onRetry = onRetry
         )
 
         AppAnimatedVisibility(
@@ -69,7 +69,7 @@ fun WalkerActiveWalkScreen(
                 loadingMessage = "Cargando tus paseos...",
                 emptyTitle = "Sin paseos activos",
                 emptyMessage = "No tenés paseos confirmados pendientes de iniciar ni paseos en curso.",
-                onRefresh = onRefresh,
+                onRetry = onRetry,
                 onStart = onStart,
                 onComplete = onComplete,
                 showActions = true,

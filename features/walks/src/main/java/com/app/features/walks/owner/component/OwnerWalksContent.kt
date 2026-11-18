@@ -10,7 +10,6 @@ import com.app.features.walks.owner.OwnerWalksUiState
 @Composable
 fun OwnerWalksContent(
     state: OwnerWalksUiState,
-    onRefresh: () -> Unit,
     onTrackWalk: (String) -> Unit,
     onOpenWalk: (String) -> Unit,
     onCancelRequest: (String) -> Unit,
@@ -35,9 +34,7 @@ fun OwnerWalksContent(
             EmptyContent(
                 title = "Todavía no tenés paseos",
                 message = "Buscá un paseador y enviá una solicitud para organizar tu primer paseo.",
-                modifier = modifier,
-                actionText = "Actualizar",
-                onAction = onRefresh
+                modifier = modifier
             )
         }
 

@@ -27,7 +27,7 @@ fun WalkerAgendaRoute(
 
     WalkerAgendaScreen(
         state = state,
-        onRefresh = viewModel::refresh,
+        onRetry = viewModel::retryLoad,
         onActiveWalkClick = onActiveWalkClick,
         onHistoryClick = onHistoryClick,
         onStart = actions.onStart,
