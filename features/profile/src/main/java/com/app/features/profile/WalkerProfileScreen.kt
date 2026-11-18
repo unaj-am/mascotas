@@ -234,13 +234,6 @@ private fun WalkerProfileContent(
                         onMaxPetsChange = onMaxPetsChange
                     )
 
-                    state.rating?.let { rating ->
-                        Text(
-                            text = "Calificación: ${"%.1f".format(rating)} / 5",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-
                     WalkerProfileActions(
                         isSaving = state.isSaving,
                         isProfileCreated = state.isProfileCreated,
@@ -257,7 +250,7 @@ private fun WalkerProfileContent(
 
 @Preview(showBackground = true)
 @Composable
-private fun WalkerProfileContentPreview() {
+private fun WalkerProfileWithoutRatingPreview() {
     MascotasThemeUI {
         WalkerProfileContent(
             state = WalkerProfileUiState(
@@ -300,5 +293,5 @@ private fun WalkerProfileContentPreview() {
 )
 @Composable
 private fun WalkerProfileContentWidePreview() {
-    WalkerProfileContentPreview()
+    WalkerProfileWithoutRatingPreview()
 }

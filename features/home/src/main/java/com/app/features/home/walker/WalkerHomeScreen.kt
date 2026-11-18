@@ -144,24 +144,11 @@ private fun WalkerHomeContent(
 
             item {
                 AppAnimatedVisibility(visible = true, durationMillis = 340) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(
-                            DimensUI.SpaceMedium
-                        )
-                    ) {
-                        WalkerHomeStatCard(
-                            title = "Paseos en curso",
-                            value = state.activeWalks.toString(),
-                            modifier = Modifier.weight(1f)
-                        )
-                        WalkerHomeStatCard(
-                            title = "Calificación promedio",
-                            value = state.rating?.let { "%.1f / 5".format(it) }
-                                ?: "Sin calificar",
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+                    WalkerHomeStatCard(
+                        title = "Paseos en curso",
+                        value = state.activeWalks.toString(),
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
 
@@ -228,7 +215,7 @@ private fun WalkerHomeContent(
 
 @Preview(showBackground = true)
 @Composable
-private fun WalkerHomeScreenPreview() {
+private fun WalkerHomeWithoutRatingPreview() {
     MascotasThemeUI {
         WalkerHomeScreen(
             state = WalkerHomeUiState(
@@ -253,5 +240,5 @@ private fun WalkerHomeScreenPreview() {
 )
 @Composable
 private fun WalkerHomeScreenWidePreview() {
-    WalkerHomeScreenPreview()
+    WalkerHomeWithoutRatingPreview()
 }
