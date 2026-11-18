@@ -7,7 +7,7 @@ import com.app.core.domain.model.MatchedRoute
 import com.app.core.domain.model.Walk
 import com.app.core.domain.model.WalkLocation
 import com.app.core.domain.model.WalkStatus
-import com.app.core.domain.usecase.GetWalkByIdUseCase
+import com.app.core.domain.repository.WalkObservationRepository
 import com.app.core.domain.usecase.MatchWalkRouteUseCase
 import com.app.core.domain.usecase.ObserveWalkLocationHistoryUseCase
 import com.app.core.domain.usecase.ObserveWalkLocationUseCase
@@ -35,7 +35,7 @@ data class WalkTrackingUiState(
 
 @HiltViewModel
 class WalkTrackingViewModel @Inject constructor(
-    private val getWalkById: GetWalkByIdUseCase,
+    private val walkObservationRepository: WalkObservationRepository,
     private val getCurrentUserId: GetCurrentUserIdUseCase,
     private val observeWalkLocation: ObserveWalkLocationUseCase,
     private val observeWalkLocationHistory: ObserveWalkLocationHistoryUseCase,
@@ -65,6 +65,7 @@ class WalkTrackingViewModel @Inject constructor(
         forceRefresh: Boolean = false
     ) {
         if (walkId.isBlank()) {
+            loadJob?.cancel()
             cancelTrackingJobs()
             currentWalkId = ""
 
@@ -106,67 +107,74 @@ class WalkTrackingViewModel @Inject constructor(
                 errorMessage = null
             )
 
+            var firstSnapshot = true
             try {
-                val walk = getWalkById(walkId)
-                    ?: throw IllegalStateException(
-                        "No se encontró el paseo."
+                walkObservationRepository.observeWalk(walkId).collect { observedWalk ->
+                    val walk = observedWalk
+                        ?: throw IllegalStateException(
+                            "No se encontró el paseo."
+                        )
+
+                    if (currentWalkId != walkId) {
+                        return@collect
+                    }
+
+                    val previousStatus = _uiState.value.walk?.status
+                    val currentUserId = getCurrentUserId()
+
+                    _uiState.value = _uiState.value.copy(
+                        walk = walk,
+                        isLoading = false,
+                        errorMessage = null,
+                        isWalker = currentUserId != null &&
+                                walk.walkerId == currentUserId
                     )
 
-                if (currentWalkId != walkId) {
-                    return@launch
-                }
+                    if (!firstSnapshot && previousStatus == walk.status) return@collect
+                    firstSnapshot = false
 
-                val currentUserId = getCurrentUserId()
+                    when (walk.status) {
+                        WalkStatus.IN_PROGRESS -> {
+                            observeLocation(walkId)
+                            observeHistory(
+                                walkId = walkId,
+                                enableMatching = true
+                            )
+                        }
 
-                _uiState.value = _uiState.value.copy(
-                    walk = walk,
-                    isLoading = false,
-                    errorMessage = null,
-                    isWalker = currentUserId != null &&
-                            walk.walkerId == currentUserId
-                )
+                        WalkStatus.COMPLETED,
+                        WalkStatus.CANCELLED -> {
+                            // El paseo terminó: dejamos de observar la ubicación actual,
+                            // pero ajustamos una vez el historial para mostrar su recorrido.
+                            locationJob?.cancel()
+                            locationJob = null
 
-                when (walk.status) {
-                    WalkStatus.IN_PROGRESS -> {
-                        observeLocation(walkId)
-                        observeHistory(
-                            walkId = walkId,
-                            enableMatching = true
-                        )
-                    }
+                            resetMatchingState()
 
-                    WalkStatus.COMPLETED,
-                    WalkStatus.CANCELLED -> {
-                        // El paseo terminó: dejamos de observar la ubicación actual,
-                        // pero ajustamos una vez el historial para mostrar su recorrido.
-                        locationJob?.cancel()
-                        locationJob = null
+                            _uiState.value = _uiState.value.copy(
+                                currentLocation = null,
+                                matchedRoute = null,
+                                locationErrorMessage = null
+                            )
 
-                        resetMatchingState()
+                            observeHistory(
+                                walkId = walkId,
+                                enableMatching = true
+                            )
+                        }
 
-                        _uiState.value = _uiState.value.copy(
-                            currentLocation = null,
-                            matchedRoute = null,
-                            locationErrorMessage = null
-                        )
+                        WalkStatus.SCHEDULED -> {
+                            cancelTrackingJobs()
+                            resetMatchingState()
 
-                        observeHistory(
-                            walkId = walkId,
-                            enableMatching = true
-                        )
-                    }
-
-                    WalkStatus.SCHEDULED -> {
-                        cancelTrackingJobs()
-                        resetMatchingState()
-
-                        _uiState.value = _uiState.value.copy(
-                            currentLocation = null,
-                            locationHistory = emptyList(),
-                            matchedRoute = null,
-                            locationErrorMessage = null,
-                            historyErrorMessage = null
-                        )
+                            _uiState.value = _uiState.value.copy(
+                                currentLocation = null,
+                                locationHistory = emptyList(),
+                                matchedRoute = null,
+                                locationErrorMessage = null,
+                                historyErrorMessage = null
+                            )
+                        }
                     }
                 }
 

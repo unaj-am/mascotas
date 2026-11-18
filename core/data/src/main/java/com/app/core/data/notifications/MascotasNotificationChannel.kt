@@ -14,7 +14,7 @@ object MascotasNotificationChannel {
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 "Notificaciones de Mascotas",
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_DEFAULT //none o higt para heads
             ).apply {
                 description = "Solicitudes de paseos y novedades de tus mascotas"
             }

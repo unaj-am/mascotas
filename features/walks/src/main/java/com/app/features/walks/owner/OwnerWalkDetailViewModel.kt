@@ -4,19 +4,20 @@ package com.app.features.walks.owner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.core.domain.usecase.GetUserByIdUseCase
-import com.app.core.domain.usecase.GetWalkByIdUseCase
+import com.app.core.domain.repository.WalkObservationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class OwnerWalkDetailViewModel @Inject constructor(
-    private val getWalkById: GetWalkByIdUseCase,
+    private val walkObservationRepository: WalkObservationRepository,
     private val getUserById: GetUserByIdUseCase
 ) : ViewModel() {
 
@@ -73,44 +74,47 @@ class OwnerWalkDetailViewModel @Inject constructor(
 
         loadJob = viewModelScope.launch {
             try {
-                val walk = getWalkById(walkId)
-                    ?: throw IllegalStateException(
-                        "No se encontró el paseo solicitado."
+                walkObservationRepository.observeWalk(walkId).collectLatest { observedWalk ->
+                    val walk = observedWalk
+                        ?: throw IllegalStateException(
+                            "No se encontró el paseo solicitado."
+                        )
+
+                    // Evita aplicar el resultado de una navegación anterior.
+                    if (currentWalkId != walkId) return@collectLatest
+
+                    // Mostramos primero el paseo, sin esperar
+                    // a que se cargue el perfil del paseador.
+                    _uiState.value = OwnerWalkDetailUiState(
+                        walk = walk,
+                        walkerName = _uiState.value.walkerName,
+                        isLoading = false
                     )
 
-                // Evita aplicar el resultado de una navegación anterior.
-                if (currentWalkId != walkId) return@launch
+                    val walkerName = _uiState.value.walkerName ?: try {
+                        val user = getUserById(walk.walkerId)
 
-                // Mostramos primero el paseo, sin esperar
-                // a que se cargue el perfil del paseador.
-                _uiState.value = OwnerWalkDetailUiState(
-                    walk = walk,
-                    isLoading = false
-                )
+                        listOf(
+                            user?.name.orEmpty().trim(),
+                            user?.lastName.orEmpty().trim()
+                        )
+                            .filter { it.isNotBlank() }
+                            .joinToString(" ")
+                            .takeIf { it.isNotBlank() }
+                    } catch (error: CancellationException) {
+                        throw error
+                    } catch (_: Exception) {
+                        null
+                    }
 
-                val walkerName = try {
-                    val user = getUserById(walk.walkerId)
+                    if (currentWalkId != walkId) return@collectLatest
 
-                    listOf(
-                        user?.name.orEmpty().trim(),
-                        user?.lastName.orEmpty().trim()
-                    )
-                        .filter { it.isNotBlank() }
-                        .joinToString(" ")
-                        .takeIf { it.isNotBlank() }
-                } catch (error: CancellationException) {
-                    throw error
-                } catch (_: Exception) {
-                    null
-                }
-
-                if (currentWalkId != walkId) return@launch
-
-                _uiState.update { state ->
-                    if (state.walk?.id == walkId) {
-                        state.copy(walkerName = walkerName)
-                    } else {
-                        state
+                    _uiState.update { state ->
+                        if (state.walk?.id == walkId) {
+                            state.copy(walkerName = walkerName)
+                        } else {
+                            state
+                        }
                     }
                 }
             } catch (error: CancellationException) {

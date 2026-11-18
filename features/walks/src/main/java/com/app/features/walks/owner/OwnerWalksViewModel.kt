@@ -6,8 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.app.core.domain.model.RequestStatus
 import com.app.core.domain.model.WalkStatus
 import com.app.core.domain.usecase.CancelWalkUseCase
-import com.app.core.domain.usecase.GetWalkRequestsByOwnerUseCase
-import com.app.core.domain.usecase.GetWalksByOwnerUseCase
+import com.app.core.domain.repository.WalkObservationRepository
 import com.app.core.domain.usecase.UpdateWalkRequestStatusUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -15,13 +14,13 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class OwnerWalksViewModel @Inject constructor(
-    private val getWalksByOwner: GetWalksByOwnerUseCase,
-    private val getRequestsByOwner: GetWalkRequestsByOwnerUseCase,
+    private val walkObservationRepository: WalkObservationRepository,
     private val cancelWalk: CancelWalkUseCase,
     private val updateRequestStatus: UpdateWalkRequestStatusUseCase
 ) : ViewModel() {
@@ -98,27 +97,24 @@ class OwnerWalksViewModel @Inject constructor(
             }
 
             try {
-                val walks = getWalksByOwner(ownerId)
-                    .sortedByDescending { it.scheduledAt }
+                combine(
+                    walkObservationRepository.observeWalksByOwner(ownerId),
+                    walkObservationRepository.observeRequestsByOwner(ownerId)
+                ) { walks, requests ->
+                    walks.sortedByDescending { it.scheduledAt } to requests
+                        .filter { it.status != RequestStatus.ACCEPTED }
+                        .sortedByDescending { it.scheduledAt }
+                }.collect { (walks, requests) ->
+                    if (this@OwnerWalksViewModel.ownerId != ownerId) return@collect
 
-                val requests = getRequestsByOwner(ownerId)
-                    .filter { request ->
-                        request.status != RequestStatus.ACCEPTED
+                    _uiState.update {
+                        it.copy(
+                            walks = walks,
+                            requests = requests,
+                            isLoading = false,
+                            errorMessage = null
+                        )
                     }
-                    .sortedByDescending { it.scheduledAt }
-
-                // Evita aplicar datos de un dueño anterior.
-                if (this@OwnerWalksViewModel.ownerId != ownerId) {
-                    return@launch
-                }
-
-                _uiState.update {
-                    it.copy(
-                        walks = walks,
-                        requests = requests,
-                        isLoading = false,
-                        errorMessage = null
-                    )
                 }
             } catch (error: CancellationException) {
                 throw error
@@ -195,10 +191,7 @@ class OwnerWalksViewModel @Inject constructor(
                             operationMessage = successMessage
                         )
                     }
-                    load(
-                        ownerId = currentOwnerId,
-                        forceRefresh = true
-                    )
+                    // La observación recibe el nuevo estado sin reiniciar la pantalla.
                 }
             } catch (error: CancellationException) {
                 throw error

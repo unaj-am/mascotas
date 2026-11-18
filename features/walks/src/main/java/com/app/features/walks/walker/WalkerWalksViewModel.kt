@@ -7,7 +7,7 @@ import com.app.core.domain.model.Walk
 import com.app.core.domain.usecase.CompleteWalkUseCase
 import com.app.core.domain.usecase.GetPetByIdUseCase
 import com.app.core.domain.usecase.GetUserByIdUseCase
-import com.app.core.domain.usecase.GetWalksByWalkerUseCase
+import com.app.core.domain.repository.WalkObservationRepository
 import com.app.core.domain.usecase.StartWalkUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -18,12 +18,13 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class WalkerWalksViewModel @Inject constructor(
-    private val getWalksByWalker: GetWalksByWalkerUseCase,
+    private val walkObservationRepository: WalkObservationRepository,
     private val startWalk: StartWalkUseCase,
     private val completeWalk: CompleteWalkUseCase,
     private val getUserById: GetUserByIdUseCase,
@@ -98,31 +99,33 @@ class WalkerWalksViewModel @Inject constructor(
             }
 
             try {
-                val (walks, details) = coroutineScope {
-                    val loadedWalks = getWalksByWalker(walkerId)
-                        .sortedBy { it.scheduledAt }
+                walkObservationRepository.observeWalksByWalker(walkerId)
+                    .collectLatest { updatedWalks ->
+                        if (this@WalkerWalksViewModel.walkerId != walkerId) return@collectLatest
 
-                    val loadedDetails = loadedWalks.map { walk ->
-                        async {
-                            walk.id to loadWalkDetails(walk)
+                        val walks = updatedWalks.sortedBy { it.scheduledAt }
+                        // Publicamos el estado antes de consultar los datos complementarios.
+                        _uiState.update {
+                            it.copy(
+                                walks = walks,
+                                isLoading = false,
+                                errorMessage = null
+                            )
                         }
-                    }.awaitAll().toMap()
 
-                    loadedWalks to loadedDetails
-                }
+                        val cachedDetails = _uiState.value.walkDetails
+                        val details = coroutineScope {
+                            walks.map { walk ->
+                                async {
+                                    walk.id to (cachedDetails[walk.id] ?: loadWalkDetails(walk))
+                                }
+                            }.awaitAll().toMap()
+                        }
 
-                if (this@WalkerWalksViewModel.walkerId != walkerId) {
-                    return@launch
-                }
-
-                _uiState.update {
-                    it.copy(
-                        walks = walks,
-                        walkDetails = details,
-                        isLoading = false,
-                        errorMessage = null
-                    )
-                }
+                        if (this@WalkerWalksViewModel.walkerId == walkerId) {
+                            _uiState.update { it.copy(walkDetails = details) }
+                        }
+                    }
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
@@ -258,9 +261,7 @@ class WalkerWalksViewModel @Inject constructor(
                 // que la operación de dominio terminó correctamente.
                 onSuccess()
 
-                if (walkerId == currentWalkerId) {
-                    load(currentWalkerId, forceRefresh = true)
-                }
+                // La observación mantiene actualizadas la agenda y el paseo activo.
 
             } catch (error: CancellationException) {
                 throw error

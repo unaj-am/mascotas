@@ -6,11 +6,12 @@ import androidx.lifecycle.viewModelScope
 import com.app.core.domain.model.RequestStatus
 import com.app.core.domain.model.WalkRequest
 import com.app.core.domain.usecase.AcceptWalkRequestUseCase
-import com.app.core.domain.usecase.GetWalkRequestsByWalkerUseCase
+import com.app.core.domain.repository.WalkObservationRepository
 import com.app.core.domain.usecase.UpdateWalkRequestStatusUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +20,7 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class WalkerRequestsViewModel @Inject constructor(
-    private val getRequestsByWalker: GetWalkRequestsByWalkerUseCase,
+    private val walkObservationRepository: WalkObservationRepository,
     private val acceptWalkRequest: AcceptWalkRequestUseCase,
     private val updateRequestStatus: UpdateWalkRequestStatusUseCase
 ) : ViewModel() {
@@ -31,7 +32,10 @@ class WalkerRequestsViewModel @Inject constructor(
     val uiState: StateFlow<WalkerRequestsUiState> =
         _uiState.asStateFlow()
 
+    private var requestsJob: Job? = null
+
     fun loadRequests(walkerId: String) {
+        requestsJob?.cancel()
         if (walkerId.isBlank()) {
             _uiState.update {
                 it.copy(
@@ -53,20 +57,22 @@ class WalkerRequestsViewModel @Inject constructor(
             )
         }
 
-        viewModelScope.launch {
+        requestsJob = viewModelScope.launch {
             try {
-                val requests = getRequestsByWalker(walkerId)
-                val displayNames = loadDisplayNames(requests)
-
-                _uiState.update {
-                    it.copy(
-                        requests = requests,
-                        ownerNames = displayNames.first,
-                        petNames = displayNames.second,
-                        isLoading = false,
-                        loadingError = null
-                    )
-                }
+                walkObservationRepository.observeRequestsByWalker(walkerId)
+                    .collect { requests ->
+                        if (_uiState.value.walkerId != walkerId) return@collect
+                        val displayNames = loadDisplayNames(requests)
+                        _uiState.update {
+                            it.copy(
+                                requests = requests,
+                                ownerNames = displayNames.first,
+                                petNames = displayNames.second,
+                                isLoading = false,
+                                loadingError = null
+                            )
+                        }
+                    }
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: Exception) {
@@ -137,15 +143,10 @@ class WalkerRequestsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val message = operation()
-                val walkerId = _uiState.value.walkerId
-                val updatedRequests = getRequestsByWalker(walkerId)
-                val displayNames = loadDisplayNames(updatedRequests)
+                if (_uiState.value.walkerId != currentState.walkerId) return@launch
 
                 _uiState.update {
                     it.copy(
-                        requests = updatedRequests,
-                        ownerNames = displayNames.first,
-                        petNames = displayNames.second,
                         processingRequestId = null,
                         operationMessage = message,
                         operationError = null,

@@ -126,6 +126,7 @@ fun WalkerNavigation(
         entry<NotificationsDestination> {
             NotificationsRoute(
                 userId = userId,
+                viewModel = notificationsViewModel,
                 onBack = {
                     if (
                         currentStack.size > 1 &&

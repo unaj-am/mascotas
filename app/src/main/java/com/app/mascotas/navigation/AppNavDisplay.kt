@@ -101,6 +101,7 @@ fun AppNavDisplay(
         entry<NotificationsDestination> {
             NotificationsRoute(
                 userId = ownerId,
+                viewModel = notificationsViewModel,
                 onBack = {
                     navigationState.goBack()
                 },

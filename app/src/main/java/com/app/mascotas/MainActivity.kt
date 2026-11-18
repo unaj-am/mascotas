@@ -249,7 +249,7 @@ class MainActivity : ComponentActivity() {
                 if (showNotificationPermissionPrompt) {
                     AlertDialog(
                         onDismissRequest = {
-                            showNotificationPermissionPrompt = false
+
                         },
                         title = {
                             Text("Recibí avisos de tus paseos")
