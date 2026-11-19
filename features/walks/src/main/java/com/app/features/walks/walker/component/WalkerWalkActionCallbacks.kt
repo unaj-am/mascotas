@@ -9,7 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
@@ -27,7 +27,7 @@ fun rememberWalkerWalkActionCallbacks(
 ): WalkerWalkActionCallbacks {
     val context = LocalContext.current
 
-    var pendingWalkId by remember {
+    var pendingWalkId by rememberSaveable {
         mutableStateOf<String?>(null)
     }
 
@@ -43,6 +43,12 @@ fun rememberWalkerWalkActionCallbacks(
         }
     }
 
+    fun startWalkWithTracking(walkId: String) {
+        viewModel.start(walkId) {
+            startTracking(walkId)
+        }
+    }
+
     val locationPermissionLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -55,9 +61,7 @@ fun rememberWalkerWalkActionCallbacks(
             pendingWalkId = null
 
             if (granted && walkId != null) {
-                viewModel.start(walkId) {
-                    startTracking(walkId)
-                }
+                startWalkWithTracking(walkId)
             } else {
                 Toast.makeText(
                     context,
@@ -81,9 +85,7 @@ fun rememberWalkerWalkActionCallbacks(
             ) == PackageManager.PERMISSION_GRANTED
 
         if (hasFineLocation || hasCoarseLocation) {
-            viewModel.start(walkId) {
-                startTracking(walkId)
-            }
+            startWalkWithTracking(walkId)
         } else {
             pendingWalkId = walkId
 

@@ -1,7 +1,6 @@
 package com.app.core.domain.repository
 
 import com.app.core.domain.model.Walk
-import com.app.core.domain.model.WalkStatus
 
 interface WalkRepository {
 
@@ -21,8 +20,9 @@ interface WalkRepository {
         walk: Walk
     )
 
-    suspend fun updateWalkStatus(
-        walkId: String,
-        status: WalkStatus
-    )
+    suspend fun startWalk(walkId: String)
+
+    suspend fun completeWalk(walkId: String)
+
+    suspend fun cancelWalk(walkId: String)
 }

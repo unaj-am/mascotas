@@ -5,7 +5,6 @@ import com.app.core.domain.model.Walk
 import com.app.core.domain.model.WalkStatus
 import com.app.core.domain.repository.WalkRepository
 import com.google.firebase.auth.FirebaseAuth
-import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -82,86 +81,27 @@ class WalkRepositoryImpl @Inject constructor(
         walkRemoteDataSource.saveWalk(walk)
     }
 
-    override suspend fun updateWalkStatus(
-        walkId: String,
-        status: WalkStatus
-    ) {
+    override suspend fun startWalk(walkId: String) {
+        updateStatus(walkId, WalkStatus.IN_PROGRESS)
+    }
+
+    override suspend fun completeWalk(walkId: String) {
+        updateStatus(walkId, WalkStatus.COMPLETED)
+    }
+
+    override suspend fun cancelWalk(walkId: String) {
+        updateStatus(walkId, WalkStatus.CANCELLED)
+    }
+
+    private suspend fun updateStatus(walkId: String, status: WalkStatus) {
         require(walkId.isNotBlank()) {
             "El identificador del paseo es obligatorio"
         }
 
-        val currentUserId = requireCurrentUserId()
-
         walkRemoteDataSource.updateWalkStatus(
-            walkId = walkId
-        ) { walk ->
-
-            require(
-                walk.ownerId == currentUserId ||
-                        walk.walkerId == currentUserId
-            ) {
-                "No tenés permiso para modificar este paseo"
-            }
-
-            when (status) {
-                WalkStatus.IN_PROGRESS -> {
-                    require(walk.walkerId == currentUserId) {
-                        "Solo el paseador puede iniciar el paseo"
-                    }
-
-                    require(walk.status == WalkStatus.SCHEDULED) {
-                        "Solo se pueden iniciar paseos programados"
-                    }
-                }
-
-                WalkStatus.COMPLETED -> {
-                    require(walk.walkerId == currentUserId) {
-                        "Solo el paseador puede finalizar el paseo"
-                    }
-
-                    require(walk.status == WalkStatus.IN_PROGRESS) {
-                        "Solo se pueden finalizar paseos en curso"
-                    }
-                }
-
-                WalkStatus.CANCELLED -> {
-                    require(walk.ownerId == currentUserId) {
-                        "Solo el dueño puede cancelar este paseo"
-                    }
-
-                    require(walk.status == WalkStatus.SCHEDULED) {
-                        "Solo se pueden cancelar paseos programados"
-                    }
-                }
-
-                WalkStatus.SCHEDULED -> {
-                    throw IllegalArgumentException(
-                        "No se puede volver al estado programado"
-                    )
-                }
-            }
-
-            val updates = mutableMapOf<String, Any>(
-                "status" to status.name
-            )
-
-            when (status) {
-                WalkStatus.IN_PROGRESS -> {
-                    updates["startedAt"] = Instant.now().toString()
-                }
-
-                WalkStatus.COMPLETED -> {
-                    updates["finishedAt"] = Instant.now().toString()
-                }
-
-                WalkStatus.CANCELLED -> {
-                    updates["cancelledAt"] = Instant.now().toString()
-                }
-
-                WalkStatus.SCHEDULED -> Unit
-            }
-
-            updates
-        }
+            walkId = walkId,
+            userId = requireCurrentUserId(),
+            status = status
+        )
     }
 }

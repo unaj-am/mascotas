@@ -204,8 +204,9 @@ class LiveWalkUpdatesTest {
         override suspend fun getWalksByOwner(ownerId: String): List<Walk> = error("Unexpected read")
         override suspend fun getWalksByWalker(walkerId: String): List<Walk> = error("Unexpected read")
         override suspend fun saveWalk(walk: Walk) = error("Unexpected write")
-        override suspend fun updateWalkStatus(walkId: String, status: WalkStatus) =
-            error("Unexpected write")
+        override suspend fun startWalk(walkId: String) = error("Unexpected write")
+        override suspend fun completeWalk(walkId: String) = error("Unexpected write")
+        override suspend fun cancelWalk(walkId: String) = error("Unexpected write")
     }
 
     private class UnusedRequestRepository : WalkRequestRepository {
