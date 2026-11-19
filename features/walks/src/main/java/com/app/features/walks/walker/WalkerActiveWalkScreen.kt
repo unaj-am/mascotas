@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
+import com.app.core.ui.theme.MascotasThemeUI
+import com.app.core.domain.model.Walk
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.app.core.domain.model.WalkStatus
@@ -78,3 +81,61 @@ fun WalkerActiveWalkScreen(
         }
     }
 }
+
+@Preview(name = "Paseos activos - En curso", showBackground = true, widthDp = 411, heightDp = 891)
+@Composable
+private fun WalkerActiveWalkScreenPreview() {
+    val walk = Walk(
+                id = "WALK001",
+                ownerId = "OWNER001",
+                walkerId = "WALKER001",
+                petIds = listOf("PET001", "PET002"),
+                scheduledAt = "2026-11-20T10:00:00",
+                durationMinutes = 45,
+                observations = "Llevar agua y evitar calles muy transitadas."
+            ).copy(
+        status = WalkStatus.IN_PROGRESS,
+        startedAt = "2026-11-20T13:00:00Z"
+    )
+    WalkerActiveWalkPreviewContent(
+        WalkerWalksUiState(
+            walks = listOf(walk),
+            walkDetails = mapOf(walk.id to WalkerWalkDetails("Franco Gómez", listOf("Luna", "Toby"))),
+            isLoading = false
+        )
+    )
+}
+
+@Preview(name = "Paseos activos - Vacío", showBackground = true, widthDp = 411, heightDp = 891)
+@Composable
+private fun WalkerActiveWalkEmptyPreview() {
+    WalkerActiveWalkPreviewContent(WalkerWalksUiState(isLoading = false))
+}
+
+@Preview(name = "Paseos activos - Cargando", showBackground = true, widthDp = 411, heightDp = 891)
+@Composable
+private fun WalkerActiveWalkLoadingPreview() {
+    WalkerActiveWalkPreviewContent(WalkerWalksUiState())
+}
+
+@Preview(name = "Paseos activos - Error", showBackground = true, widthDp = 411, heightDp = 891)
+@Composable
+private fun WalkerActiveWalkErrorPreview() {
+    WalkerActiveWalkPreviewContent(
+        WalkerWalksUiState(isLoading = false, errorMessage = "No se pudieron cargar los paseos.")
+    )
+}
+
+@Composable
+private fun WalkerActiveWalkPreviewContent(state: WalkerWalksUiState) {
+    MascotasThemeUI(isWalker = true) {
+        WalkerActiveWalkScreen(
+            state = state,
+            onRetry = {},
+            onBack = {},
+            onStart = {},
+            onComplete = {}
+        )
+    }
+}
+

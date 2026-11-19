@@ -12,6 +12,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
+import com.app.core.ui.theme.MascotasThemeUI
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -186,3 +188,41 @@ fun WalkerRequestDetailScreen(
         }
     }
 }
+
+@Preview(name = "Solicitud - Pendiente", showBackground = true, widthDp = 411, heightDp = 891)
+@Composable
+private fun WalkerRequestDetailScreenPreview() {
+    WalkerRequestDetailPreviewContent(
+        WalkerRequestDetailUiState(
+            requestId = "REQUEST001",
+            ownerName = "Franco Gómez",
+            petNames = listOf("Luna", "Toby"),
+            scheduledAt = "20/11/2026 a las 10:00",
+            durationMinutes = 45,
+            observations = "Llevar agua y evitar calles muy transitadas.",
+            status = "PENDING"
+        )
+    )
+}
+
+@Preview(name = "Solicitud - Cargando", showBackground = true, widthDp = 411, heightDp = 891)
+@Composable
+private fun WalkerRequestDetailLoadingPreview() {
+    WalkerRequestDetailPreviewContent(WalkerRequestDetailUiState(isLoading = true))
+}
+
+@Preview(name = "Solicitud - Error", showBackground = true, widthDp = 411, heightDp = 891)
+@Composable
+private fun WalkerRequestDetailErrorPreview() {
+    WalkerRequestDetailPreviewContent(
+        WalkerRequestDetailUiState(errorMessage = "No se pudo cargar la solicitud.")
+    )
+}
+
+@Composable
+private fun WalkerRequestDetailPreviewContent(state: WalkerRequestDetailUiState) {
+    MascotasThemeUI(isWalker = true) {
+        WalkerRequestDetailScreen(state = state, onBack = {})
+    }
+}
+

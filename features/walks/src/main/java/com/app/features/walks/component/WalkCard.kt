@@ -10,6 +10,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import com.app.core.ui.theme.MascotasThemeUI
 import com.app.core.domain.model.RequestStatus
 import com.app.core.domain.model.Walk
 import com.app.core.domain.model.WalkRequest
@@ -335,3 +337,60 @@ private fun requestStatusTextColor(status: RequestStatus) =
         RequestStatus.CANCELLED ->
             MaterialTheme.colorScheme.onSurfaceVariant
     }
+
+@Preview(name = "Paseo - Programado", showBackground = true, widthDp = 411)
+@Composable
+private fun ScheduledWalkCardPreview() {
+    MascotasThemeUI(isWalker = true) {
+        WalkCard(
+            walk = previewCardWalk(WalkStatus.SCHEDULED),
+            ownerName = "Franco Gómez",
+            petNames = listOf("Luna", "Toby"),
+            showStart = true
+        )
+    }
+}
+
+@Preview(name = "Paseo - En curso", showBackground = true, widthDp = 411)
+@Composable
+private fun ActiveWalkCardPreview() {
+    MascotasThemeUI(isWalker = true) {
+        WalkCard(
+            walk = previewCardWalk(WalkStatus.IN_PROGRESS),
+            ownerName = "Franco Gómez",
+            petNames = listOf("Luna", "Toby"),
+            showComplete = true
+        )
+    }
+}
+
+@Preview(name = "Solicitud - Pendiente", showBackground = true, widthDp = 411)
+@Composable
+private fun WalkRequestCardPreview() {
+    MascotasThemeUI {
+        WalkRequestCard(
+            request = WalkRequest(
+                id = "REQUEST001",
+                ownerId = "OWNER001",
+                walkerId = "WALKER001",
+                petIds = listOf("PET001"),
+                petNames = listOf("Luna"),
+                scheduledAt = "2026-11-20T10:00:00",
+                durationMinutes = 45,
+                observations = "Llevar agua."
+            )
+        )
+    }
+}
+
+private fun previewCardWalk(status: WalkStatus) = Walk(
+    id = "WALK001",
+    ownerId = "OWNER001",
+    walkerId = "WALKER001",
+    petIds = listOf("PET001", "PET002"),
+    scheduledAt = "2026-11-20T10:00:00",
+    durationMinutes = 45,
+    status = status,
+    observations = "Llevar agua."
+)
+

@@ -6,6 +6,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
+import com.app.core.ui.theme.MascotasThemeUI
+import com.app.core.domain.model.Walk
+import com.app.core.domain.model.WalkStatus
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.app.core.ui.components.DomainErrorMessage
@@ -55,5 +59,49 @@ fun OwnerWalkDetailScreen(
                 )
             }
         }
+    }
+}
+
+@Preview(name = "Detalle - En curso", showBackground = true, widthDp = 411, heightDp = 891)
+@Composable
+private fun OwnerWalkDetailScreenPreview() {
+    OwnerWalkDetailPreviewContent(
+        OwnerWalkDetailUiState(
+            walk = Walk(
+                id = "WALK001",
+                ownerId = "OWNER001",
+                walkerId = "WALKER001",
+                petIds = listOf("PET001", "PET002"),
+                scheduledAt = "2026-11-20T10:00:00",
+                durationMinutes = 45,
+                observations = "Llevar agua y evitar calles muy transitadas."
+            ).copy(
+                status = WalkStatus.IN_PROGRESS,
+                startedAt = "2026-11-20T13:00:00Z"
+            ),
+            walkerName = "Mateo Pérez",
+            isLoading = false
+        )
+    )
+}
+
+@Preview(name = "Detalle - Cargando", showBackground = true, widthDp = 411, heightDp = 891)
+@Composable
+private fun OwnerWalkDetailLoadingPreview() {
+    OwnerWalkDetailPreviewContent(OwnerWalkDetailUiState())
+}
+
+@Preview(name = "Detalle - Error", showBackground = true, widthDp = 411, heightDp = 891)
+@Composable
+private fun OwnerWalkDetailErrorPreview() {
+    OwnerWalkDetailPreviewContent(
+        OwnerWalkDetailUiState(isLoading = false, errorMessage = "No se pudo cargar el paseo.")
+    )
+}
+
+@Composable
+private fun OwnerWalkDetailPreviewContent(state: OwnerWalkDetailUiState) {
+    MascotasThemeUI {
+        OwnerWalkDetailScreen(state = state, onBack = {}, onRetry = {}, onTrackWalk = {})
     }
 }
